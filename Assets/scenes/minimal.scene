@@ -3539,19 +3539,6 @@
               "ScaleStrategy": "ConsistentHeight",
               "TargetCamera": null,
               "ZIndex": 100
-            },
-            {
-              "__type": "Sandbox.HUD",
-              "__guid": "e3889377-59c5-41a5-84fd-257db896d425",
-              "__enabled": false,
-              "Flags": 0,
-              "MyStringValue": "",
-              "OnComponentDestroy": null,
-              "OnComponentDisabled": null,
-              "OnComponentEnabled": null,
-              "OnComponentFixedUpdate": null,
-              "OnComponentStart": null,
-              "OnComponentUpdate": null
             }
           ],
           "Children": []
@@ -3574,7 +3561,7 @@
           "Components": [
             {
               "__type": "Sandbox.HUD",
-              "__guid": "7c5260e0-0a24-4f7d-8b57-37672d6934b6",
+              "__guid": "ed28e7ce-19b4-4912-bbb4-24d9a95d4889",
               "__enabled": true,
               "Flags": 0,
               "MyStringValue": "",
@@ -4233,26 +4220,6 @@
           "UseCollisionRules": true
         },
         {
-          "__type": "Enemy",
-          "__guid": "765b1bec-c4c5-4430-a504-163f3ad2050b",
-          "__enabled": true,
-          "Flags": 0,
-          "AttackCooldown": 1.5,
-          "AttackDamage": 5,
-          "AttackRange": 150,
-          "ChaseSpeed": 200,
-          "DetectionRange": 500,
-          "OnComponentDestroy": null,
-          "OnComponentDisabled": null,
-          "OnComponentEnabled": null,
-          "OnComponentFixedUpdate": null,
-          "OnComponentStart": null,
-          "OnComponentUpdate": null,
-          "PatrolPoints": [],
-          "PatrolSpeed": 100,
-          "StoppingDistance": 50
-        },
-        {
           "__type": "Sandbox.BoxCollider",
           "__guid": "44ce5071-6537-4bba-865a-c319af88ec5e",
           "__enabled": true,
@@ -4277,6 +4244,26 @@
           "Static": false,
           "Surface": null,
           "SurfaceVelocity": "0,0,0"
+        },
+        {
+          "__type": "Enemy",
+          "__guid": "f08a8e1e-9e62-4ca0-8092-3bd240a4d6cf",
+          "__enabled": true,
+          "Flags": 0,
+          "AttackCooldown": 1.5,
+          "AttackDamage": 10,
+          "AttackRange": 150,
+          "ChaseSpeed": 200,
+          "DetectionRange": 500,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "PatrolPoints": [],
+          "PatrolSpeed": 100,
+          "StoppingDistance": 50
         }
       ],
       "Children": []
