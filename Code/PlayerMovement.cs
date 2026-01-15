@@ -61,6 +61,8 @@ public sealed class PlayerMovement : Component
 
 	protected override void OnUpdate()
 	{
+		if ( !Enabled ) return;
+
 		// Try to recover CharacterController reference if it's null (editor play toggles can leave components in odd states)
 		if (characterController is null)
 		{
@@ -137,6 +139,8 @@ public sealed class PlayerMovement : Component
 
 	protected override void OnFixedUpdate()
 	{
+		if ( !Enabled ) return;
+
 		BuildWishVelocity();		
 		RotateBody();
 		Move();
