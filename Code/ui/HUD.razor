@@ -15,6 +15,7 @@
 			<div class="health-bar">
 				<div class="health-fill" style="width:@HealthWidth"></div>
 			</div>
+			<div>HP: @PlayerStats.CurrentHealth / @PlayerStats.HealthMax (@HealthWidth)</div>
 		</div>
 	</div>
 
@@ -32,11 +33,33 @@
 
 	[Property, TextArea] public string MyStringValue { get; set; } = "";
 
+	private float lastHealth = 0f;
+	private float lastStamina = 0f;
+
+	protected override void OnUpdate()
+	{
+		var currentHealth = PlayerStats.CurrentHealth;
+		var currentStamina = PlayerStats.CurrentStamina;
+		
+		// Force rebuild if health or stamina changed
+		if ( lastHealth != currentHealth || lastStamina != currentStamina )
+		{
+			lastHealth = currentHealth;
+			lastStamina = currentStamina;
+			StateHasChanged();
+		}
+	}
+
 	/// <summary>
 	/// the hash determines if the system should be rebuilt. If it changes, it will be rebuilt
 	/// Include stamina so HUD rebuilds when it changes (coarse-grained).
 	/// </summary>
-	protected override int BuildHash() => System.HashCode.Combine( MyStringValue, (int)(PlayerStats.CurrentStamina * 10), (int)(PlayerStats.CurrentHealth * 10) );
+	protected override int BuildHash() => System.HashCode.Combine( 
+		MyStringValue, 
+		PlayerStats.CurrentStamina, 
+		PlayerStats.CurrentHealth,
+		PlayerStats.HealthMax
+	);
 	
 	// Computed width string for the stamina-fill element (e.g. "75%")
 	private string StaminaWidth => PlayerStats.StaminaMax > 0 ? $"{(PlayerStats.CurrentStamina / PlayerStats.StaminaMax * 100):F0}%" : "0%";
