@@ -100,7 +100,7 @@ public sealed class HealthComponent : Component, IHealth
 		CurrentHealth = 0f;
 
 		// Disable input/movement
-		var playerMovement = Components.Get<PlayerMovement>();
+		var playerMovement = GameObject.Root.Components.GetInDescendantsOrSelf<PlayerMovement>();
 		if ( playerMovement is not null )
 		{
 			playerMovement.Enabled = false;
@@ -121,7 +121,7 @@ public sealed class HealthComponent : Component, IHealth
 		isDead = false;
 		CurrentHealth = MaxHealth;
 
-		var playerMovement = Components.Get<PlayerMovement>();
+		var playerMovement = GameObject.Root.Components.GetInDescendantsOrSelf<PlayerMovement>( true );
 		if ( playerMovement is not null )
 		{
 			playerMovement.Enabled = true;

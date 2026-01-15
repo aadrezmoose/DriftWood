@@ -3704,10 +3704,9 @@
         },
         {
           "__type": "HealthComponent",
-          "__guid": "d98bf53d-8881-4732-a60c-fdb4fba79424",
+          "__guid": "3d4bebe6-be6e-4e3f-b6d0-ef6c59e5aa6b",
           "__enabled": true,
           "Flags": 0,
-          "AllowRegen": false,
           "CurrentHealth": 0,
           "MaxHealth": 100,
           "OnComponentDestroy": null,
@@ -3715,9 +3714,7 @@
           "OnComponentEnabled": null,
           "OnComponentFixedUpdate": null,
           "OnComponentStart": null,
-          "OnComponentUpdate": null,
-          "RegenDelay": 3,
-          "RegenRate": 5
+          "OnComponentUpdate": null
         }
       ],
       "Children": [
