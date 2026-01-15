@@ -10,7 +10,23 @@ public sealed class Enemy : Component, Component.ITriggerListener
 	[Property] public float AttackRange { get; set; } = 150f;
 	[Property] public float AttackCooldown { get; set; } = 1.5f;
 	[Property] public float AttackDamage { get; set; } = 100f;
+	[Property] public float KnockbackForce { get; set; } = 300f;
+	[Property] public float KnockbackUpForce { get; set; } = 200f;
 	[Property] public List<Transform> PatrolPoints { get; set; } = new();
+	[Property] public Color FlashColor { get; set; } = Color.White;
+	[Property] public float FlashDuration { get; set; } = 0.2f;
+	[Property] public SoundEvent DeathSound { get; set; }
+
+	// Stagger settings
+	[Property] public float StaggerDuration { get; set; } = 0.35f;
+	[Property] public float StaggerDamageScale { get; set; } = 0.01f;
+	[Property] public float StaggerMaxTime { get; set; } = 1.0f;
+	[Property] public float HeadshotStaggerMultiplier { get; set; } = 1.5f; // Extra multiplier for headshot stagger
+
+	private Model model;
+	private Color originalColor = Color.White;
+	private float flashTimer = 0f;
+	private float staggerTimer = 0f;
 
 	private enum AIState
 	{
@@ -32,6 +48,17 @@ public sealed class Enemy : Component, Component.ITriggerListener
 	{
 		characterController = Components.Get<CharacterController>();
 		health = Components.Get<HealthComponent>();
+		var render = Components.Get<ModelRenderer>();
+
+		if ( render is not null )
+		{
+			originalColor = render.Tint;
+			Log.Info( $"Enemy found ModelRenderer, originalColor = {originalColor}" );
+		}
+		else
+		{
+			Log.Warning( "Enemy has no ModelRenderer - flash won't work" );
+		}
 
 		// Find player in scene
 		player = Scene.GetAllComponents<PlayerMovement>().FirstOrDefault()?.GameObject;
@@ -59,6 +86,7 @@ public sealed class Enemy : Component, Component.ITriggerListener
 		if ( health is not null )
 		{
 			health.OnDeath += OnEnemyDeath;
+			health.OnDamageTakenWithAttacker += OnEnemyDamaged;
 		}
 
 		Log.Info( $"Enemy spawned with {PatrolPoints.Count} patrol points" );
@@ -73,9 +101,30 @@ public sealed class Enemy : Component, Component.ITriggerListener
 			return;
 		}
 
+		// Update flash timer
+		if ( flashTimer > 0f )
+		{
+			flashTimer -= Time.Delta;
+			if ( flashTimer <= 0f )
+			{
+				var render = Components.Get<ModelRenderer>();
+				if ( render is not null )
+					render.Tint = originalColor;
+			}
+		}
+
 		// Update attack cooldown
 		if ( attackCooldownTimer > 0f )
 			attackCooldownTimer -= Time.Delta;
+
+		// Handle stagger: temporarily disable movement/attacks
+		if ( staggerTimer > 0f )
+		{
+			staggerTimer -= Time.Delta;
+			currentState = AIState.Idle;
+			moveDirection = Vector3.Zero; // Stop new movement input, but preserve knockback velocity
+			return; // skip AI while staggered
+		}
 
 		// Determine state
 		float distanceToPlayer = (Transform.Position - player.Transform.Position).Length;
@@ -202,7 +251,7 @@ public sealed class Enemy : Component, Component.ITriggerListener
 		Vector3 endPos = player.Transform.Position + Vector3.Up * 40f;
 
 		var trace = Scene.Trace.Ray( startPos, endPos )
-			.WithoutTags( "trigger" )
+			.WithoutTags( "trigger", "nosight" )
 			.IgnoreGameObject( GameObject )
 			.Run();
 
@@ -212,6 +261,7 @@ public sealed class Enemy : Component, Component.ITriggerListener
 			Gizmo.Draw.Line( startPos, trace.EndPosition );
 			Gizmo.Draw.Color = Color.Red;
 			Gizmo.Draw.LineSphere( trace.EndPosition, 10f );
+			Log.Info( $"{GameObject.Name}: LOS BLOCKED by {trace.GameObject?.Name} at distance {trace.Distance:F1}" );
 			return false;
 		}
 
@@ -230,7 +280,81 @@ public sealed class Enemy : Component, Component.ITriggerListener
 			characterController.Velocity = Vector3.Zero;
 		}
 
+		// Play death sound
+		if ( DeathSound != null )
+		{
+			Sound.Play( "sounds/click7", Transform.Position );
+		}
+
+		// Convert to ragdoll
+		var modelRenderer = Components.Get<ModelRenderer>();
+		if ( modelRenderer != null && modelRenderer.Model != null )
+		{
+			// Disable character controller
+			if ( characterController != null )
+			{
+				characterController.Enabled = false;
+			}
+
+			// Create physics body for ragdoll effect
+			var rigidbody = Components.GetOrCreate<Rigidbody>();
+			rigidbody.PhysicsBody.MotionEnabled = true;
+			rigidbody.PhysicsBody.GravityEnabled = true;
+			
+			// Add some random spin for dramatic effect
+			rigidbody.PhysicsBody.AngularVelocity = Vector3.Random * 2f;
+		}
+
+		// Disable AI
+		Enabled = false;
+
 		Log.Info( "Enemy died" );
+	}
+
+	void OnEnemyDamaged( float damageAmount, GameObject attacker )
+	{
+		if ( characterController is null || attacker is null )
+			return;
+
+		ApplyDamageEffects( damageAmount, attacker, isHeadshot: false );
+	}
+
+	public void OnHeadshotDamage( float damageAmount, GameObject attacker )
+	{
+		if ( characterController is null || attacker is null )
+			return;
+
+		ApplyDamageEffects( damageAmount, attacker, isHeadshot: true );
+	}
+
+	private void ApplyDamageEffects( float damageAmount, GameObject attacker, bool isHeadshot )
+	{
+		// Calculate direction away from attacker
+		Vector3 directionFromAttacker = (Transform.Position - attacker.Transform.Position).Normal;
+
+		// Apply knockback impulse with upward component
+		Vector3 knockbackImpulse = (directionFromAttacker * KnockbackForce) + (Vector3.Up * KnockbackUpForce);
+		characterController.Punch( knockbackImpulse );
+		Log.Info( $"Enemy knockback applied: impulse magnitude={knockbackImpulse.Length}" );
+
+		// Calculate stagger with headshot multiplier
+		float staggerMultiplier = isHeadshot ? HeadshotStaggerMultiplier : 1.0f;
+		float addStagger = (StaggerDuration + (damageAmount * StaggerDamageScale)) * staggerMultiplier;
+		staggerTimer = System.Math.Min( System.Math.Max( staggerTimer, addStagger ), StaggerMaxTime );
+		Log.Info( $"Enemy stagger: damage={damageAmount}, multiplier={staggerMultiplier:F1}x, new stagger time={staggerTimer:F2}s" );
+
+		// Flash the model
+		var render = Components.Get<ModelRenderer>();
+		if ( render is not null )
+		{
+			Log.Info( $"Enemy flashing from {render.Tint} to {FlashColor}" );
+			render.Tint = FlashColor;
+			flashTimer = FlashDuration;
+		}
+		else
+		{
+			Log.Warning( "Enemy damage: no ModelRenderer found for flash" );
+		}
 	}
 
 	protected override void OnFixedUpdate()
@@ -238,7 +362,17 @@ public sealed class Enemy : Component, Component.ITriggerListener
 		if ( characterController is null || !Enabled )
 			return;
 
-		// Simple movement without gravity
+		// During stagger: apply gravity and friction, skip acceleration/movement input
+		if ( staggerTimer > 0f )
+		{
+			// Apply gravity (gravity.z is negative, so add it to pull down)
+			characterController.Velocity = characterController.Velocity.WithZ( characterController.Velocity.z + (Scene.PhysicsWorld.Gravity.z * Time.Delta) );
+			characterController.ApplyFriction( 4.0f );
+			characterController.Move();
+			return;
+		}
+
+		// Normal movement: apply input and friction
 		characterController.Velocity = characterController.Velocity.WithZ( 0 );
 		characterController.Accelerate( moveDirection );
 		characterController.ApplyFriction( 4.0f );
@@ -250,6 +384,7 @@ public sealed class Enemy : Component, Component.ITriggerListener
 		if ( health is not null )
 		{
 			health.OnDeath -= OnEnemyDeath;
+			health.OnDamageTakenWithAttacker -= OnEnemyDamaged;
 		}
 	}
 }

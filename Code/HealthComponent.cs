@@ -20,6 +20,11 @@ public sealed class HealthComponent : Component, IHealth
 	public event Action<float> OnDamageTaken;
 
 	/// <summary>
+	/// Called when damage is taken with attacker info.
+	/// </summary>
+	public event Action<float, GameObject> OnDamageTakenWithAttacker;
+
+	/// <summary>
 	/// Called when the player heals.
 	/// </summary>
 	public event Action<float> OnHealed;
@@ -68,6 +73,7 @@ public sealed class HealthComponent : Component, IHealth
 		CurrentHealth = MathF.Max( 0f, CurrentHealth - damageAmount );
 
 		OnDamageTaken?.Invoke( damageAmount );
+		OnDamageTakenWithAttacker?.Invoke( damageAmount, attacker );
 
 		if ( CurrentHealth <= 0f )
 		{
@@ -83,7 +89,7 @@ public sealed class HealthComponent : Component, IHealth
 	/// <summary>
 	/// Explicit interface implementation for IHealth.
 	/// </summary>
-	void IHealth.TakeDamage( float damage ) => TakeDamage( damage );
+	void IHealth.TakeDamage( float damage, GameObject attacker = null ) => TakeDamage( damage, attacker );
 
 	/// <summary>
 	/// Heal the player.

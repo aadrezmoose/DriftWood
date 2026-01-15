@@ -114,17 +114,67 @@ public static class MyEditorMenu
 	[Menu("Editor", "My Project/Test Enemy/Spawn Test Enemy")]
 	public static void SpawnTestEnemy()
 	{
+		var player = Game.ActiveScene.GetAllComponents<PlayerMovement>().FirstOrDefault();
+		if ( player == null )
+		{
+			Log.Warning( "No player found in scene. Can't spawn enemy." );
+			return;
+		}
+
+		// Create enemy GameObject with randomized spawn position
 		var enemyObj = new GameObject();
 		enemyObj.Name = "TestEnemy";
-		enemyObj.Transform.Position = Game.ActiveScene.GetAllComponents<PlayerMovement>().FirstOrDefault()?.GameObject.Transform.Position + Vector3.Forward * 300f ?? Vector3.Zero;
-		
-		enemyObj.AddComponent<CharacterController>();
-		enemyObj.AddComponent<HealthComponent>();
+		var spawnOffset = player.GameObject.Transform.Rotation.Forward * 300f;
+		// Add some random left/right spread so multiple spawns don't stack
+		spawnOffset += player.GameObject.Transform.Rotation.Right * (Game.Random.Float(-150f, 150f));
+		enemyObj.Transform.Position = player.GameObject.Transform.Position + spawnOffset + Vector3.Up * 50f;
+
+		// Add ModelRenderer with a basic model (cube for now)
+		var renderer = enemyObj.AddComponent<ModelRenderer>();
+		renderer.Model = Model.Load( "models/infoterryfinal/terrystart.vmdl_c" );
+		renderer.Tint = Color.Red;
+
+		// Add collider
+		var collider = enemyObj.AddComponent<BoxCollider>();
+		collider.Scale = new Vector3( 50, 50, 100 );
+
+		// Add CharacterController for movement
+		var controller = enemyObj.AddComponent<CharacterController>();
+		controller.Radius = 25f;
+		controller.Height = 100f;
+
+		// Add HealthComponent
+		var health = enemyObj.AddComponent<HealthComponent>();
+		health.MaxHealth = 100f;
+		health.CurrentHealth = 100f;
+		health.IsPlayer = false;
+
+		// Add Enemy AI component
 		var enemy = enemyObj.AddComponent<Enemy>();
 		enemy.DetectionRange = 600f;
-		enemy.AttackDamage = 5f;
-		
-		Log.Info($"Spawned test enemy at {enemyObj.Transform.Position}");
+		enemy.AttackDamage = 10f;
+		enemy.PatrolSpeed = 100f;
+		enemy.ChaseSpeed = 200f;
+		enemy.StaggerDuration = 0.35f;
+		enemy.AttackCooldown = 1.5f;
+
+		// Create head child GameObject for headshot zone
+		var headObj = new GameObject();
+		headObj.Name = "EnemyHead";
+		headObj.Parent = enemyObj;
+		headObj.Transform.LocalPosition = Vector3.Up * 50f; // Position at head height
+		headObj.Transform.LocalScale = Vector3.One * 0.6f;
+
+		// Add collider for head
+		var headCollider = headObj.AddComponent<BoxCollider>();
+		headCollider.Scale = new Vector3( 30, 30, 35 );
+		headCollider.Tags.Add( "nosight" ); // Exclude from LOS traces
+
+		// Add HeadshotZone component
+		var headshot = headObj.AddComponent<HeadshotZone>();
+		headshot.DamageMultiplier = 2.0f;
+
+		Log.Info( $"Spawned test enemy with headshot zone at {enemyObj.Transform.Position}" );
 	}
 
 	[ConCmd("test_enemy_damage")]
