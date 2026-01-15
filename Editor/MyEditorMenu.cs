@@ -110,4 +110,28 @@ public static class MyEditorMenu
 			Log.Warning( "No HealthComponent found in active scene." );
 		}
 	}
+
+	[Menu("Editor", "My Project/Test Enemy/Spawn Test Enemy")]
+	public static void SpawnTestEnemy()
+	{
+		var enemyObj = new GameObject();
+		enemyObj.Name = "TestEnemy";
+		enemyObj.Transform.Position = Game.ActiveScene.GetAllComponents<PlayerMovement>().FirstOrDefault()?.GameObject.Transform.Position + Vector3.Forward * 300f ?? Vector3.Zero;
+		
+		enemyObj.AddComponent<CharacterController>();
+		enemyObj.AddComponent<HealthComponent>();
+		var enemy = enemyObj.AddComponent<Enemy>();
+		enemy.DetectionRange = 600f;
+		enemy.AttackDamage = 5f;
+		
+		Log.Info($"Spawned test enemy at {enemyObj.Transform.Position}");
+	}
+
+	[ConCmd("test_enemy_damage")]
+	public static void TestEnemyDamage(float damage = 10f)
+	{
+		var enemy = Game.ActiveScene.GetAllComponents<HealthComponent>().FirstOrDefault();
+		enemy?.TakeDamage(damage);
+		Log.Info($"Enemy health: {enemy?.CurrentHealth}/{enemy?.MaxHealth}");
+	}
 }

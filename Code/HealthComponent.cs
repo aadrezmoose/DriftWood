@@ -9,6 +9,8 @@ public sealed class HealthComponent : Component, IHealth
 	[Property]
 	public float CurrentHealth { get; set; }
 
+	[Property]
+	public bool IsPlayer { get; set; } = false;
 
 	private bool isDead = false;
 
@@ -32,9 +34,12 @@ public sealed class HealthComponent : Component, IHealth
 		CurrentHealth = MaxHealth;
 		isDead = false;
 
-		// Update UI
-		PlayerStats.CurrentHealth = CurrentHealth;
-		PlayerStats.HealthMax = MaxHealth;
+		// Update UI only if this is the player
+		if ( IsPlayer )
+		{
+			PlayerStats.CurrentHealth = CurrentHealth;
+			PlayerStats.HealthMax = MaxHealth;
+		}
 	}
 
 	protected override void OnUpdate()
@@ -42,8 +47,11 @@ public sealed class HealthComponent : Component, IHealth
 		if ( isDead )
 			return;
 
-		// Update UI
-		PlayerStats.CurrentHealth = CurrentHealth;
+		// Update UI only if this is the player
+		if ( IsPlayer )
+		{
+			PlayerStats.CurrentHealth = CurrentHealth;
+		}
 	}
 
 	/// <summary>
@@ -66,7 +74,10 @@ public sealed class HealthComponent : Component, IHealth
 			Die( attacker );
 		}
 
-		PlayerStats.CurrentHealth = CurrentHealth;
+		if ( IsPlayer )
+		{
+			PlayerStats.CurrentHealth = CurrentHealth;
+		}
 	}
 
 	/// <summary>
@@ -85,7 +96,10 @@ public sealed class HealthComponent : Component, IHealth
 		CurrentHealth = MathF.Min( MaxHealth, CurrentHealth + healAmount );
 		OnHealed?.Invoke( healAmount );
 
-		PlayerStats.CurrentHealth = CurrentHealth;
+		if ( IsPlayer )
+		{
+			PlayerStats.CurrentHealth = CurrentHealth;
+		}
 	}
 
 	/// <summary>
@@ -108,7 +122,10 @@ public sealed class HealthComponent : Component, IHealth
 
 		OnDeath?.Invoke();
 
-		PlayerStats.CurrentHealth = 0f;
+		if ( IsPlayer )
+		{
+			PlayerStats.CurrentHealth = 0f;
+		}
 
 		Log.Info( $"Player died! Attacker: {(attacker?.Name ?? "Unknown")}" );
 	}
@@ -127,7 +144,10 @@ public sealed class HealthComponent : Component, IHealth
 			playerMovement.Enabled = true;
 		}
 
-		PlayerStats.CurrentHealth = CurrentHealth;
+		if ( IsPlayer )
+		{
+			PlayerStats.CurrentHealth = CurrentHealth;
+		}
 	}
 
 	/// <summary>
