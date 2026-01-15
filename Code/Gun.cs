@@ -14,6 +14,7 @@ public abstract class Gun : Component
 	protected bool isReloading = false;
 	protected GameObject playerHead; // Reference to player's head for firing
 	protected GunViewModel viewModel; // Reference to the gun's visual model
+	protected GameObject owner; // Root owner (player), used to ignore self in traces
 
 	protected override void OnAwake()
 	{
@@ -84,6 +85,11 @@ public abstract class Gun : Component
 	public void SetPlayerHead(GameObject head)
 	{
 		playerHead = head;
+	}
+
+	public void SetOwner(GameObject ownerGameObject)
+	{
+		owner = ownerGameObject;
 	}
 
 	public int GetCurrentAmmo() => currentAmmo;

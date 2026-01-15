@@ -21,19 +21,24 @@ public sealed class Pistol : Gun
 		Log.Info($"Firing from {startPos} in direction {fireDirection}");
 
 		// Raycast from camera forward
+		// Ignore the player's own collider and widen the trace a little to make hits more forgiving
 		var trace = Scene.Trace
 			.Ray(startPos, endPos)
+			.Size(3f)
+			.WithoutTags( "trigger" )
+			.IgnoreGameObject( owner ?? playerHead )
 			.Run();
 
 		if (trace.Hit)
 		{
-			Log.Info($"Hit something at {trace.EndPosition}");
+			// Find an IHealth component on the hit object or nearby in hierarchy
+			IHealth hitHealth = trace.GameObject?.Components.Get<IHealth>();
+			if ( hitHealth is null ) hitHealth = trace.GameObject?.Components.GetInAncestorsOrSelf<IHealth>();
+			if ( hitHealth is null ) hitHealth = trace.GameObject?.Components.GetInDescendantsOrSelf<IHealth>();
 
-			// Try to damage it if it has a health component
-			var hitComponent = trace.GameObject?.Components.Get<IHealth>();
-			if (hitComponent != null)
+			if (hitHealth != null)
 			{
-				hitComponent.TakeDamage(Damage);
+				hitHealth.TakeDamage(Damage);
 			}
 
 			// Visual effect at impact point - longer duration

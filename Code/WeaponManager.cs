@@ -15,6 +15,7 @@ public sealed class WeaponManager : Component
 		if (playerMovement != null && playerMovement.Head != null)
 		{
 			CurrentGun.SetPlayerHead(playerMovement.Head);
+			CurrentGun.SetOwner(GameObject);
 			Log.Info("WeaponManager: Set player head on gun");
 		}
 		else
@@ -55,6 +56,7 @@ public sealed class WeaponManager : Component
 			if (playerMovement != null && playerMovement.Head != null)
 			{
 				CurrentGun.SetPlayerHead(playerMovement.Head);
+				CurrentGun.SetOwner(GameObject);
 			}
 		}
 	}
