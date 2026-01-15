@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Editor": {
+      "commandName": "Executable",
+      "executablePath": "E:\\steamlibrary\\steamapps\\common\\sbox\\sbox-dev.exe",
+      "commandLineArgs": "-project \u0022c:\\users\\austi\\documents\\s\u0026box projects\\my_project\\my_project.sbproj\u0022"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace Sandbox
+
+<root>
+	<div class="hud">
+		<div class="title">@MyStringValue</div>
+
+		
+	</div>
+
+	<div class="health-container">
+		<div class="health">			
+			<div class="health-bar">
+				<div class="health-fill" style="width:@HealthWidth"></div>
+			</div>
+		</div>
+	</div>
+
+	<div class="stamina-container">
+		<div class="stamina">
+			<div class="stamina-bar">
+				<div class="stamina-fill" style="width:@StaminaWidth"></div>
+			</div>
+		</div>
+	</div>
+</root>
+
+@code
+{
+
+	[Property, TextArea] public string MyStringValue { get; set; } = "";
+
+	/// <summary>
+	/// the hash determines if the system should be rebuilt. If it changes, it will be rebuilt
+	/// Include stamina so HUD rebuilds when it changes (coarse-grained).
+	/// </summary>
+	protected override int BuildHash() => System.HashCode.Combine( MyStringValue, (int)(PlayerStats.CurrentStamina * 10), (int)(PlayerStats.CurrentHealth * 10) );
+	
+	// Computed width string for the stamina-fill element (e.g. "75%")
+	private string StaminaWidth => PlayerStats.StaminaMax > 0 ? $"{(PlayerStats.CurrentStamina / PlayerStats.StaminaMax * 100):F0}%" : "0%";
+	// Numeric readout shown beside the bar
+	private string StaminaText => PlayerStats.StaminaMax > 0 ? $"{PlayerStats.CurrentStamina:F1}/{PlayerStats.StaminaMax:F1}" : "0/0";
+
+	private string HealthWidth => PlayerStats.HealthMax > 0 ? $"{(PlayerStats.CurrentHealth / PlayerStats.HealthMax * 100):F0}%" : "0%";
+	// Numeric readout shown beside the bar
+	private string HealthText => PlayerStats.HealthMax > 0 ? $"{PlayerStats.CurrentHealth:F1}/{PlayerStats.HealthMax:F1}" : "0/0";
+}
