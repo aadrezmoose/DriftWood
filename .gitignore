@@ -1,0 +1,5 @@
+Code/Properties/launchSettings.json
+Editor/my_project.editor.csproj
+Editor/Properties/launchSettings.json
+.sbox/project.json
+.vscode/settings.json
