@@ -45,7 +45,7 @@
 		<ProjectReference Include="E:\SteamLibrary\steamapps\common\sbox\editor\ActionGraph\Code\actiongraph.csproj" />
 		<ProjectReference Include="E:\SteamLibrary\steamapps\common\sbox\editor\Hammer\Code\hammer.csproj" />
 		<ProjectReference Include="E:\SteamLibrary\steamapps\common\sbox\addons\tools\Code\Base Editor Library.csproj" />
-		<ProjectReference Include="c:\users\austi\documents\s&amp;box projects\my_project\Code\my_project.csproj" />
+		<ProjectReference Include="C:\Users\austi\Documents\s&amp;box projects\DriftWood\Code\my_project.csproj" />
 		<ProjectReference Include="E:\SteamLibrary\steamapps\common\sbox\editor\ShaderGraph\Code\shadergraph.csproj" />
 	</ItemGroup>
 

@@ -3539,29 +3539,10 @@
               "ScaleStrategy": "ConsistentHeight",
               "TargetCamera": null,
               "ZIndex": 100
-            }
-          ],
-          "Children": []
-        },
-        {
-          "__guid": "9ffb4cc0-4599-4372-8391-6924fe3cbe97",
-          "__version": 2,
-          "Flags": 0,
-          "Name": "HUD",
-          "Position": "0,0,0",
-          "Rotation": "0,0,0,1",
-          "Scale": "1,1,1",
-          "Tags": "",
-          "Enabled": true,
-          "NetworkMode": 2,
-          "NetworkFlags": 0,
-          "NetworkOrphaned": 0,
-          "NetworkTransmit": true,
-          "OwnerTransfer": 1,
-          "Components": [
+            },
             {
               "__type": "Sandbox.HUD",
-              "__guid": "ed28e7ce-19b4-4912-bbb4-24d9a95d4889",
+              "__guid": "3ea78014-9990-4e90-ac1a-4a26a7ecff57",
               "__enabled": true,
               "Flags": 0,
               "MyStringValue": "",
@@ -4145,8 +4126,8 @@
       "__guid": "0e9175e1-3b0c-4389-9b5b-cd018734b010",
       "__version": 2,
       "Flags": 0,
-      "Name": "Cube",
-      "Position": "-439.5158,-695.7529,92.72155",
+      "Name": "Enemy",
+      "Position": "-423.4229,-740.2768,22.15335",
       "Rotation": "0,0,0,1",
       "Scale": "1,1,1",
       "Tags": "",
@@ -4168,7 +4149,7 @@
           "MaterialGroup": null,
           "MaterialOverride": null,
           "Materials": null,
-          "Model": "models/dev/box.vmdl",
+          "Model": "models/infoterryfinal/terrystart.vmdl",
           "OnComponentDestroy": null,
           "OnComponentDisabled": null,
           "OnComponentEnabled": null,
@@ -4182,7 +4163,7 @@
             "AfterUILayer": false
           },
           "RenderType": "On",
-          "Tint": "0.9814,0,0,1"
+          "Tint": "1,0,0,1"
         },
         {
           "__type": "HealthComponent",
@@ -4198,6 +4179,32 @@
           "OnComponentFixedUpdate": null,
           "OnComponentStart": null,
           "OnComponentUpdate": null
+        },
+        {
+          "__type": "Sandbox.BoxCollider",
+          "__guid": "44ce5071-6537-4bba-865a-c319af88ec5e",
+          "__enabled": true,
+          "Flags": 0,
+          "Center": "0,0,36.61065",
+          "ColliderFlags": 0,
+          "Elasticity": null,
+          "Friction": null,
+          "IsTrigger": false,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "OnObjectTriggerEnter": null,
+          "OnObjectTriggerExit": null,
+          "OnTriggerEnter": null,
+          "OnTriggerExit": null,
+          "RollingResistance": null,
+          "Scale": "15,15,69.60417",
+          "Static": false,
+          "Surface": null,
+          "SurfaceVelocity": "0,0,0"
         },
         {
           "__type": "Sandbox.CharacterController",
@@ -4220,32 +4227,6 @@
           "UseCollisionRules": true
         },
         {
-          "__type": "Sandbox.BoxCollider",
-          "__guid": "44ce5071-6537-4bba-865a-c319af88ec5e",
-          "__enabled": true,
-          "Flags": 0,
-          "Center": "0,0,0",
-          "ColliderFlags": 0,
-          "Elasticity": null,
-          "Friction": null,
-          "IsTrigger": false,
-          "OnComponentDestroy": null,
-          "OnComponentDisabled": null,
-          "OnComponentEnabled": null,
-          "OnComponentFixedUpdate": null,
-          "OnComponentStart": null,
-          "OnComponentUpdate": null,
-          "OnObjectTriggerEnter": null,
-          "OnObjectTriggerExit": null,
-          "OnTriggerEnter": null,
-          "OnTriggerExit": null,
-          "RollingResistance": null,
-          "Scale": "50,50,50",
-          "Static": false,
-          "Surface": null,
-          "SurfaceVelocity": "0,0,0"
-        },
-        {
           "__type": "Enemy",
           "__guid": "f08a8e1e-9e62-4ca0-8092-3bd240a4d6cf",
           "__enabled": true,
@@ -4254,7 +4235,12 @@
           "AttackDamage": 10,
           "AttackRange": 150,
           "ChaseSpeed": 200,
-          "DetectionRange": 500,
+          "DeathSound": "sound/explosion1.sound",
+          "DetectionRange": 5000,
+          "FlashColor": "1,1,1,1",
+          "FlashDuration": 0.2,
+          "KnockbackForce": 300,
+          "KnockbackUpForce": 25,
           "OnComponentDestroy": null,
           "OnComponentDisabled": null,
           "OnComponentEnabled": null,
@@ -4263,10 +4249,73 @@
           "OnComponentUpdate": null,
           "PatrolPoints": [],
           "PatrolSpeed": 100,
+          "StaggerDamageScale": 0.01,
+          "StaggerDuration": 0.35,
+          "StaggerMaxTime": 1,
           "StoppingDistance": 50
         }
       ],
-      "Children": []
+      "Children": [
+        {
+          "__guid": "5d2b8197-b0cf-43bd-8b2e-7825e52415ba",
+          "__version": 2,
+          "Flags": 0,
+          "Name": "EnemyHead",
+          "Position": "1.268494,-5.363464,66.40688",
+          "Rotation": "0,0,0,1",
+          "Scale": "1,1,1",
+          "Tags": "",
+          "Enabled": true,
+          "NetworkMode": 2,
+          "NetworkFlags": 0,
+          "NetworkOrphaned": 0,
+          "NetworkTransmit": true,
+          "OwnerTransfer": 1,
+          "Components": [
+            {
+              "__type": "Sandbox.BoxCollider",
+              "__guid": "a77692b3-0038-46d5-b7da-6ea5649e3a6b",
+              "__enabled": true,
+              "Flags": 0,
+              "Center": "0.3837204,3.9014,-3.363256",
+              "ColliderFlags": 0,
+              "Elasticity": null,
+              "Friction": null,
+              "IsTrigger": false,
+              "OnComponentDestroy": null,
+              "OnComponentDisabled": null,
+              "OnComponentEnabled": null,
+              "OnComponentFixedUpdate": null,
+              "OnComponentStart": null,
+              "OnComponentUpdate": null,
+              "OnObjectTriggerEnter": null,
+              "OnObjectTriggerExit": null,
+              "OnTriggerEnter": null,
+              "OnTriggerExit": null,
+              "RollingResistance": null,
+              "Scale": "15.14971,9.633589,15.3026",
+              "Static": true,
+              "Surface": null,
+              "SurfaceVelocity": "0,0,0"
+            },
+            {
+              "__type": "HeadshotZone",
+              "__guid": "f8efb2e9-79d4-4f0d-a9d0-e100512d2d3d",
+              "__enabled": true,
+              "Flags": 0,
+              "DamageMultiplier": 2,
+              "OnComponentDestroy": null,
+              "OnComponentDisabled": null,
+              "OnComponentEnabled": null,
+              "OnComponentFixedUpdate": null,
+              "OnComponentStart": null,
+              "OnComponentUpdate": null,
+              "TargetEntity": null
+            }
+          ],
+          "Children": []
+        }
+      ]
     }
   ],
   "SceneProperties": {
@@ -4297,7 +4346,9 @@
     "apetavern.wall_stone#78609",
     "drakefruit.lugerpistolfire#91245",
     "gex.pistol#54864",
+    "igrotronika.explosion1#50755",
     "opengameartcco.concretebarrier_wall#96060",
+    "pilgrim.terrystart#11488",
     "svin.tile_roof#36222"
   ],
   "__version": 3

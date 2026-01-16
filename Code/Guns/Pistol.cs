@@ -14,6 +14,10 @@ public sealed class Pistol : Gun
 			return;
 		}
 
+		// Play gunshot sound from cloud - replace with your desired cloud sound path
+		// Example format: "sounds/weapon_pistol.vsnd" or cloud package path
+		Sound.Play( "sounds/luger pistol fire.sound", playerHead.Transform.World.Position );
+
 		var startPos = playerHead.Transform.World.Position;
 		var fireDirection = playerHead.Transform.World.Rotation.Forward;
 		var endPos = startPos + fireDirection * BulletDistance;
@@ -25,24 +29,63 @@ public sealed class Pistol : Gun
 		var trace = Scene.Trace
 			.Ray(startPos, endPos)
 			.Size(3f)
-			.WithoutTags( "trigger" )
 			.IgnoreGameObject( owner ?? playerHead )
 			.Run();
 
 		if (trace.Hit)
 		{
-			// Find an IHealth component on the hit object or nearby in hierarchy
-			IHealth hitHealth = trace.GameObject?.Components.Get<IHealth>();
-			if ( hitHealth is null ) hitHealth = trace.GameObject?.Components.GetInAncestorsOrSelf<IHealth>();
-			if ( hitHealth is null ) hitHealth = trace.GameObject?.Components.GetInDescendantsOrSelf<IHealth>();
+			// Check for headshot zone first
+			var headshotZone = trace.GameObject?.Components.Get<HeadshotZone>();
+			if ( headshotZone is null ) headshotZone = trace.GameObject?.Components.GetInAncestorsOrSelf<HeadshotZone>();
+			if ( headshotZone is null ) headshotZone = trace.GameObject?.Components.GetInDescendantsOrSelf<HeadshotZone>();
+			float damageMultiplier = 1.0f;
+			GameObject targetEntity = trace.GameObject;
+
+			if ( headshotZone is not null )
+			{
+				damageMultiplier = headshotZone.DamageMultiplier;
+				targetEntity = headshotZone.GetTargetEntity() ?? trace.GameObject;
+				Log.Info( $"HEADSHOT! zone={headshotZone.GameObject?.Name}, target={targetEntity?.Name}, mult={damageMultiplier}x" );
+				
+				// Visual feedback - use yellow/gold for headshot
+				DebugOverlay.Sphere(new Sphere(trace.EndPosition, 8f), Color.Yellow, 2f);
+			}
+			else
+			{
+				// Normal hit - red sphere
+				DebugOverlay.Sphere(new Sphere(trace.EndPosition, 5f), Color.Red, 2f);
+			}
+
+			// Find an IHealth component on the target entity
+			IHealth hitHealth = targetEntity?.Components.Get<IHealth>();
+			if ( hitHealth is null ) hitHealth = targetEntity?.Components.GetInAncestorsOrSelf<IHealth>();
+			if ( hitHealth is null ) hitHealth = targetEntity?.Components.GetInDescendantsOrSelf<IHealth>();
+
+			// Fallback: directly get HealthComponent if interface lookup fails
+			if ( hitHealth is null )
+			{
+				var hc = targetEntity?.Components.Get<HealthComponent>()
+						?? targetEntity?.Components.GetInAncestorsOrSelf<HealthComponent>()
+						?? targetEntity?.Components.GetInDescendantsOrSelf<HealthComponent>();
+				if ( hc is not null ) hitHealth = hc as IHealth;
+			}
 
 			if (hitHealth != null)
 			{
-				hitHealth.TakeDamage(Damage);
-			}
+				float finalDamage = Damage * damageMultiplier;
+				Log.Info($"Applying damage to {targetEntity?.Name}: base={Damage}, mult={damageMultiplier}, final={finalDamage}");
+				hitHealth.TakeDamage(finalDamage, owner ?? playerHead);
 
-			// Visual effect at impact point - longer duration
-			DebugOverlay.Sphere(new Sphere(trace.EndPosition, 5f), Color.Red, 2f);
+				// Apply headshot stagger if it was a headshot
+				if ( damageMultiplier > 1.0f )
+				{
+					var enemy = targetEntity?.Components.Get<Enemy>();
+					if ( enemy is not null )
+					{
+						enemy.OnHeadshotDamage( finalDamage, owner ?? playerHead );
+					}
+				}
+			}
 		}
 		else
 		{
@@ -58,5 +101,5 @@ public sealed class Pistol : Gun
 
 public interface IHealth
 {
-	void TakeDamage(float damage);
+	void TakeDamage(float damage, GameObject attacker = null);
 }
