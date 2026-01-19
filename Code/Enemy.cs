@@ -9,13 +9,14 @@ public sealed class Enemy : Component, Component.ITriggerListener
 	[Property] public float DetectionRange { get; set; } = 500f;
 	[Property] public float AttackRange { get; set; } = 150f;
 	[Property] public float AttackCooldown { get; set; } = 1.5f;
-	[Property] public float AttackDamage { get; set; } = 100f;
+	[Property] public float AttackDamage { get; set; } = 15f;
 	[Property] public float KnockbackForce { get; set; } = 300f;
 	[Property] public float KnockbackUpForce { get; set; } = 200f;
 	[Property] public List<Transform> PatrolPoints { get; set; } = new();
 	[Property] public Color FlashColor { get; set; } = Color.White;
 	[Property] public float FlashDuration { get; set; } = 0.2f;
 	[Property] public SoundEvent DeathSound { get; set; }
+	[Property] public GameObject PlayerReference { get; set; } // Allow manual assignment from spawner
 
 	// Stagger settings
 	[Property] public float StaggerDuration { get; set; } = 0.35f;
@@ -60,8 +61,16 @@ public sealed class Enemy : Component, Component.ITriggerListener
 			Log.Warning( "Enemy has no ModelRenderer - flash won't work" );
 		}
 
-		// Find player in scene
-		player = Scene.GetAllComponents<PlayerMovement>().FirstOrDefault()?.GameObject;
+		// Find player in scene - prefer PlayerReference if manually assigned
+		if ( PlayerReference is not null )
+		{
+			player = PlayerReference;
+			Log.Info( "Enemy: Using manually assigned PlayerReference" );
+		}
+		else
+		{
+			player = Scene.GetAllComponents<PlayerMovement>().FirstOrDefault()?.GameObject;
+		}
 
 		if ( characterController is null )
 		{
@@ -244,30 +253,35 @@ public sealed class Enemy : Component, Component.ITriggerListener
 			return false;
 
 		Vector3 directionToPlayer = (player.Transform.Position - Transform.Position).Normal;
-		float distanceToPlayer = (Transform.Position - player.Transform.Position).Length;
+		float distanceToPlayer = (player.Transform.Position - Transform.Position).Length;
 
-		// Start trace from slightly above the enemy (eye level)
-		Vector3 startPos = Transform.Position + Vector3.Up * 40f;
-		Vector3 endPos = player.Transform.Position + Vector3.Up * 40f;
+		// Start trace from enemy's head level (much higher to clear ground)
+		Vector3 startPos = Transform.Position + Vector3.Up * 80f;
+		Vector3 playerEyePos = player.Transform.Position + Vector3.Up * 80f;
 
-		var trace = Scene.Trace.Ray( startPos, endPos )
-			.WithoutTags( "trigger", "nosight" )
+		var trace = Scene.Trace.Ray( startPos, playerEyePos )
+			.WithoutTags( "trigger" )
 			.IgnoreGameObject( GameObject )
+			.IgnoreGameObject( player )  // Don't stop at player collider
 			.Run();
 
-		// Draw debug line to visualize
-		if ( trace.Hit && trace.Distance < distanceToPlayer - 10f )
+		// If ray didn't hit anything, we have clear LOS
+		if ( !trace.Hit || trace.Distance >= distanceToPlayer - 5f )
 		{
-			Gizmo.Draw.Line( startPos, trace.EndPosition );
-			Gizmo.Draw.Color = Color.Red;
-			Gizmo.Draw.LineSphere( trace.EndPosition, 10f );
-			Log.Info( $"{GameObject.Name}: LOS BLOCKED by {trace.GameObject?.Name} at distance {trace.Distance:F1}" );
-			return false;
+			Gizmo.Draw.Color = Color.Green;
+			Gizmo.Draw.Line( startPos, playerEyePos );
+			return true;
 		}
 
-		Gizmo.Draw.Color = Color.Green;
-		Gizmo.Draw.Line( startPos, endPos );
-		return true;
+		// Trace hit something before reaching the player - log what it hit
+		Gizmo.Draw.Color = Color.Red;
+		Gizmo.Draw.Line( startPos, trace.EndPosition );
+		Gizmo.Draw.LineSphere( trace.EndPosition, 10f );
+		if ( trace.GameObject is not null )
+		{
+			Log.Info( $"LOS BLOCKED by {trace.GameObject.Name} at distance {trace.Distance:F1}/{distanceToPlayer:F1}" );
+		}
+		return false;
 	}
 
 	void OnEnemyDeath()
@@ -290,6 +304,9 @@ public sealed class Enemy : Component, Component.ITriggerListener
 		var modelRenderer = Components.Get<ModelRenderer>();
 		if ( modelRenderer != null && modelRenderer.Model != null )
 		{
+			// Set to white (dead color)
+			modelRenderer.Tint = Color.White;
+
 			// Disable character controller
 			if ( characterController != null )
 			{
@@ -366,14 +383,21 @@ public sealed class Enemy : Component, Component.ITriggerListener
 		if ( staggerTimer > 0f )
 		{
 			// Apply gravity (gravity.z is negative, so add it to pull down)
-			characterController.Velocity = characterController.Velocity.WithZ( characterController.Velocity.z + (Scene.PhysicsWorld.Gravity.z * Time.Delta) );
+			var vel = characterController.Velocity;
+			vel.z += (Scene.PhysicsWorld.Gravity.z * Time.Delta);
+			
+			// Clamp vertical velocity to prevent floaty knockback
+			vel.z = System.Math.Max( vel.z, -500f );  // Terminal velocity
+			
+			characterController.Velocity = vel;
 			characterController.ApplyFriction( 4.0f );
 			characterController.Move();
 			return;
 		}
 
-		// Normal movement: apply input and friction
-		characterController.Velocity = characterController.Velocity.WithZ( 0 );
+		// Normal movement: only set horizontal velocity, let gravity handle vertical
+		var currentVel = characterController.Velocity;
+		characterController.Velocity = new Vector3( moveDirection.x, moveDirection.y, currentVel.z );
 		characterController.Accelerate( moveDirection );
 		characterController.ApplyFriction( 4.0f );
 		characterController.Move();
@@ -386,5 +410,29 @@ public sealed class Enemy : Component, Component.ITriggerListener
 			health.OnDeath -= OnEnemyDeath;
 			health.OnDamageTakenWithAttacker -= OnEnemyDamaged;
 		}
+	}
+
+	/// <summary>
+	/// Reset the enemy to a fresh spawned state (call this when respawning)
+	/// </summary>
+	public void ResetSpawnState()
+	{
+		// Reset all timers
+		staggerTimer = 0f;
+		flashTimer = 0f;
+		attackCooldownTimer = 0f;
+		currentWaypointIndex = 0;
+		moveDirection = Vector3.Zero;
+		currentState = AIState.Patrol;
+
+		// Force color to alive state (white/normal)
+		var render = Components.Get<ModelRenderer>();
+		if ( render is not null )
+		{
+			render.Tint = Color.White;
+			originalColor = Color.White;
+		}
+
+		Log.Info( "Enemy: Reset spawn state - color forced to white" );
 	}
 }
