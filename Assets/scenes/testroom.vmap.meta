@@ -1,0 +1,27 @@
+{
+  "publish": {
+    "Enabled": false,
+    "ProjectConfig": {
+      "Title": "Testroom",
+      "Type": "map",
+      "Org": "local",
+      "Ident": "testroom",
+      "Schema": 0,
+      "IncludeSourceFiles": false,
+      "Resources": null,
+      "PackageReferences": [],
+      "EditorReferences": [
+        "facepunch.industrial_stair_step_a#38437",
+        "facepunch.metal_beam_stairs_a_128#141947",
+        "facepunch.railing_stairs_a_128#33758",
+        "fpopium.chainlink_fence_b#158034",
+        "subzerostudios.corrugatedsteel008c#149737"
+      ],
+      "Mounts": null,
+      "IsStandaloneOnly": false,
+      "Metadata": {
+        "SingleAssetSource": "scenes/testroom.vmap"
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace Sandbox
+
+<root>
+	<div class="ammo-display">
+		<div class="weapon-name">@PlayerStats.WeaponName</div>
+		<div class="ammo-counters">
+			<div class="ammo-current">@PlayerStats.CurrentAmmo</div>
+			<div class="ammo-separator">/</div>
+			<div class="ammo-reserve">@PlayerStats.ReserveAmmo</div>
+		</div>
+	</div>
+</root>
+
+@code {
+	/// <summary>
+	/// Rebuild only when ammo or weapon changes
+	/// </summary>
+	protected override int BuildHash() =>
+		System.HashCode.Combine(PlayerStats.CurrentAmmo, PlayerStats.ReserveAmmo, PlayerStats.WeaponName);
+}
