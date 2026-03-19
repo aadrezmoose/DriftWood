@@ -1,377 +1,366 @@
 using Sandbox;
+using Sandbox.Citizen;
 using System.Collections.Generic;
 using System.Linq;
 
 public sealed class EnemySpawner : Component
 {
-	[Property] public float SpawnInterval { get; set; } = 3f; // Seconds between spawns
-	[Property] public int MaxEnemies { get; set; } = 5; // Max enemies alive at once
-	[Property] public float SpawnDuration { get; set; } = 60f; // Seconds to spawn for
-	[Property] public float SpawnPauseTime { get; set; } = 60f; // Seconds to pause after spawn duration ends
-	[Property] public float SpawnRadius { get; set; } = 300f; // Distance from player to spawn enemies
-	[Property] public GameObject EnemyPrefab { get; set; } // Prefab to spawn
-	[Property] public GameObject PlayerReference { get; set; } // Optional: manually assign the player
-	[Property] public bool Enabled { get; set; } = true; // Toggle spawner on/off
+	[Property] public float SpawnInterval { get; set; } = 3f;
+	[Property] public int MaxEnemies { get; set; } = 5;
+	[Property] public float SpawnDuration { get; set; } = 60f;
+	[Property] public float SpawnPauseTime { get; set; } = 60f;
+	[Property] public GameObject EnemyPrefab { get; set; }
+	[Property] public GameObject PlayerReference { get; set; }
+	[Property] public bool Enabled { get; set; } = true;
+
+	/// <summary>
+	/// If no spawn nodes are found, fall back to radial probing around the player.
+	/// Turn off once nodes are placed on all maps.
+	/// </summary>
+	[Property] public bool AllowRadialFallback { get; set; } = true;
+	[Property] public float RadialFallbackRadius { get; set; } = 900f;
+	[Property] public AIDirector Director { get; set; }
+
+	public bool IsSafeZoneActive { get; set; } = false;
 
 	private float spawnTimer = 0f;
 	private float cycleTimer = 0f;
-	private bool isSpawning = true; // Start spawning immediately
-	private List<GameObject> spawnedEnemies = new List<GameObject>();
+	private bool isSpawning = true;
+	private List<GameObject> spawnedEnemies = new();
 	private GameObject player;
-	
-	// Cache original enemy properties from the scene
+
+	// Cached prefab properties
 	private float cachedPatrolSpeed = 100f;
 	private float cachedChaseSpeed = 200f;
-	private float cachedDetectionRange = 500f;
+	private float cachedDetectionRange = 300f;
+	private float cachedSightRange = 1500f;
 	private float cachedAttackRange = 150f;
-	private float cachedAttackDamage = 15f;
+	private float cachedAttackDamage = 2f;
 	private float cachedKnockbackForce = 300f;
 	private float cachedKnockbackUpForce = 200f;
 	private Color cachedFlashColor = Color.White;
 	private float cachedFlashDuration = 0.2f;
 	private SoundEvent cachedDeathSound;
+	private SoundEvent cachedGrowlSound;
+	private SoundEvent cachedAttackSound;
+	private SoundEvent cachedFootstepSound;
 	private float cachedHeadshotStaggerMultiplier = 1.5f;
 	private List<Transform> cachedPatrolPoints = new();
 
 	protected override void OnAwake()
 	{
-		Log.Info( "EnemySpawner: OnAwake called" );
+		SafeRoom.OnPlayerEntered += OnPlayerEnteredSafeRoom;
+		SafeRoom.OnPlayerExited += OnPlayerExitedSafeRoom;
 
-		// Use manual reference if provided
 		if ( PlayerReference is not null )
 		{
 			player = PlayerReference;
-			Log.Info( "EnemySpawner: Using manually assigned player reference" );
 		}
 		else
 		{
-			// Try to find the player by looking for a PlayerMovement component
-			var playerMovement = Scene.Components.Get<PlayerMovement>();
-			if ( playerMovement is not null )
-			{
-				player = playerMovement.GameObject;
-				Log.Info( "EnemySpawner: Player found via Scene.Components" );
-			}
+			var pm = Scene.Components.Get<PlayerMovement>();
+			if ( pm is not null )
+				player = pm.GameObject;
 			else
 			{
-				// Fallback: search all GameObjects for PlayerMovement
 				foreach ( var go in Scene.GetAllComponents<PlayerMovement>() )
 				{
 					player = go.GameObject;
-					Log.Info( "EnemySpawner: Player found via GetAllComponents fallback" );
 					break;
 				}
 			}
 		}
 
 		if ( player is null )
-		{
-			Log.Warning( "EnemySpawner: Could not find player! Try manually assigning PlayerReference property." );
-		}
+			Log.Warning( "EnemySpawner: Could not find player!" );
 
-		// Cache original enemy properties from the scene
-		var originalEnemy = Scene.Components.Get<Enemy>();
+		var originalEnemy = EnemyPrefab?.Components.Get<Enemy>();
 		if ( originalEnemy is not null )
 		{
-			cachedPatrolSpeed = originalEnemy.PatrolSpeed;
-			cachedChaseSpeed = originalEnemy.ChaseSpeed;
-			cachedDetectionRange = originalEnemy.DetectionRange;
-			cachedAttackRange = originalEnemy.AttackRange;
-			cachedAttackDamage = originalEnemy.AttackDamage;
-			cachedKnockbackForce = originalEnemy.KnockbackForce;
-			cachedKnockbackUpForce = originalEnemy.KnockbackUpForce;
-			cachedFlashColor = originalEnemy.FlashColor;
-			cachedFlashDuration = originalEnemy.FlashDuration;
-			cachedDeathSound = originalEnemy.DeathSound;
+			cachedPatrolSpeed               = originalEnemy.PatrolSpeed;
+			cachedChaseSpeed                = originalEnemy.ChaseSpeed;
+			cachedDetectionRange            = originalEnemy.DetectionRange;
+			cachedSightRange                = originalEnemy.SightRange;
+			cachedAttackRange               = originalEnemy.AttackRange;
+			cachedAttackDamage              = originalEnemy.AttackDamage;
+			cachedKnockbackForce            = originalEnemy.KnockbackForce;
+			cachedKnockbackUpForce          = originalEnemy.KnockbackUpForce;
+			cachedFlashColor                = originalEnemy.FlashColor;
+			cachedFlashDuration             = originalEnemy.FlashDuration;
+			cachedDeathSound                = originalEnemy.DeathSound;
+			cachedGrowlSound                = originalEnemy.GrowlSound;
+			cachedAttackSound               = originalEnemy.AttackSound;
+			cachedFootstepSound             = originalEnemy.FootstepSound;
 			cachedHeadshotStaggerMultiplier = originalEnemy.HeadshotStaggerMultiplier;
-			cachedPatrolPoints = new List<Transform>( originalEnemy.PatrolPoints ?? new List<Transform>() );
-			Log.Info( $"EnemySpawner: Cached original enemy properties (patrol points: {cachedPatrolPoints.Count})" );
+			cachedPatrolPoints              = new List<Transform>( originalEnemy.PatrolPoints ?? new List<Transform>() );
 		}
 	}
 
 	protected override void OnUpdate()
 	{
-		// Debug: check basic state
-		if ( !Enabled )
-		{
-			Log.Warning( "EnemySpawner: Spawner is disabled!" );
-			return;
-		}
+		if ( !Enabled || player is null || EnemyPrefab is null ) return;
 
-		if ( player is null )
-		{
-			Log.Warning( "EnemySpawner: Player is null" );
-			return;
-		}
-
-		if ( EnemyPrefab is null )
-		{
-			Log.Warning( "EnemySpawner: EnemyPrefab is null" );
-			return;
-		}
-
-		// Aggressive cleanup: Remove ALL dead enemies (null, inactive, or Enemy component disabled)
-		var deadEnemies = 0;
+		// Clean up dead enemies
 		for ( int i = spawnedEnemies.Count - 1; i >= 0; i-- )
 		{
 			try
 			{
-				var enemy = spawnedEnemies[i];
-				bool isDead = false;
-
-				if ( enemy is null )
+				var e = spawnedEnemies[i];
+				bool dead = e is null || !e.Active;
+				if ( !dead )
 				{
-					isDead = true;
+					var ec = e.Components.Get<Enemy>();
+					if ( ec is null || !ec.Enabled ) dead = true;
 				}
-				else if ( !enemy.Active )
-				{
-					isDead = true;
-				}
-				else
-				{
-					var enemyComponent = enemy.Components.Get<Enemy>();
-					if ( enemyComponent is null || !enemyComponent.Enabled )
-					{
-						isDead = true;
-					}
-				}
-
-				if ( isDead )
-				{
-					spawnedEnemies.RemoveAt( i );
-					deadEnemies++;
-				}
+				if ( dead ) spawnedEnemies.RemoveAt( i );
 			}
-			catch ( System.Exception ex )
+			catch
 			{
-				Log.Warning( $"EnemySpawner: Exception during cleanup: {ex.Message}" );
 				spawnedEnemies.RemoveAt( i );
-				deadEnemies++;
 			}
-		}
-
-		if ( deadEnemies > 0 )
-		{
-			Log.Info( $"EnemySpawner: Cleaned up {deadEnemies} dead enemies. Alive: {spawnedEnemies.Count}/{MaxEnemies}" );
 		}
 
 		cycleTimer += Time.Delta;
 
-		// Check if we need to switch between spawning and pausing
 		float currentPhaseDuration = isSpawning ? SpawnDuration : SpawnPauseTime;
 		if ( cycleTimer >= currentPhaseDuration )
 		{
-			cycleTimer = 0f;
-			isSpawning = !isSpawning;
-			Log.Info( $"EnemySpawner: Switched to {(isSpawning ? "SPAWNING" : "PAUSED")} phase. Alive: {spawnedEnemies.Count}/{MaxEnemies}" );
+			cycleTimer  = 0f;
+			isSpawning  = !isSpawning;
 		}
 
-		if ( !isSpawning )
-		{
-			Log.Info( $"EnemySpawner: In PAUSE phase ({cycleTimer:F1}/{SpawnPauseTime:F1}s), not spawning" );
-			return; // Don't spawn during pause phase
-		}
+		if ( !isSpawning ) return;
 
-		// Spawn enemies - STRICT limit enforcement
 		spawnTimer += Time.Delta;
 		if ( spawnTimer >= SpawnInterval )
 		{
 			spawnTimer = 0f;
-			
-			if ( spawnedEnemies.Count >= MaxEnemies )
+			if ( spawnedEnemies.Count < MaxEnemies )
 			{
-				Log.Warning( $"EnemySpawner: BLOCKED SPAWN - At cap ({spawnedEnemies.Count}/{MaxEnemies})" );
-				return;
-			}
-
-			Log.Info( "EnemySpawner: Spawn interval reached, attempting spawn..." );
-			try
-			{
-				SpawnEnemy();
-			}
-			catch ( System.Exception ex )
-			{
-				Log.Error( $"EnemySpawner: Exception during spawn: {ex.Message}\n{ex.StackTrace}" );
+				try { SpawnEnemy(); }
+				catch ( System.Exception ex )
+				{
+					Log.Error( $"EnemySpawner: {ex.Message}\n{ex.StackTrace}" );
+				}
 			}
 		}
 	}
 
 	private void SpawnEnemy()
 	{
-		if ( EnemyPrefab is null )
+		if ( IsSafeZoneActive ) return;
+
+		var spawnPos = FindSpawnPosition();
+		if ( spawnPos == Vector3.Zero )
 		{
-			Log.Error( "EnemySpawner: No enemy prefab assigned!" );
+			Log.Info( "EnemySpawner: No valid spawn node found" );
 			return;
 		}
 
-		if ( player is null )
+		var spawnedEnemy = EnemyPrefab.Clone( spawnPos );
+		if ( spawnedEnemy is null ) return;
+
+		// Tint red
+		var modelRenderer = spawnedEnemy.Components.Get<SkinnedModelRenderer>() as ModelRenderer
+			?? spawnedEnemy.Components.Get<ModelRenderer>();
+		if ( modelRenderer is not null )
+			modelRenderer.Tint = Color.Red;
+
+		// CharacterController
+		var cc = spawnedEnemy.Components.Get<CharacterController>();
+		if ( cc is null )
 		{
-			Log.Error( "EnemySpawner: Player is null during spawn attempt!" );
-			return;
+			cc = spawnedEnemy.Components.Create<CharacterController>();
+			cc.Radius = 25f;
+			cc.Height = 100f;
+		}
+		cc.Enabled     = true;
+		cc.Velocity    = Vector3.Zero;
+		cc.IsOnGround  = true;
+
+		// Disable Rigidbody — re-enabled on death for ragdoll
+		var rb = spawnedEnemy.Components.Get<Rigidbody>();
+		if ( rb != null ) rb.Enabled = false;
+
+		// BoxCollider for bullet hits
+		if ( spawnedEnemy.Components.Get<BoxCollider>() is null )
+		{
+			var col    = spawnedEnemy.Components.Create<BoxCollider>();
+			col.Scale  = new Vector3( 40f, 40f, 100f );
+			col.Center = new Vector3( 0f, 0f, 50f );
 		}
 
-		// Random spawn position around the player
-		float angle = Game.Random.Float( 0f, 360f );
-		float distance = Game.Random.Float( SpawnRadius * 0.8f, SpawnRadius );
-		
-		// Ensure minimum distance from player
-		if ( distance < 200f )
-		{
-			distance = 200f;
-		}
-		
-		try
-		{
-			Log.Info( "EnemySpawner: Starting spawn..." );
+		// Headshot zone
+		var headHitbox           = new GameObject( true, "HeadshotZone" );
+		headHitbox.Parent        = spawnedEnemy;
+		headHitbox.LocalPosition = new Vector3( 0f, 0f, 80f );
+		headHitbox.Tags.Add( "headzone" );
+		var headCol              = headHitbox.Components.Create<BoxCollider>();
+		headCol.Scale            = new Vector3( 30f, 30f, 30f );
+		var hsZone               = headHitbox.Components.Create<HeadshotZone>();
+		hsZone.DamageMultiplier  = 2.0f;
+		hsZone.TargetEntity      = spawnedEnemy;
 
-			// Start raycast from high above to find ground level
-			Vector3 raycastStart = player.Transform.Position + new Vector3(
-				(float)System.Math.Cos( angle * System.Math.PI / 180f ) * distance,
-				(float)System.Math.Sin( angle * System.Math.PI / 180f ) * distance,
-				500f  // Raycast from high in the air
+		// HealthComponent
+		var health = spawnedEnemy.Components.Get<HealthComponent>();
+		if ( health is null )
+		{
+			health               = spawnedEnemy.Components.Create<HealthComponent>();
+			health.MaxHealth     = 100f;
+			health.CurrentHealth = 100f;
+			health.IsPlayer      = false;
+		}
+		else
+		{
+			health.CurrentHealth = health.MaxHealth;
+		}
+
+		// Enemy component
+		var allEnemies = spawnedEnemy.Components.GetAll<Enemy>().ToList();
+		var enemy      = allEnemies.Count > 0
+			? allEnemies.First()
+			: spawnedEnemy.Components.Create<Enemy>();
+
+		enemy.Enabled = true;
+
+		float speedVariance                      = Game.Random.Float( 0.85f, 1.15f );
+		enemy.PlayerReference                    = player;
+		enemy.PatrolSpeed                        = cachedPatrolSpeed * speedVariance;
+		enemy.ChaseSpeed                         = cachedChaseSpeed * speedVariance;
+		enemy.DetectionRange                     = cachedDetectionRange;
+		enemy.SightRange                         = cachedSightRange;
+		enemy.AttackRange                        = cachedAttackRange;
+		enemy.AttackDamage                       = cachedAttackDamage;
+		enemy.KnockbackForce                     = cachedKnockbackForce;
+		enemy.KnockbackUpForce                   = cachedKnockbackUpForce;
+		enemy.FlashColor                         = cachedFlashColor;
+		enemy.FlashDuration                      = cachedFlashDuration;
+		enemy.HeadshotStaggerMultiplier          = cachedHeadshotStaggerMultiplier;
+		enemy.PatrolPoints                       = new List<Transform>( cachedPatrolPoints );
+
+		// Re-wire animation helper
+		var skinned = spawnedEnemy.Components.Get<SkinnedModelRenderer>();
+		if ( skinned is not null )
+		{
+			var anim   = spawnedEnemy.Components.GetOrCreate<CitizenAnimationHelper>();
+			anim.Target = skinned;
+		}
+
+		spawnedEnemies.Add( spawnedEnemy );
+		Log.Info( $"EnemySpawner: Spawned at {spawnPos} (Z={spawnPos.z:F0}). Alive: {spawnedEnemies.Count}/{MaxEnemies}" );
+	}
+
+	/// <summary>
+	/// Picks an eligible SpawnNode. Falls back to radial probing if no nodes exist.
+	/// </summary>
+	private Vector3 FindSpawnPosition()
+	{
+		var nodes = SpawnNode.All;
+
+		if ( nodes.Count > 0 )
+		{
+			// Gather eligible nodes
+			var eligible = nodes.Where( n => n.IsEligible( player ) ).ToList();
+
+			if ( eligible.Count == 0 )
+			{
+				Log.Info( "EnemySpawner: No eligible spawn nodes (all visible or too close)" );
+				return Vector3.Zero;
+			}
+
+			// Director-driven weight:
+			// At Rest (intensity=0)  → prefer far nodes (ambush)
+			// At Peak (intensity=1)  → prefer close nodes (pressure)
+			float intensity = Director?.CurrentIntensity ?? 0f;
+			float maxDist   = eligible.Max( n => Vector3.DistanceBetween( player.WorldPosition, n.WorldPosition ) );
+			if ( maxDist < 1f ) maxDist = 1f;
+
+			float ComputeWeight( SpawnNode n )
+			{
+				float dist           = Vector3.DistanceBetween( player.WorldPosition, n.WorldPosition );
+				float normalizedDist = dist / maxDist; // 0 = close, 1 = far
+				// Lerp: Rest prefers far (normalizedDist), Peak prefers close (1-normalizedDist)
+				float distWeight = MathX.Lerp( normalizedDist, 1f - normalizedDist, intensity );
+				return System.Math.Max( 0.01f, n.Weight * distWeight );
+			}
+
+			float totalWeight = eligible.Sum( n => ComputeWeight( n ) );
+			float roll        = Game.Random.Float( 0f, totalWeight );
+			float cumulative  = 0f;
+
+			foreach ( var node in eligible )
+			{
+				cumulative += ComputeWeight( node );
+				if ( roll <= cumulative )
+					return node.WorldPosition + Vector3.Up * 5f;
+			}
+
+			return eligible.Last().WorldPosition + Vector3.Up * 5f;
+		}
+
+		// ── Radial fallback ────────────────────────────────────────────
+		if ( !AllowRadialFallback ) return Vector3.Zero;
+
+		var fwd       = player.WorldRotation.Forward;
+		float facingDeg = (float)(System.Math.Atan2( fwd.y, fwd.x ) * 180.0 / System.Math.PI);
+
+		Vector3 bestPos    = Vector3.Zero;
+
+		for ( int attempt = 0; attempt < 12; attempt++ )
+		{
+			float angle    = attempt < 8
+				? facingDeg + Game.Random.Float( -150f, 150f )
+				: Game.Random.Float( 0f, 360f );
+
+			float distance = Game.Random.Float( RadialFallbackRadius * 0.75f, RadialFallbackRadius );
+			if ( distance < 350f ) distance = 350f;
+
+			Vector3 rayOrigin = new Vector3(
+				player.WorldPosition.x + (float)System.Math.Cos( angle * System.Math.PI / 180f ) * distance,
+				player.WorldPosition.y + (float)System.Math.Sin( angle * System.Math.PI / 180f ) * distance,
+				player.WorldPosition.z + 20f
 			);
-			Log.Info( "EnemySpawner: Raycast start calculated" );
 
-			// Raycast down to find ground level
-			var trace = Scene.Trace
-				.Ray( raycastStart, raycastStart + Vector3.Down * 1000f )
+			var ground = Scene.Trace
+				.Ray( rayOrigin, rayOrigin + Vector3.Down * 500f )
+				.WithoutTags( "trigger" )
 				.Run();
-			
-			Log.Info( "EnemySpawner: Raycast completed" );
 
-			// Reject spawn if trace doesn't hit (no ground found)
-			if ( !trace.Hit )
-			{
-				Log.Warning( $"EnemySpawner: No ground found at spawn position, rejecting spawn" );
-				return;
-			}
-			
-			Vector3 spawnPos = trace.EndPosition + Vector3.Up * 80f;  // Place high above ground to guarantee clear space
-			
-			// Validate spawn position - reject if it's below a certain threshold (likely inside geometry)
-			if ( spawnPos.z < 20f )
-			{
-				Log.Warning( $"EnemySpawner: Spawn position too low ({spawnPos.z:F1}), rejecting spawn" );
-				return;
-			}
-			
-			Log.Info( "EnemySpawner: Spawn position calculated at {0}" );
+			if ( !ground.Hit ) continue;
 
-			// Instantiate the enemy
-			var spawnedEnemy = EnemyPrefab.Clone( spawnPos );
-			Log.Info( "EnemySpawner: Enemy cloned" );
+			Vector3 candidate = ground.EndPosition + Vector3.Up * 5f;
+			if ( candidate.z < player.WorldPosition.z - 50f ) continue;
 
-			if ( spawnedEnemy is null )
-			{
-				Log.Error( "EnemySpawner: Failed to clone prefab!" );
-				return;
-			}
+			var los = Scene.Trace
+				.Ray( candidate + Vector3.Up * 60f, player.WorldPosition + Vector3.Up * 60f )
+				.WithoutTags( "trigger" )
+				.Run();
 
-			// 1. Set color to red FIRST (before Enemy.OnAwake runs)
-			var modelRenderer = spawnedEnemy.Components.Get<ModelRenderer>();
-			if ( modelRenderer is not null )
-			{
-				modelRenderer.Tint = Color.Red;
-			}
-			Log.Info( "EnemySpawner: Model renderer set" );
+			if ( los.Hit )
+				return candidate; // hidden — use immediately
 
-			// 2. Ensure CharacterController exists (BEFORE creating Enemy)
-			var characterController = spawnedEnemy.Components.Get<CharacterController>();
-			if ( characterController is null )
-			{
-				characterController = spawnedEnemy.Components.Create<CharacterController>();
-				characterController.Radius = 25f;
-				characterController.Height = 100f;
-			}
-			characterController.Enabled = true;
-			characterController.Velocity = Vector3.Zero;
-			characterController.IsOnGround = true;  // Start on ground
-			Log.Info( "EnemySpawner: Character controller setup" );
-
-			// 3. Setup Rigidbody (create if needed for ragdoll when enemy dies)
-			try
-			{
-				var rigidbody = spawnedEnemy.Components.Get<Rigidbody>();
-				if ( rigidbody is null )
-				{
-					rigidbody = spawnedEnemy.Components.Create<Rigidbody>();
-				}
-				rigidbody.Enabled = true;  // Enable for ragdoll physics when enemy dies
-				Log.Info( "EnemySpawner: Rigidbody setup complete" );
-			}
-			catch ( System.Exception rbEx )
-			{
-				Log.Warning( $"EnemySpawner: Could not setup rigidbody: {rbEx.Message}" );
-			}
-
-			// 4. Ensure HealthComponent exists (required by Enemy)
-			var healthComponent = spawnedEnemy.Components.Get<HealthComponent>();
-			if ( healthComponent is null )
-			{
-				healthComponent = spawnedEnemy.Components.Create<HealthComponent>();
-				healthComponent.MaxHealth = 100f;
-				healthComponent.CurrentHealth = 100f;
-				healthComponent.IsPlayer = false;
-			}
-			else
-			{
-				// Reset health if component exists
-				healthComponent.CurrentHealth = healthComponent.MaxHealth;
-			}
-			Log.Info( "EnemySpawner: Health component setup" );
-
-			// 5. Now enable or create Enemy component
-			var allEnemies = spawnedEnemy.Components.GetAll<Enemy>().ToList();
-			Log.Info( $"EnemySpawner: Found {allEnemies.Count} Enemy components on clone" );
-
-			Enemy spawnedEnemyComponent = null;
-			
-			if ( allEnemies.Count > 0 )
-			{
-				spawnedEnemyComponent = allEnemies.First();
-				spawnedEnemyComponent.Enabled = true;
-				Log.Info( "EnemySpawner: Enabled existing Enemy component" );
-			}
-			else
-			{
-				spawnedEnemyComponent = spawnedEnemy.Components.Create<Enemy>();
-				Log.Info( "EnemySpawner: Created new Enemy component" );
-			}
-
-			// 6. Apply cached properties to the spawned enemy
-			if ( spawnedEnemyComponent is not null )
-			{
-				spawnedEnemyComponent.PlayerReference = player;  // Set the correct player reference
-				spawnedEnemyComponent.PatrolSpeed = cachedPatrolSpeed;
-				spawnedEnemyComponent.ChaseSpeed = cachedChaseSpeed;
-				spawnedEnemyComponent.DetectionRange = cachedDetectionRange;
-				spawnedEnemyComponent.AttackRange = cachedAttackRange;
-				spawnedEnemyComponent.AttackDamage = cachedAttackDamage;
-				spawnedEnemyComponent.KnockbackForce = cachedKnockbackForce;
-				spawnedEnemyComponent.KnockbackUpForce = cachedKnockbackUpForce;
-				spawnedEnemyComponent.FlashColor = cachedFlashColor;
-				spawnedEnemyComponent.FlashDuration = cachedFlashDuration;
-				spawnedEnemyComponent.DeathSound = cachedDeathSound;
-				spawnedEnemyComponent.HeadshotStaggerMultiplier = cachedHeadshotStaggerMultiplier;
-				spawnedEnemyComponent.PatrolPoints = new List<Transform>( cachedPatrolPoints );
-				Log.Info( $"EnemySpawner: Applied cached properties to spawned enemy (patrol points: {spawnedEnemyComponent.PatrolPoints.Count})" );
-			}
-
-			spawnedEnemies.Add( spawnedEnemy );
-			Log.Info( $"EnemySpawner: Spawned enemy at distance {distance:F0}. Total: {spawnedEnemies.Count}/{MaxEnemies}" );
+			if ( bestPos == Vector3.Zero )
+				bestPos = candidate; // visible fallback
 		}
-		catch ( System.Exception ex )
-		{
-			Log.Error( $"EnemySpawner: Exception in spawn logic: {ex.Message}\n{ex.StackTrace}" );
-		}
+
+		return bestPos;
 	}
 
 	public int GetAliveEnemyCount()
 	{
-		// Validate list integrity
 		spawnedEnemies.RemoveAll( e => e is null || !e.Active );
 		return spawnedEnemies.Count;
 	}
+
 	public bool IsSpawning() => isSpawning;
 	public float GetPhaseProgress() => cycleTimer / (isSpawning ? SpawnDuration : SpawnPauseTime);
+
+	void OnPlayerEnteredSafeRoom( SafeRoom safeRoom ) => IsSafeZoneActive = true;
+	void OnPlayerExitedSafeRoom( SafeRoom safeRoom )  => IsSafeZoneActive = false;
+
+	protected override void OnDestroy()
+	{
+		SafeRoom.OnPlayerEntered -= OnPlayerEnteredSafeRoom;
+		SafeRoom.OnPlayerExited  -= OnPlayerExitedSafeRoom;
+	}
 }

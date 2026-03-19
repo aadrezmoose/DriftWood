@@ -19,6 +19,13 @@ public sealed class PlayerMovement : Component
 	[Property] public float StaminaRecoverRate { get; set; } = 0.5f; // per second when not sprinting
 	[Property] public float JumpCooldown { get; set; } = 0.15f; // small buffer between jumps
 
+	// Footstep sounds
+	[Property] public SoundEvent FootstepWalk { get; set; }
+	[Property] public SoundEvent FootstepRun { get; set; }
+	[Property] public SoundEvent FootstepCrouch { get; set; }
+	[Property] public float WalkStepInterval { get; set; } = 0.5f;
+	[Property] public float RunStepInterval { get; set; } = 0.32f;
+	[Property] public float CrouchStepInterval { get; set; } = 0.65f;
 
 	//Object Refs
 
@@ -29,10 +36,15 @@ public sealed class PlayerMovement : Component
 	public Vector3 WishVelocity = Vector3.Zero;
 	public bool isCrouching = false;
 	public bool isSprinting = false;
+	public bool IsPinned { get; set; } = false; // Set by Hunter when player is pinned
+
+	public Vector3 Velocity => characterController?.Velocity ?? Vector3.Zero;
+	public bool IsOnGround => characterController?.IsOnGround ?? false;
 
 	private float currentStamina;
 	private float jumpCooldownRemaining = 0f;
 	private float originalHeight = 72f;
+	private float footstepTimer = 0f;
 
 	[Property]
 	public bool EnableDiagnostics { get; set; } = true;
@@ -62,6 +74,13 @@ public sealed class PlayerMovement : Component
 	protected override void OnUpdate()
 	{
 		if ( !Enabled ) return;
+
+		// If pinned by Hunter, disable movement entirely
+		if ( IsPinned )
+		{
+			WishVelocity = Vector3.Zero;
+			return;
+		}
 
 		// Try to recover CharacterController reference if it's null (editor play toggles can leave components in odd states)
 		if (characterController is null)
@@ -133,6 +152,7 @@ public sealed class PlayerMovement : Component
 
 		RotateBody();
 		UpdateAnimations();
+		UpdateFootsteps();
 		// allow crouch state transitions (press/release logic)
 		UpdateCrouch();
 	}
@@ -152,8 +172,8 @@ public sealed class PlayerMovement : Component
 		
 		// use Head if available, otherwise fall back to Body; if neither, use identity rotation
 		Rotation rot;
-		if (Head is not null) rot = Head.Transform.Rotation;
-		else if (Body is not null) rot = Body.Transform.Rotation;
+		if (Head is not null) rot = Head.WorldRotation;
+		else if (Body is not null) rot = Body.WorldRotation;
 		else rot = Rotation.Identity;
 		if(Input.Down( "Forward" ))		WishVelocity += rot.Forward;
 		if(Input.Down( "Backward"))		WishVelocity += rot.Backward;
@@ -165,7 +185,8 @@ public sealed class PlayerMovement : Component
 
 		// determine speed based on state and stamina
 		float targetSpeed = Speed;
-		if (isCrouching) targetSpeed = CrouchSpeed;
+		if ( PlayerStats.IsIncapacitated ) targetSpeed = CrouchSpeed * 0.5f;
+		else if (isCrouching) targetSpeed = CrouchSpeed;
 		else if (isSprinting) targetSpeed = RunSpeed;
 		else targetSpeed = Speed;
 
@@ -209,13 +230,19 @@ public sealed class PlayerMovement : Component
 	void RotateBody() {
 		if(Body is null) return;
 
-		var targetAngle = new Angles(0, Head.Transform.Rotation.Yaw(), 0).ToRotation();
-		float rotateDifference = Body.Transform.Rotation.Distance( targetAngle );
+		var targetAngle = new Angles(0, Head.WorldRotation.Yaw(), 0).ToRotation();
+		float rotateDifference = Body.WorldRotation.Distance( targetAngle );
 
-		if(rotateDifference > 50f || characterController.Velocity.Length > 10f) 
+		if(rotateDifference > 50f || characterController.Velocity.Length > 10f)
 		{
-			Body.Transform.Rotation = Rotation.Lerp(Body.Transform.Rotation, targetAngle, Time.Delta * 2f);
-		}	
+			Body.WorldRotation = Rotation.Lerp(Body.WorldRotation, targetAngle, Time.Delta * 2f);
+
+			// CitizenAnimationHelper is on the Player root — rotate it to match body facing.
+			// Save and restore Head world rotation so the camera doesn't spin when root changes.
+			var savedHeadRot = Head.WorldRotation;
+			GameObject.WorldRotation = Body.WorldRotation;
+			Head.WorldRotation = savedHeadRot;
+		}
 	}
 
 	void Jump() {
@@ -225,26 +252,78 @@ public sealed class PlayerMovement : Component
 		// reset vertical velocity and apply a consistent upward impulse
 		characterController.Velocity = characterController.Velocity.WithZ(0);
 		characterController.Punch(Vector3.Up * JumpForce);
-		animationHelper?.TriggerJump();
+		if ( animationHelper is not null && Body?.Components.Get<SkinnedModelRenderer>() is not null )
+			animationHelper.TriggerJump();
 		jumpCooldownRemaining = JumpCooldown;
 
 		// Drain stamina on jump
 		currentStamina = MathF.Max(0f, currentStamina - 0.5f);
 	}
 
-	void UpdateAnimations() 
+	void UpdateAnimations()
 	{
-		if(animationHelper is null) return;
+		if ( animationHelper is null || characterController is null || Head is null ) return;
+		// SkinnedModelRenderer may be on the Player root, not the Body child
+		var smr = Components.Get<SkinnedModelRenderer>()
+			?? Body?.Components.Get<SkinnedModelRenderer>();
+		if ( smr is null ) return;
+
+		// Downed state: full crouch, no movement, hold pistol
+		if ( PlayerStats.IsIncapacitated )
+		{
+			animationHelper.WithWishVelocity( Vector3.Zero );
+			animationHelper.WithVelocity( Vector3.Zero );
+			animationHelper.AimAngle = Head.WorldRotation;
+			animationHelper.IsGrounded = true;
+			animationHelper.HoldType = CitizenAnimationHelper.HoldTypes.Pistol;
+			animationHelper.DuckLevel = 1.0f;
+			animationHelper.MoveStyle = CitizenAnimationHelper.MoveStyles.Run;
+			return;
+		}
 
 		animationHelper.WithWishVelocity(WishVelocity);
 		animationHelper.WithVelocity(characterController.Velocity);
-		animationHelper.AimAngle = Head.Transform.Rotation;
+		animationHelper.AimAngle = Head.WorldRotation;
 		animationHelper.IsGrounded = characterController.IsOnGround;
-		animationHelper.WithLook(Head.Transform.Rotation.Forward, 1f, 0.75f, 0.5f);
+		animationHelper.WithLook(Head.WorldRotation.Forward, 1f, 0.75f, 0.5f);
 		animationHelper.MoveStyle = CitizenAnimationHelper.MoveStyles.Run;
 		animationHelper.DuckLevel  = isCrouching ? 1f : 0f;
-
 	}
+	void UpdateFootsteps()
+	{
+		if ( characterController is null ) return;
+
+		// Short downward trace — works even if the ground plane has no CharacterController-detected collision
+		var groundTrace = Scene.Trace
+			.Ray( WorldPosition + Vector3.Up * 5f, WorldPosition - Vector3.Up * 25f )
+			.WithoutTags( "player", "trigger" )
+			.Run();
+		if ( !groundTrace.Hit ) return;
+
+		// Only step when actually moving horizontally
+		var flatVel = characterController.Velocity.WithZ( 0 );
+		if ( flatVel.Length < 20f )
+		{
+			footstepTimer = 0f;
+			return;
+		}
+
+		float interval = isCrouching ? CrouchStepInterval : (isSprinting ? RunStepInterval : WalkStepInterval);
+		footstepTimer -= Time.Delta;
+
+		if ( footstepTimer <= 0f )
+		{
+			footstepTimer = interval;
+
+			SoundEvent sound = isCrouching ? FootstepCrouch : (isSprinting ? FootstepRun : FootstepWalk);
+			// Fall back: crouch→walk, run→walk if not assigned
+			sound ??= FootstepWalk;
+
+			if ( sound != null )
+				Sound.Play( sound, WorldPosition );
+		}
+	}
+
 	void UpdateCrouch()
 	{
 		if(characterController is null) return;

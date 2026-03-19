@@ -5,7 +5,7 @@
   <Project Path="Code/my_project.csproj" />
   <Project Path="Editor/my_project.editor.csproj" />
   <Folder Name="/Addons/">
-    <Project Path="E:/SteamLibrary/steamapps/common/sbox/addons/base/Code/Base Library.csproj" />
+    <Project Path="E:/SteamLibrary/steamapps/common/sbox/addons/base/code/Base Library.csproj" />
   </Folder>
   <Folder Name="/Tools/">
     <Project Path="E:/SteamLibrary/steamapps/common/sbox/addons/tools/Code/Base Editor Library.csproj" />

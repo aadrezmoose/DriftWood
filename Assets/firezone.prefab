@@ -1,0 +1,43 @@
+{
+  "RootObject": {
+    "__guid": "37a27479-913b-474b-8bd3-a084b4bd4f9a",
+    "__version": 2,
+    "Flags": 0,
+    "Name": "FireZone",
+    "Position": "0,0,0",
+    "Rotation": "0,0,0,1",
+    "Scale": "1,1,1",
+    "Tags": "",
+    "Enabled": true,
+    "NetworkMode": 2,
+    "NetworkFlags": 0,
+    "NetworkOrphaned": 0,
+    "NetworkTransmit": true,
+    "OwnerTransfer": 1,
+    "Components": [
+      {
+        "__type": "FireZone",
+        "__guid": "37a0275e-3c05-4ed6-bf76-cf1234fefce0",
+        "__enabled": true,
+        "Flags": 0,
+        "BurnSound": null,
+        "DamagePerSecond": 8,
+        "Duration": 6,
+        "OnComponentDestroy": null,
+        "OnComponentDisabled": null,
+        "OnComponentEnabled": null,
+        "OnComponentFixedUpdate": null,
+        "OnComponentStart": null,
+        "OnComponentUpdate": null
+      }
+    ],
+    "Children": []
+  },
+  "ResourceVersion": 2,
+  "ShowInMenu": false,
+  "MenuPath": null,
+  "MenuIcon": null,
+  "DontBreakAsTemplate": false,
+  "__references": [],
+  "__version": 2
+}

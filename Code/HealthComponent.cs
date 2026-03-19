@@ -1,7 +1,7 @@
 using System;
 using Sandbox;
 
-public sealed class HealthComponent : Component, IHealth
+public sealed class HealthComponent : Component
 {
 	[Property]
 	public float MaxHealth { get; set; } = 100f;
@@ -72,11 +72,20 @@ public sealed class HealthComponent : Component, IHealth
 
 		CurrentHealth = MathF.Max( 0f, CurrentHealth - damageAmount );
 
+		if ( IsPlayer )
+			PlayerStats.TotalDamageTaken += (int)damageAmount;
+
 		OnDamageTaken?.Invoke( damageAmount );
 		OnDamageTakenWithAttacker?.Invoke( damageAmount, attacker );
 
 		if ( CurrentHealth <= 0f )
 		{
+			// If already incapacitated, don't trigger Die() again — IncapacitationComponent handles death
+			if ( IsPlayer && PlayerStats.IsIncapacitated )
+			{
+				CurrentHealth = 0.1f;
+				return;
+			}
 			Die( attacker );
 		}
 
@@ -85,11 +94,6 @@ public sealed class HealthComponent : Component, IHealth
 			PlayerStats.CurrentHealth = CurrentHealth;
 		}
 	}
-
-	/// <summary>
-	/// Explicit interface implementation for IHealth.
-	/// </summary>
-	void IHealth.TakeDamage( float damage, GameObject attacker = null ) => TakeDamage( damage, attacker );
 
 	/// <summary>
 	/// Heal the player.
@@ -116,6 +120,19 @@ public sealed class HealthComponent : Component, IHealth
 		if ( isDead )
 			return;
 
+		// Check for incapacitation before actual death (player only)
+		if ( IsPlayer )
+		{
+			var incap = Components.GetInDescendantsOrSelf<IncapacitationComponent>()
+			         ?? GameObject.Parent?.Components.GetInDescendantsOrSelf<IncapacitationComponent>();
+			if ( incap != null && incap.CanBeIncapacitated() )
+			{
+				incap.Incapacitate();
+				CurrentHealth = 1f;
+				return;
+			}
+		}
+
 		isDead = true;
 		CurrentHealth = 0f;
 
@@ -131,6 +148,8 @@ public sealed class HealthComponent : Component, IHealth
 		if ( IsPlayer )
 		{
 			PlayerStats.CurrentHealth = 0f;
+			PlayerStats.IsDead = true;
+			PlayerStats.IsIncapacitated = false;
 		}
 
 		Log.Info( $"Player died! Attacker: {(attacker?.Name ?? "Unknown")}" );

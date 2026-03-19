@@ -1,0 +1,37 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace Sandbox
+
+<root>
+	<div class="inv-column">
+		@for ( int i = 0; i < 2; i++ )
+		{
+			var name = i < PlayerStats.CarriedItems.Count ? PlayerStats.CarriedItems[i] : null;
+			var isActive = i == 0;
+			<div class="inv-slot @(name != null ? "filled" : "empty") @(isActive && name != null ? "active" : "")">
+				<div class="inv-slot-icon">@SlotIcon(name)</div>
+				<div class="inv-slot-name">@(name ?? "Empty")</div>
+				@if ( isActive && name != null )
+				{
+					<div class="inv-use-hint">[E] Use</div>
+				}
+			</div>
+		}
+	</div>
+</root>
+
+@code {
+	protected override int BuildHash() =>
+		System.HashCode.Combine( PlayerStats.CarriedItems.Count,
+			PlayerStats.CarriedItems.Count > 0 ? PlayerStats.CarriedItems[0] : "",
+			PlayerStats.CarriedItems.Count > 1 ? PlayerStats.CarriedItems[1] : "" );
+
+	private string SlotIcon( string itemName ) => itemName switch
+	{
+		"Health Kit"  => "+",
+		"Pain Pills"  => "P",
+		"Ammo Pile"   => "A",
+		_             => "?"
+	};
+}

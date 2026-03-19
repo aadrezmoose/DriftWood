@@ -1,50 +1,266 @@
 HUD
 {
+	font-family: Poppins, sans-serif;
 	font-weight: bold;
+	pointer-events: none;
 
-	.health-container
+	// ── Left: Inventory column ─────────────────────────────────────────
+	.inv-column
 	{
 		position: absolute;
-		bottom: 40px;
-		left: 8px;
-		min-width: 160px;
-		padding: 6px 10px;
-		background: rgba(0,0,0,0.35);
-		border-radius: 8px;
-
-		.health
-		{
-			color: #fff;
-			font-family: Poppins;
-
-			.health-label { font-size: 11px; margin-bottom: 4px; }
-			.health-bar { width: 100%; height: 16px; background: rgba(0, 0, 0, 0.5); border: 1px solid #444; border-radius: 6px; overflow: hidden; }
-			.health-fill { height: 100%; background: linear-gradient(90deg, #ff0000, #aa0000); width: 0%; transition: width 0.1s linear; box-shadow: 0 0 8px rgba(255, 0, 0, 0.6); }			
-		}
+		left: 16px;
+		bottom: 90px;
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
 	}
 
-	.stamina-container
+	.inv-slot
+	{
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 8px;
+		padding: 5px 10px 5px 6px;
+		border-radius: 5px;
+		min-width: 155px;
+		background: rgba(0, 0, 0, 0.5);
+		border: 1px solid rgba(255, 255, 255, 0.07);
+	}
+
+	.inv-empty { opacity: 0.35; }
+
+	.inv-active
+	{
+		border-color: rgba(255, 200, 50, 0.55);
+		background: rgba(0, 0, 0, 0.65);
+	}
+
+	.inv-icon
+	{
+		width: 26px;
+		height: 26px;
+		border-radius: 4px;
+		background: rgba(255, 255, 255, 0.08);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 15px;
+		color: #888;
+		overflow: hidden;
+
+		img
+		{
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+			filter: brightness(0.85);
+		}
+
+		.inv-filled & { background: rgba(0, 200, 100, 0.2); color: #00ff88; }
+		.inv-active & { background: rgba(255, 200, 50, 0.2); color: #ffc832; }
+		.inv-active & img { filter: brightness(1.1); }
+	}
+
+	.inv-name
+	{
+		font-size: 12px;
+		font-weight: bold;
+		color: #999;
+		flex: 1;
+
+		.inv-empty & { color: #444; }
+		.inv-filled & { color: #ddd; }
+		.inv-active & { color: #fff; }
+	}
+
+	.inv-hint
+	{
+		font-size: 10px;
+		color: #ffc832;
+		opacity: 0.75;
+	}
+
+	// ── Bottom-left: health / stamina / bleed ──────────────────────────
+	.bottom-left
 	{
 		position: absolute;
-		bottom: 8px;
-		left: 8px;
-		min-width: 160px;
-		padding: 6px 10px;
-		background: rgba(0,0,0,0.35);
-		border-radius: 8px;
-
-		.stamina
-		{
-			color: #fff;
-			font-family: Poppins;
-
-			.stamina-label { font-size: 11px; margin-bottom: 4px; }
-			.stamina-bar { width: 100%; height: 16px; background: rgba(0, 0, 0, 0.5); border: 1px solid #444; border-radius: 6px; overflow: hidden; }
-			.stamina-fill { height: 100%; background: linear-gradient(90deg, #00ff00, #00aa00); width: 0%; transition: width 0.1s linear; box-shadow: 0 0 8px rgba(0, 255, 0, 0.6); }
-			.stamina-text { font-size: 11px; margin-top: 4px; }
-		}
+		bottom: 24px;
+		left: 20px;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		min-width: 200px;
 	}
 
+	.bar-row
+	{
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.bar-label
+	{
+		font-size: 11px;
+		color: rgba(255,255,255,0.6);
+		width: 32px;
+		text-align: right;
+		letter-spacing: 1px;
+	}
+
+	.bar-track
+	{
+		flex: 1;
+		height: 10px;
+		background: rgba(0,0,0,0.5);
+		border-radius: 5px;
+		overflow: hidden;
+		border: 1px solid rgba(255,255,255,0.1);
+	}
+
+	.bar-fill
+	{
+		height: 100%;
+		border-radius: 5px;
+		transition: width 0.15s ease;
+	}
+
+	.health-fill  { background: linear-gradient(90deg, #cc0000, #ff4444); box-shadow: 0 0 6px rgba(255,60,60,0.7); }
+	.stamina-fill { background: linear-gradient(90deg, #007700, #00dd00); box-shadow: 0 0 6px rgba(0,220,0,0.5); }
+	.bleedout-fill { background: linear-gradient(90deg, #880000, #ff0000); box-shadow: 0 0 8px rgba(255,0,0,0.9); }
+
+	.bar-value
+	{
+		font-size: 11px;
+		color: #fff;
+		width: 28px;
+	}
+
+	.incap-row { margin-top: 4px; }
+	.incap-label { color: #ff4444; }
+	.incap-value { color: #ff4444; }
+
+	// ── Bottom-right: ammo ─────────────────────────────────────────────
+	.bottom-right
+	{
+		position: absolute;
+		bottom: 24px;
+		right: 20px;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 2px;
+		min-width: 140px;
+		overflow: visible;
+	}
+
+	.weapon-name
+	{
+		font-size: 13px;
+		color: rgba(255,255,255,0.55);
+		letter-spacing: 2px;
+		text-transform: uppercase;
+	}
+
+	.ammo-row
+	{
+		display: flex;
+		flex-direction: row;
+		align-items: baseline;
+		gap: 2px;
+	}
+
+	.ammo-current
+	{
+		font-size: 32px;
+		color: #ffffff;
+		line-height: 1;
+		min-width: 40px;
+		text-align: right;
+	}
+
+	.ammo-sep
+	{
+		font-size: 20px;
+		color: rgba(255,255,255,0.4);
+	}
+
+	.ammo-reserve
+	{
+		font-size: 20px;
+		color: rgba(255,255,255,0.6);
+	}
+
+	.carried-item
+	{
+		font-size: 12px;
+		color: #ffdd88;
+		letter-spacing: 1px;
+	}
+
+	// ── Directional damage indicators ──────────────────────────────────
+	.damage-indicator-container
+	{
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 280px;
+		height: 280px;
+		margin-left: -140px;
+		margin-top: -140px;
+		pointer-events: none;
+	}
+
+	.damage-indicator
+	{
+		position: absolute;
+		top: 8px;
+		left: 125px;
+		width: 30px;
+		height: 55px;
+		transform-origin: 15px 132px;
+		background: linear-gradient( to bottom, rgba(255, 30, 30, 0.9), rgba(255, 30, 30, 0) );
+	}
+
+	// ── Pickup hint ────────────────────────────────────────────────────
+	.pickup-hint
+	{
+		position: absolute;
+		bottom: 120px;
+		left: 50%;
+		transform: translateX(-50%);
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 8px;
+		background: rgba(0, 0, 0, 0.6);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 6px;
+		padding: 8px 18px;
+		pointer-events: none;
+	}
+
+	.pickup-key
+	{
+		font-size: 17px;
+		font-weight: bold;
+		color: #111;
+		background: #ffc832;
+		border-radius: 4px;
+		padding: 2px 10px;
+		letter-spacing: 1px;
+	}
+
+	.pickup-label
+	{
+		font-size: 17px;
+		color: rgba(255, 255, 255, 0.9);
+		letter-spacing: 1px;
+	}
+
+	// ── Crosshair ──────────────────────────────────────────────────────
 	.crosshair
 	{
 		position: absolute;
@@ -55,91 +271,131 @@ HUD
 		margin-left: -25px;
 		margin-top: -25px;
 		pointer-events: none;
-		z-index: 9999;
 
 		.crosshair-dot
 		{
 			position: absolute;
-			top: 50%;
-			left: 50%;
-			width: 4px;
-			height: 4px;
-			margin-left: -2px;
-			margin-top: -2px;
+			top: 50%; left: 50%;
+			width: 4px; height: 4px;
+			margin-left: -2px; margin-top: -2px;
 			background: #00ff00;
 			border-radius: 50%;
-			box-shadow: 0 0 4px rgba(0, 0, 0, 1);
+			box-shadow: 0 0 3px #000;
 		}
 
 		.crosshair-line
 		{
 			position: absolute;
 			background: #00ff00;
-			box-shadow: 0 0 4px rgba(0, 0, 0, 1);
+			box-shadow: 0 0 3px #000;
 		}
 
-		.crosshair-top
-		{
-			top: 0;
-			left: 50%;
-			width: 3px;
-			height: 10px;
-			margin-left: -1.5px;
-		}
+		.crosshair-top    { top: 0;    left: 50%; width: 2px; height: 10px; margin-left: -1px; }
+		.crosshair-bottom { bottom: 0; left: 50%; width: 2px; height: 10px; margin-left: -1px; }
+		.crosshair-left   { left: 0;   top: 50%;  width: 10px; height: 2px; margin-top: -1px; }
+		.crosshair-right  { right: 0;  top: 50%;  width: 10px; height: 2px; margin-top: -1px; }
+	}
 
-		.crosshair-bottom
-		{
-			bottom: 0;
-			left: 50%;
-			width: 3px;
-			height: 10px;
-			margin-left: -1.5px;
-		}
+	// ── Death screen ───────────────────────────────────────────────────
+	.death-overlay
+	{
+		position: absolute;
+		top: 0; left: 0; right: 0; bottom: 0;
+		background: rgba(80, 0, 0, 0.75);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 40px;
+		pointer-events: all;
+	}
 
-		.crosshair-left
-		{
-			left: 0;
-			top: 50%;
-			width: 10px;
-			height: 3px;
-			margin-top: -1.5px;
-		}
+	.death-title
+	{
+		font-size: 72px;
+		color: #ff2222;
+		letter-spacing: 12px;
+		text-transform: uppercase;
+		text-shadow: 0 0 40px rgba(255,0,0,0.8), 0 4px 8px rgba(0,0,0,0.9);
+	}
 
-		.crosshair-right
+	.death-buttons
+	{
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+		align-items: center;
+	}
+
+	.death-btn
+	{
+		font-size: 22px;
+		color: #ffffff;
+		letter-spacing: 4px;
+		padding: 14px 48px;
+		background: rgba(180, 0, 0, 0.7);
+		border: 2px solid rgba(255, 60, 60, 0.6);
+		border-radius: 4px;
+		cursor: pointer;
+		pointer-events: all;
+		transition: background 0.1s;
+
+		&:hover
 		{
-			right: 0;
-			top: 50%;
-			width: 10px;
-			height: 3px;
-			margin-top: -1.5px;
+			background: rgba(220, 0, 0, 0.9);
+			border-color: #ff4444;
 		}
 	}
 
-
-
-	.hud
+	// ── Win screen ─────────────────────────────────────────────────────
+	.win-overlay
 	{
 		position: absolute;
-		top: 8px;
-		left: 8px;
-		min-width: 180px;
-		padding: 6px 10px;
-		background: rgba(0,0,0,0.35);
-		border-radius: 8px;
+		top: 0; left: 0; right: 0; bottom: 0;
+		background: rgba(0, 40, 10, 0.80);
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
+		align-items: center;
+		justify-content: center;
+		gap: 40px;
+		pointer-events: all;
+	}
 
-		.title
-		{
-			font-size: 18px;
-			font-family: 'Courier New', Courier, monospace;
-			color: #fff;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
+	.win-title
+	{
+		font-size: 72px;
+		color: #ffe040;
+		letter-spacing: 12px;
+		text-transform: uppercase;
+		text-shadow: 0 0 40px rgba(100, 220, 80, 0.9), 0 4px 8px rgba(0,0,0,0.9);
+	}
 
-		.debug { color: #ffd; font-size: 11px; margin-top: 6px; white-space: pre-wrap; }
+	// ── Stats panel (end-of-level screen) ──────────────────────────────
+	.stats-panel
+	{
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		margin: 20px 0;
+		min-width: 300px;
+	}
+
+	.stat-row
+	{
+		display: flex;
+		justify-content: space-between;
+		font-size: 18px;
+		color: white;
+		font-family: Poppins;
+	}
+
+	.stat-label
+	{
+		opacity: 0.7;
+	}
+
+	.stat-value
+	{
+		font-weight: bold;
 	}
 }

@@ -1,0 +1,53 @@
+AmmoDisplay
+{
+	.ammo-display
+	{
+		position: absolute;
+		bottom: 40px;
+		right: 8px;
+		min-width: 140px;
+		padding: 8px 12px;
+		background: rgba(0,0,0,0.35);
+		border-radius: 8px;
+		color: #fff;
+		font-family: Poppins;
+		font-weight: bold;
+
+		.weapon-name
+		{
+			font-size: 12px;
+			color: #aaa;
+			margin-bottom: 4px;
+			text-align: right;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+		}
+
+		.ammo-counters
+		{
+			display: flex;
+			align-items: baseline;
+			justify-content: flex-end;
+			gap: 4px;
+
+			.ammo-current
+			{
+				font-size: 32px;
+				color: #fff;
+				text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+			}
+
+			.ammo-separator
+			{
+				font-size: 20px;
+				color: #666;
+			}
+
+			.ammo-reserve
+			{
+				font-size: 20px;
+				color: #999;
+			}
+		}
+	}
+}

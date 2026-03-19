@@ -1,0 +1,95 @@
+using Sandbox;
+using System.Collections.Generic;
+
+/// <summary>
+/// Physics projectile spawned by the Pipe Bomb throwable.
+/// Beeps on a 0.5-second cadence, then explodes after FuseDuration seconds,
+/// dealing AOE damage to all HealthComponents within ExplosionRadius.
+/// </summary>
+public sealed class PipeBombProjectile : Component
+{
+	[Property] public SoundEvent BeepSound { get; set; }
+	[Property] public SoundEvent ExplosionSound { get; set; }
+	[Property] public float FuseDuration { get; set; } = 3f;
+	[Property] public float ExplosionRadius { get; set; } = 2000f;
+	[Property] public float ExplosionDamage { get; set; } = 150f;
+	/// <summary>0.5 = half gravity, 1 = normal, 2 = double.</summary>
+	[Property] public float GravityMultiplier { get; set; } = 0.5f;
+
+	/// <summary>Set by PipeBomb immediately after spawning so the blast can attribute kills.</summary>
+	public GameObject Owner { get; set; }
+
+	private Rigidbody _rb;
+	private float _fuseTimer = 0f;
+	private float _beepTimer = 0f;
+	private const float BeepInterval = 0.5f;
+	private bool _hasExploded = false;
+
+	protected override void OnStart()
+	{
+		// Ensure a Rigidbody exists — PipeBomb sets velocity on this after spawning.
+		_rb = Components.GetOrCreate<Rigidbody>();
+	}
+
+	protected override void OnFixedUpdate()
+	{
+		if ( _hasExploded || _rb == null ) return;
+		var gravity = Scene.PhysicsWorld.Gravity;
+		_rb.Velocity += gravity * ( GravityMultiplier - 1f ) * Time.Delta;
+	}
+
+	protected override void OnUpdate()
+	{
+		if ( _hasExploded ) return;
+
+		_fuseTimer += Time.Delta;
+		_beepTimer += Time.Delta;
+
+		// Beep every half second
+		if ( _beepTimer >= BeepInterval )
+		{
+			_beepTimer -= BeepInterval;
+			if ( BeepSound != null )
+				Sound.Play( BeepSound, WorldPosition );
+		}
+
+		// Detonate when fuse expires
+		if ( _fuseTimer >= FuseDuration )
+		{
+			Explode();
+		}
+	}
+
+	private void Explode()
+	{
+		if ( _hasExploded ) return;
+		_hasExploded = true;
+
+		// Play explosion sound
+		if ( ExplosionSound != null )
+			Sound.Play( ExplosionSound, WorldPosition );
+
+		// AOE damage — check all HealthComponents by distance
+		var damagedTargets = new HashSet<HealthComponent>();
+
+		foreach ( var health in Scene.GetAllComponents<HealthComponent>() )
+		{
+			if ( health == null || !health.IsValid || health.IsDead ) continue;
+
+			float dist = (health.WorldPosition - WorldPosition).Length;
+			if ( dist > ExplosionRadius ) continue;
+
+			if ( damagedTargets.Add( health ) )
+			{
+				float falloff = 1f - System.MathF.Min( dist / ExplosionRadius, 1f );
+				float scaledDamage = ExplosionDamage * (0.3f + 0.7f * falloff);
+				health.TakeDamage( scaledDamage, Owner );
+				Log.Info( $"PipeBomb: dealt {scaledDamage:F0} damage to {health.GameObject.Name}" );
+			}
+		}
+
+		Log.Info( $"PipeBomb exploded — hit {damagedTargets.Count} target(s)" );
+
+		GameObject.Destroy();
+	}
+}
