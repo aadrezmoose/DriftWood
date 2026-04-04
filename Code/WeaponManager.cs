@@ -1,12 +1,55 @@
 using Sandbox;
 using System.Collections.Generic;
+using System.Linq;
 
 public sealed class WeaponManager : Component
 {
+	[Property] public bool EnableDiagnostics { get; set; } = false;
+
 	/// <summary>Assign the Primary weapon slot GO (Shotgun, SMG, Rifle, Sniper) in the inspector.</summary>
 	[Property] public GameObject PrimarySlot { get; set; }
 	/// <summary>Assign the Secondary weapon slot GO (Pistol, Melee) in the inspector.</summary>
 	[Property] public GameObject SecondarySlot { get; set; }
+
+	// --- NETWORKED WEAPON STATE ---
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public string NetPrimaryWeaponPrefab { get; set; } = string.Empty;
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public string NetPrimaryViewModel { get; set; } = string.Empty;
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public string NetPrimaryAnimGraph { get; set; } = string.Empty;
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public string NetPrimaryHandsModel { get; set; } = string.Empty;
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public string NetPrimaryOverlayModel { get; set; } = string.Empty;
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public Vector3 NetPrimaryViewModelOffset { get; set; } = Vector3.Zero;
+
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public string NetSecondaryWeaponPrefab { get; set; } = string.Empty;
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public string NetSecondaryViewModel { get; set; } = string.Empty;
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public string NetSecondaryAnimGraph { get; set; } = string.Empty;
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public string NetSecondaryHandsModel { get; set; } = string.Empty;
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public string NetSecondaryOverlayModel { get; set; } = string.Empty;
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public Vector3 NetSecondaryViewModelOffset { get; set; } = Vector3.Zero;
+
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public string NetMainHealOverlayModel { get; set; } = string.Empty;
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public string NetSubHealOverlayModel { get; set; } = string.Empty;
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public string NetUtilityOverlayModel { get; set; } = string.Empty;
+
+	[Sync, Change( nameof(OnNetWeaponStateChanged) )] public int NetCurrentSlot { get; set; } = 0;
+
+	private bool _suppressNetWeaponStateChange = false;
+
+	// Tracks the pickup object used to equip each weapon slot, so it can be dropped on swap
+	private WeaponPickup primaryEquippedPickup;
+	private WeaponPickup secondaryEquippedPickup;
+	private WeaponPickup _lastAppliedPrimaryViewModelPickup;
+	private WeaponPickup _lastAppliedSecondaryViewModelPickup;
+	private string _lastAppliedPrimaryPrefabPath = string.Empty;
+	private Vector3 _lastAppliedPrimaryOffset = Vector3.Zero;
+	private string _lastAppliedSecondaryPrefabPath = string.Empty;
+	private Vector3 _lastAppliedSecondaryOffset = Vector3.Zero;
+	private string _lastAppliedMainHealOverlayPath = string.Empty;
+	private string _lastAppliedSubHealOverlayPath = string.Empty;
+	private string _lastAppliedUtilityOverlayPath = string.Empty;
+	private bool _pendingPrimaryViewModelUpdate;
+	private bool _pendingSecondaryViewModelUpdate;
+	private bool _pendingHealViewModelUpdate;
+	private bool _pendingUtilityViewModelUpdate;
 
 	// Item slots — filled at runtime by pickup
 	private BaseItem mainHealItem;      // slot 2
@@ -15,6 +58,30 @@ public sealed class WeaponManager : Component
 
 	private int currentSlot = 0;
 	private const int TotalSlots = 5;
+
+	private PlayerIdentity _identity;
+	private PlayerIdentity Identity => _identity ??= Components.GetInDescendantsOrSelf<PlayerIdentity>();
+
+	private bool IsLocallyControlled() => PlayerIdentity.IsOwnedByLocal( GameObject );
+
+	// GunViewModels self-register here in their OnStart() via RegisterViewModel().
+	private readonly List<GunViewModel> _registeredViewModels = new();
+
+	public void RegisterViewModel( GunViewModel vm )
+	{
+		if ( vm != null && !_registeredViewModels.Contains( vm ) )
+		{
+			_registeredViewModels.Add( vm );
+			vm.SetLocalPlayerFlag( IsLocallyControlled() );
+			if ( EnableDiagnostics )
+				Log.Info( $"[WeaponManager] Registered VM slot={vm.WeaponSlotIndex}" );
+		}
+	}
+
+	public void UnregisterViewModel( GunViewModel vm )
+	{
+		if ( vm != null ) _registeredViewModels.Remove( vm );
+	}
 
 	private float shoveCooldown = 0f;
 	[Property] public float ShoveCooldown { get; set; } = 1.2f;
@@ -52,6 +119,10 @@ public sealed class WeaponManager : Component
 	{
 		if ( shoveCooldown > 0f ) shoveCooldown -= Time.Delta;
 
+		// Retry pending VM updates if they failed last frame (e.g., OnStart not finished)
+		if ( _pendingHealViewModelUpdate ) UpdateHealViewModel();
+		if ( _pendingUtilityViewModelUpdate ) UpdateUtilityViewModel();
+
 		SyncAllSlots();
 
 		if ( PlayerStats.IsDead ) return;
@@ -71,6 +142,23 @@ public sealed class WeaponManager : Component
 		HandleInput();
 		UpdateHUD();
 		UpdatePickupHint();
+	}
+
+	private void OnNetWeaponStateChanged()
+	{
+		if ( _suppressNetWeaponStateChange ) return;
+
+		// Only update heal/utility overlays if their paths actually changed
+		if ( NetMainHealOverlayModel != _lastAppliedMainHealOverlayPath )
+		{
+			_lastAppliedMainHealOverlayPath = NetMainHealOverlayModel;
+			_pendingHealViewModelUpdate = true;
+		}
+		if ( NetUtilityOverlayModel != _lastAppliedUtilityOverlayPath )
+		{
+			_lastAppliedUtilityOverlayPath = NetUtilityOverlayModel;
+			_pendingUtilityViewModelUpdate = true;
+		}
 	}
 
 	private void HandleSlotSwitching()
@@ -294,6 +382,62 @@ public sealed class WeaponManager : Component
 			case ItemSlotType.SecondaryHeal: secondaryHealItem = item; break;
 			case ItemSlotType.Utility:       utilityItem = item; break;
 		}
+	}
+
+	private GunViewModel GetViewModelForSlot( int slotIndex )
+	{
+		foreach ( var vm in _registeredViewModels )
+			if ( vm.WeaponSlotIndex == slotIndex )
+				return vm;
+		return null;
+	}
+
+	private GunViewModel EnsureRuntimeViewModelForSlot( int slotIndex, Model armsModel, Model overlayModel, Vector3? offset )
+	{
+		var existingVM = GetViewModelForSlot( slotIndex );
+		if ( existingVM != null ) return existingVM;
+
+		// Create new runtime VM
+		var vmGO = new GameObject( true, $"VM_Slot{slotIndex}" );
+		vmGO.Parent = GameObject;
+		var vm = vmGO.AddComponent<GunViewModel>();
+		vm.WeaponSlotIndex = slotIndex;
+		vm.WeaponModel = armsModel ?? Model.Load( "models/first_person/v_first_person_arms_human.vmdl" );
+		if ( offset.HasValue ) vm.PositionOffset = offset.Value;
+		vm.SetLocalPlayerFlag( IsLocallyControlled() );
+		return vm;
+	}
+
+	private void UpdateHealViewModel()
+	{
+		var vm = GetViewModelForSlot( 2 );
+		if ( vm == null )
+		{
+			// Create runtime VM with arms model for health kits
+			var armsModel = Model.Load( "models/first_person/v_first_person_arms_human.vmdl" );
+			vm = EnsureRuntimeViewModelForSlot( 2, armsModel, null, null );
+			if ( vm == null ) { _pendingHealViewModelUpdate = true; return; }
+		}
+		var kit = mainHealItem as HealthKit;
+		var model = kit?.ViewModelOverlayModel;
+		vm.UpdateOverlayModel( model );
+		_pendingHealViewModelUpdate = false;
+	}
+
+	private void UpdateUtilityViewModel()
+	{
+		var vm = GetViewModelForSlot( 4 );
+		if ( vm == null )
+		{
+			// Create runtime VM with arms model for throwables
+			var armsModel = Model.Load( "models/first_person/v_first_person_arms_human.vmdl" );
+			vm = EnsureRuntimeViewModelForSlot( 4, armsModel, null, null );
+			if ( vm == null ) { _pendingUtilityViewModelUpdate = true; return; }
+		}
+		var throwable = utilityItem as ThrowableBase;
+		var model = throwable?.ViewModelOverlayModel;
+		vm.UpdateOverlayModel( model );
+		_pendingUtilityViewModelUpdate = false;
 	}
 
 	private void SyncAllSlots()

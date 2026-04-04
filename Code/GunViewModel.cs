@@ -17,6 +17,17 @@ public sealed class GunViewModel : Component
 	private GameObject modelObject;
 	public SkinnedModelRenderer ModelRenderer { get; private set; }
 
+	private GameObject overlayGO;
+	private SkinnedModelRenderer overlayRenderer;
+
+	/// <summary>Inspector-assigned overlay model (throwables/heal items). Usually null — assigned at runtime.</summary>
+	[Property] public Model OverlayModel { get; set; }
+
+	// Set by WeaponManager when it registers this VM
+	private bool? _isLocalPlayer;
+
+	public void SetLocalPlayerFlag( bool isLocal ) => _isLocalPlayer = isLocal;
+
 	protected override void OnStart()
 	{
 		modelObject = new GameObject( true, "GunModel" );
@@ -38,11 +49,38 @@ public sealed class GunViewModel : Component
 			handsRenderer.Model = HandsModel;
 			handsRenderer.BoneMergeTarget = ModelRenderer;
 		}
+
+		// Always create overlay GO (hidden initially) — model assigned at runtime via UpdateOverlayModel()
+		overlayGO = new GameObject( false, "OverlayModel" );
+		overlayGO.Parent = modelObject;
+		overlayGO.LocalPosition = new Vector3( 5, -8, 15 );
+		overlayRenderer = overlayGO.AddComponent<SkinnedModelRenderer>();
+		// Bone-merge the overlay onto the weapon skeleton
+		if ( overlayRenderer is SkinnedModelRenderer skinned )
+		{
+			skinned.BoneMergeTarget = ModelRenderer;
+		}
+		if ( OverlayModel != null )
+		{
+			overlayRenderer.Model = OverlayModel;
+			overlayGO.Enabled = true;
+		}
+
+		// Self-register so WeaponManager sees this VM before its first OnUpdate
+		Components.GetInAncestorsOrSelf<WeaponManager>()?.RegisterViewModel( this );
 	}
 
 	protected override void OnUpdate()
 	{
 		if ( modelObject == null ) return;
+
+		// In multiplayer, hide viewmodels that belong to remote players.
+		// _isLocalPlayer is set by WeaponManager at registration time.
+		if ( Networking.IsActive && _isLocalPlayer != true )
+		{
+			modelObject.Enabled = false;
+			return;
+		}
 
 		bool isWeaponSlotActive = PlayerStats.ActiveSlotIndex < PlayerStats.WeaponSlotCount;
 		bool isThisSlotActive   = PlayerStats.ActiveSlotIndex == WeaponSlotIndex;
@@ -63,6 +101,25 @@ public sealed class GunViewModel : Component
 	public void PlayAnim( string param )
 	{
 		ModelRenderer?.Set( param, true );
+	}
+
+	/// <summary>Swap the overlay model (used for throwable/item meshes layered on top of arms).</summary>
+	public void UpdateOverlayModel( Model model )
+	{
+		if ( overlayRenderer == null ) return;
+		if ( model != null )
+		{
+			overlayRenderer.Model = model;
+			if ( overlayGO != null )
+			{
+				overlayGO.Enabled = true;
+				overlayRenderer.Enabled = true;
+			}
+		}
+		else
+		{
+			if ( overlayGO != null ) overlayGO.Enabled = false;
+		}
 	}
 
 	/// <summary>Hot-swap the displayed weapon model — called when the player picks up a new weapon.</summary>
@@ -91,6 +148,7 @@ public sealed class GunViewModel : Component
 	protected override void OnDestroy()
 	{
 		if ( Current == this ) Current = null;
+		Components.GetInAncestorsOrSelf<WeaponManager>()?.UnregisterViewModel( this );
 		modelObject?.Destroy();
 	}
 }
