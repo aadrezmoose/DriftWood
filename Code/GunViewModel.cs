@@ -1,4 +1,5 @@
 using Sandbox;
+using System;
 
 public sealed class GunViewModel : Component
 {
