@@ -542,4 +542,41 @@ public sealed class WeaponManager : Component
 			PlayerStats.WeaponName = ActiveItem?.ItemName ?? "";
 		}
 	}
+
+	public void BroadcastRemoteMuzzleFlashFromWeaponManager( Vector3 position, Rotation rotation )
+	{
+		// Broadcast muzzle flash visuals to other players
+		// For now, just a placeholder for multiplayer muzzle flash effect
+	}
+
+	public string GetActiveHeldModelPathForPresentation()
+	{
+		if ( currentSlot == 0 && PrimarySlot != null )
+			return GetWeaponHeldModelPath( 0, PrimarySlot, primaryEquippedPickup );
+		else if ( currentSlot == 1 && SecondarySlot != null )
+			return GetWeaponHeldModelPath( 1, SecondarySlot, secondaryEquippedPickup );
+		else if ( currentSlot == 2 && mainHealItem != null )
+			return GetItemHeldModelPath( mainHealItem );
+		else if ( currentSlot == 3 && secondaryHealItem != null )
+			return GetItemHeldModelPath( secondaryHealItem );
+		else if ( currentSlot == 4 && utilityItem != null )
+			return GetItemHeldModelPath( utilityItem );
+		return string.Empty;
+	}
+
+	private string GetWeaponHeldModelPath( int slotIndex, GameObject slot, WeaponPickup equippedPickup )
+	{
+		// World model is what remote players should see in third-person — prefer it over the 1P viewmodel
+		if ( equippedPickup?.WorldModel != null )
+			return equippedPickup.WorldModel.ResourcePath ?? string.Empty;
+		return string.Empty;
+	}
+
+	private string GetItemHeldModelPath( BaseItem item )
+	{
+		// For heal items, use their overlay model if available
+		if ( item is HealthKit kit ) return kit.ViewModelOverlayModel?.ResourcePath ?? string.Empty;
+		if ( item is ThrowableBase throwable ) return throwable.ViewModelOverlayModel?.ResourcePath ?? string.Empty;
+		return string.Empty;
+	}
 }

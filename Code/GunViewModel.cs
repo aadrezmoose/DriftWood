@@ -11,6 +11,13 @@ public sealed class GunViewModel : Component
 	/// <summary>Which weapon slot index this viewmodel belongs to (0 = first slot, 1 = second, etc.).</summary>
 	[Property] public int WeaponSlotIndex { get; set; } = 0;
 
+	/// <summary>Animation parameter name triggered on fire.</summary>
+	[Property] public string AnimFireParam { get; set; } = "fire";
+	/// <summary>Animation parameter name triggered on reload.</summary>
+	[Property] public string AnimReloadParam { get; set; } = "reload";
+	/// <summary>Animation parameter name triggered on empty reload.</summary>
+	[Property] public string AnimReloadEmptyParam { get; set; } = "reload_empty";
+
 	/// <summary>The active viewmodel instance — kept for backwards compat, points to whichever slot is active.</summary>
 	public static GunViewModel Current { get; private set; }
 
@@ -103,6 +110,24 @@ public sealed class GunViewModel : Component
 		ModelRenderer?.Set( param, true );
 	}
 
+	public void PlayFireAnim()
+	{
+		if ( !string.IsNullOrEmpty( AnimFireParam ) )
+			ModelRenderer?.Set( AnimFireParam, true );
+	}
+
+	public void PlayReloadAnim()
+	{
+		if ( !string.IsNullOrEmpty( AnimReloadParam ) )
+			ModelRenderer?.Set( AnimReloadParam, true );
+	}
+
+	public void PlayReloadEmptyAnim()
+	{
+		if ( !string.IsNullOrEmpty( AnimReloadEmptyParam ) )
+			ModelRenderer?.Set( AnimReloadEmptyParam, true );
+	}
+
 	/// <summary>Swap the overlay model (used for throwable/item meshes layered on top of arms).</summary>
 	public void UpdateOverlayModel( Model model )
 	{
@@ -124,12 +149,21 @@ public sealed class GunViewModel : Component
 
 	/// <summary>Hot-swap the displayed weapon model — called when the player picks up a new weapon.</summary>
 	public void UpdateWeapon( Model model, AnimationGraph animGraph, Model handsModel, Vector3 positionOffset )
+		=> UpdateWeapon( model, animGraph, handsModel, positionOffset, null, null, null );
+
+	/// <summary>Hot-swap the displayed weapon model and animation parameters.</summary>
+	public void UpdateWeapon( Model model, AnimationGraph animGraph, Model handsModel, Vector3 positionOffset,
+		string animFireParam, string animReloadParam, string animReloadEmptyParam )
 	{
 		if ( ModelRenderer == null ) return;
 
 		ModelRenderer.Model = model ?? Model.Load( "models/dev/box.vmdl" );
 		if ( animGraph != null ) ModelRenderer.AnimationGraph = animGraph;
-		if ( positionOffset != default ) modelObject.LocalPosition = positionOffset;
+		Log.Info($"[GunViewModel] Applying LocalPosition offset: {positionOffset}");
+		modelObject.LocalPosition = positionOffset;
+		if ( !string.IsNullOrEmpty( animFireParam ) ) AnimFireParam = animFireParam;
+		if ( !string.IsNullOrEmpty( animReloadParam ) ) AnimReloadParam = animReloadParam;
+		if ( !string.IsNullOrEmpty( animReloadEmptyParam ) ) AnimReloadEmptyParam = animReloadEmptyParam;
 
 		// Rebuild hands — destroy old HandsModel child then recreate if needed
 		foreach ( var child in modelObject.Children )
