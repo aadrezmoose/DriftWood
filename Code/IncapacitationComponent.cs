@@ -15,24 +15,32 @@ public sealed class IncapacitationComponent : Component
 
 	private HealthComponent health;
 	private PlayerMovement playerMovement;
+	private PlayerIdentity identity;
+
+	private bool ShouldWriteLocalPlayerStats => !Networking.IsActive || !IsProxy;
 
 	protected override void OnAwake()
 	{
 		// Reset static flags so a new play session doesn't inherit the previous state
-		PlayerStats.IsIncapacitated = false;
-		PlayerStats.BleedOutHealth = 100f;
-		PlayerStats.IsDead = false;
-		PlayerStats.CarriedItems.Clear();
-		PlayerStats.CarriedItem = string.Empty;
-		PlayerStats.ActiveSlotIndex = 0;
-		PlayerStats.ResetDamageIndicators();
+		if ( ShouldWriteLocalPlayerStats )
+		{
+			PlayerStats.IsIncapacitated = false;
+			PlayerStats.BleedOutHealth = 100f;
+			PlayerStats.IsDead = false;
+			PlayerStats.CarriedItems.Clear();
+			PlayerStats.CarriedItem = string.Empty;
+			PlayerStats.ActiveSlotIndex = 0;
+			PlayerStats.ResetDamageIndicators();
+		}
 
-		health = Components.GetInAncestorsOrSelf<HealthComponent>();
+		health         = Components.GetInAncestorsOrSelf<HealthComponent>();
 		playerMovement = Components.GetInAncestorsOrSelf<PlayerMovement>();
+		identity       = Components.GetInAncestorsOrSelf<PlayerIdentity>();
 	}
 
 	protected override void OnUpdate()
 	{
+		if ( IsProxy ) return; // Owner runs the bleed-out timer; proxies receive BleedOutHealth via [Sync]
 		if ( !IsIncapacitated ) return;
 
 		// Drain bleed-out health
@@ -41,6 +49,7 @@ public sealed class IncapacitationComponent : Component
 		BleedOutHealth = System.Math.Max( 0f, BleedOutHealth );
 
 		PlayerStats.BleedOutHealth = BleedOutHealth;
+		if ( identity != null ) identity.BleedOutHealth = BleedOutHealth;
 
 		if ( BleedOutHealth <= 0f )
 		{
@@ -54,8 +63,22 @@ public sealed class IncapacitationComponent : Component
 	public void ApplyBleedDamage( float amount )
 	{
 		if ( !IsIncapacitated ) return;
+		if ( Networking.IsActive && IsProxy ) return;
 		BleedOutHealth = System.Math.Max( 0f, BleedOutHealth - amount );
-		PlayerStats.BleedOutHealth = BleedOutHealth;
+		if ( ShouldWriteLocalPlayerStats )
+			PlayerStats.BleedOutHealth = BleedOutHealth;
+		if ( identity != null ) identity.BleedOutHealth = BleedOutHealth;
+	}
+
+	/// <summary>
+	/// Broadcast RPC so a teammate's revive applies on the owning client,
+	/// ensuring [Sync] fields replicate correctly.
+	/// </summary>
+	[Rpc.Broadcast]
+	public void RequestReviveFromTeammate()
+	{
+		if ( Networking.IsActive && IsProxy ) return;
+		Revive();
 	}
 
 	/// <summary>Revives the player with 45% HP. Call this from a health kit or teammate.</summary>
@@ -65,8 +88,12 @@ public sealed class IncapacitationComponent : Component
 
 		IsIncapacitated = false;
 		BleedOutHealth = 100f;
-		PlayerStats.IsIncapacitated = false;
-		PlayerStats.BleedOutHealth = 100f;
+		if ( ShouldWriteLocalPlayerStats )
+		{
+			PlayerStats.IsIncapacitated = false;
+			PlayerStats.BleedOutHealth = 100f;
+		}
+		if ( identity != null ) { identity.IsIncapacitated = false; identity.BleedOutHealth = 100f; }
 
 		// Re-enable movement
 		if ( playerMovement != null )
@@ -76,7 +103,9 @@ public sealed class IncapacitationComponent : Component
 		if ( health != null )
 		{
 			health.CurrentHealth = health.MaxHealth * 0.45f;
-			PlayerStats.CurrentHealth = health.CurrentHealth;
+			if ( ShouldWriteLocalPlayerStats )
+				PlayerStats.CurrentHealth = health.CurrentHealth;
+			if ( identity != null ) identity.CurrentHealth = health.CurrentHealth;
 		}
 
 		Log.Info( "Player revived at 45% HP." );
@@ -85,14 +114,19 @@ public sealed class IncapacitationComponent : Component
 	public void Incapacitate()
 	{
 		if ( IsIncapacitated ) return;
+		if ( Networking.IsActive && IsProxy ) return;
 
 		IsIncapacitated = true;
 		IncapCount++;
 		BleedOutHealth = 100f;
 
-		PlayerStats.IsIncapacitated = true;
-		PlayerStats.BleedOutHealth = 100f;
-		PlayerStats.TimesIncapacitated++;
+		if ( ShouldWriteLocalPlayerStats )
+		{
+			PlayerStats.IsIncapacitated = true;
+			PlayerStats.BleedOutHealth = 100f;
+			PlayerStats.TimesIncapacitated++;
+		}
+		if ( identity != null ) { identity.IsIncapacitated = true; identity.BleedOutHealth = 100f; identity.TimesIncapacitated++; }
 
 		Log.Info( $"Player incapacitated ({IncapCount}/{MaxIncaps}). Bleeding out..." );
 	}
@@ -102,7 +136,9 @@ public sealed class IncapacitationComponent : Component
 		// Exhaust incap count so HealthComponent.Die() doesn't re-incapacitate
 		IncapCount = MaxIncaps;
 		IsIncapacitated = false;
-		PlayerStats.IsIncapacitated = false;
+		if ( ShouldWriteLocalPlayerStats )
+			PlayerStats.IsIncapacitated = false;
+		if ( identity != null ) identity.IsIncapacitated = false;
 
 		if ( health != null )
 			health.Die();

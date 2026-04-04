@@ -42,13 +42,15 @@ public sealed class ViewModelHandler : Component
 	{
 		if ( Player is null ) return;
 
-		// Lazy-find GunModel — created by GunViewModel in OnStart so may not exist yet
-		if ( gunModel is null || !gunModel.IsValid() )
+		// Re-find GunModel whenever the cached one is disabled (weapon switched) or gone
+		if ( gunModel is null || !gunModel.IsValid() || !gunModel.Enabled )
 		{
 			gunModel = FindDescendantByName( GameObject, "GunModel" );
 			if ( gunModel is null ) return;
 			restPosition = gunModel.LocalPosition;
-			restAngles = gunModel.LocalRotation.Angles();
+			restAngles   = gunModel.LocalRotation.Angles();
+			finalPos     = Vector3.Zero;
+			finalRot     = Vector3.Zero;
 		}
 
 		// Smooth lerp toward targets
@@ -83,7 +85,7 @@ public sealed class ViewModelHandler : Component
 	{
 		foreach ( var child in parent.Children )
 		{
-			if ( child.Name == name ) return child;
+			if ( child.Name == name && child.Enabled ) return child;
 			var found = FindDescendantByName( child, name );
 			if ( found is not null ) return found;
 		}

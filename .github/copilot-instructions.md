@@ -12,6 +12,7 @@ Keep in mind: this repo targets the s&box engine and references local s&box asse
 - Scenes live in `Assets/scenes/` and the startup scene is set in `my_project.sbproj` metadata (`StartupScene: scenes/minimal.scene`).
 
 ## Project-specific conventions and patterns
+- Follow `BUILDING_WITH_EXISTING_TOOLS.md` before introducing custom architecture. Prefer s&box built-ins, then existing repo systems, then thin helpers, and only then larger custom systems.
 - Use `[Property]` on component public properties to expose them to the editor/scene. Example: `CameraMovement` exposes `Player`, `Body`, `Head` as `[Property]`.
 - Razor UI: prefer simple stateful components that expose a small `BuildHash()` to control rebuilds. Example: `HUD.razor` uses `BuildHash()` to include `MyStringValue`.
 - Movement & camera logic: `PlayerMovement` manages inputs and character controller; `CameraMovement` uses the `CameraComponent` and scene tracing for third-person placement. When tracing or touching physics, prefer engine APIs (e.g., `Scene.Trace.Ray`, `Scene.PhysicsWorld`).
@@ -36,6 +37,7 @@ Keep in mind: this repo targets the s&box engine and references local s&box asse
 - UI component: `Code/ui/HUD.razor` demonstrates Razor usage inside the s&box project (note `[Property, TextArea]` and `BuildHash()` usage).
 
 ## What to watch for when editing
+- For any meaningful feature/refactor, document built-ins considered, existing repo systems considered, and why custom code is necessary if you introduce it.
 - Don't move runtime code into `Editor/` — editor code is compiled into a separate project and may reference editor-only APIs.
 - Keep Input action names and groups consistent — changing an action name requires updating `Input.config` and all call sites.
 - If you change project references or OutputPath in `Code/my_project.csproj`, document the change — builds depend on local s&box folder structure.

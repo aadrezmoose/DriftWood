@@ -8,6 +8,8 @@ using System.Linq;
 /// </summary>
 public sealed class HunterSpawner : Component
 {
+	private bool IsAuthoritativeInstance() => !Networking.IsActive || Connection.Local?.IsHost == true;
+
 	[Property] public float SpawnInterval { get; set; } = 15f; // Seconds between spawns
 	[Property] public int MaxHunters { get; set; } = 2; // Max hunters alive at once
 	[Property] public float SpawnRadius { get; set; } = 500f; // Distance from player to spawn hunters
@@ -64,6 +66,9 @@ public sealed class HunterSpawner : Component
 
 	protected override void OnUpdate()
 	{
+		if ( !IsAuthoritativeInstance() )
+			return;
+
 		if (!Enabled)
 		{
 			return;
@@ -146,8 +151,34 @@ public sealed class HunterSpawner : Component
 		}
 	}
 
-	private void SpawnHunter()
+	public bool TrySpawnHunter( Vector3? overridePosition = null )
 	{
+		if ( !IsAuthoritativeInstance() ) return false;
+		if ( !Enabled ) { Log.Warning( "HunterSpawner: TrySpawnHunter blocked — spawner is disabled" ); return false; }
+		if ( IsSafeZoneActive ) { Log.Warning( "HunterSpawner: TrySpawnHunter blocked — safe zone active" ); return false; }
+		if ( spawnedHunters.Count >= MaxHunters ) { Log.Warning( $"HunterSpawner: TrySpawnHunter blocked — at max hunters ({spawnedHunters.Count}/{MaxHunters})" ); return false; }
+		if ( HunterPrefab is null ) { Log.Warning( "HunterSpawner: TrySpawnHunter blocked — HunterPrefab is null" ); return false; }
+		if ( player is null ) { Log.Warning( "HunterSpawner: TrySpawnHunter blocked — player is null" ); return false; }
+
+		int beforeCount = spawnedHunters.Count;
+		try
+		{
+			SpawnHunter( overridePosition );
+		}
+		catch ( System.Exception ex )
+		{
+			Log.Error( $"HunterSpawner: Exception during TrySpawnHunter: {ex.Message}\n{ex.StackTrace}" );
+			return false;
+		}
+
+		return spawnedHunters.Count > beforeCount;
+	}
+
+	private void SpawnHunter( Vector3? overridePosition = null )
+	{
+		if ( !IsAuthoritativeInstance() )
+			return;
+
 		// Early return if safe zone is active
 		if (IsSafeZoneActive)
 		{
@@ -167,43 +198,46 @@ public sealed class HunterSpawner : Component
 			return;
 		}
 
-		// Random spawn position around the player
-		float angle = Game.Random.Float(0f, 360f);
-		float distance = Game.Random.Float(SpawnRadius * 0.8f, SpawnRadius);
-
-		// Ensure minimum distance from player
-		if (distance < 300f)
-		{
-			distance = 300f;
-		}
-
 		try
 		{
 			Log.Info("HunterSpawner: Starting spawn...");
 
-			// Start raycast from high above to find ground level
-			Vector3 raycastStart = player.WorldPosition + new Vector3(
-				(float)System.Math.Cos(angle * System.Math.PI / 180f) * distance,
-				(float)System.Math.Sin(angle * System.Math.PI / 180f) * distance,
-				500f  // Raycast from high in the air
-			);
+			Vector3 spawnPos;
 
-			// Raycast down to find ground level
-			var trace = Scene.Trace
-				.Ray(raycastStart, raycastStart + Vector3.Down * 1000f)
-				.Run();
-
-			// Reject spawn if trace doesn't hit (no ground found)
-			if (!trace.Hit)
+			if ( overridePosition.HasValue )
 			{
-				Log.Warning($"HunterSpawner: No ground found at spawn position, rejecting spawn");
-				return;
+				// Use the explicitly provided position (test/editor spawn point)
+				spawnPos = overridePosition.Value;
+				Log.Info( $"HunterSpawner: Using override spawn position {spawnPos}" );
+			}
+			else
+			{
+				// Random spawn position around the player
+				float angle = Game.Random.Float( 0f, 360f );
+				float distance = Game.Random.Float( SpawnRadius * 0.8f, SpawnRadius );
+				if ( distance < 300f ) distance = 300f;
+
+				Vector3 raycastStart = player.WorldPosition + new Vector3(
+					(float)System.Math.Cos( angle * System.Math.PI / 180f ) * distance,
+					(float)System.Math.Sin( angle * System.Math.PI / 180f ) * distance,
+					500f
+				);
+
+				var trace = Scene.Trace
+					.Ray( raycastStart, raycastStart + Vector3.Down * 1000f )
+					.Run();
+
+				if ( !trace.Hit )
+				{
+					Log.Warning( "HunterSpawner: No ground found at spawn position, rejecting spawn" );
+					return;
+				}
+
+				spawnPos = trace.EndPosition + Vector3.Up * 5f;
 			}
 
-			Vector3 spawnPos = trace.EndPosition + Vector3.Up * 80f;  // Place above ground
-
-			// Validate spawn position
-			if (spawnPos.z < 20f)
+			// Validate spawn position — only reject if completely underground (e.g. below map)
+			if (spawnPos.z < -500f)
 			{
 				Log.Warning($"HunterSpawner: Spawn position too low ({spawnPos.z:F1}), rejecting spawn");
 				return;
@@ -220,7 +254,8 @@ public sealed class HunterSpawner : Component
 			}
 
 			// Set tint to green (different from regular enemies)
-			var modelRenderer = spawnedHunter.Components.Get<ModelRenderer>();
+			var modelRenderer = spawnedHunter.Components.Get<SkinnedModelRenderer>() as ModelRenderer
+			                 ?? spawnedHunter.Components.Get<ModelRenderer>();
 			if (modelRenderer is not null)
 			{
 				modelRenderer.Tint = new Color(0.5f, 1.0f, 0.5f); // Green tint for hunters
@@ -246,7 +281,7 @@ public sealed class HunterSpawner : Component
 				{
 					rigidbody = spawnedHunter.Components.Create<Rigidbody>();
 				}
-				rigidbody.Enabled = true;
+				rigidbody.Enabled = false; // Must stay disabled — re-enabled on death for ragdoll
 			}
 			catch (System.Exception rbEx)
 			{
@@ -267,6 +302,15 @@ public sealed class HunterSpawner : Component
 				// Reset health if component exists
 				healthComponent.MaxHealth = 250f;
 				healthComponent.CurrentHealth = 250f;
+			}
+
+			// Disable any Enemy component on the clone — if using enemy_prefab as fallback,
+			// Enemy and Hunter would both run and fight each other for movement control
+			var enemyComponent = spawnedHunter.Components.Get<Enemy>();
+			if ( enemyComponent is not null )
+			{
+				enemyComponent.Enabled = false;
+				Log.Info( "HunterSpawner: Disabled Enemy component on fallback prefab" );
 			}
 
 			// Now enable or create Hunter component
@@ -294,8 +338,11 @@ public sealed class HunterSpawner : Component
 				Log.Info("HunterSpawner: Set player reference on Hunter");
 			}
 
+			if ( Networking.IsActive )
+				spawnedHunter.NetworkSpawn();
+
 			spawnedHunters.Add(spawnedHunter);
-			Log.Info($"HunterSpawner: Spawned hunter at distance {distance:F0}. Total: {spawnedHunters.Count}/{MaxHunters}");
+			Log.Info($"HunterSpawner: Spawned hunter at {spawnPos}. Total: {spawnedHunters.Count}/{MaxHunters}");
 		}
 		catch (System.Exception ex)
 		{

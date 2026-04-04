@@ -1,5 +1,6 @@
 using Sandbox;
 using System;
+using System.Threading.Tasks;
 
 public sealed class Hunter : Component
 {
@@ -40,13 +41,15 @@ public sealed class Hunter : Component
 	private GameObject pinnedPlayer = null;
 	private Vector3 pounceDirection = Vector3.Zero;
 	private Vector3 moveDirection = Vector3.Zero;
+	private bool deathHandled = false;
 
 	protected override void OnAwake()
 	{
 		// Cache components
 		characterController = Components.Get<CharacterController>();
 		health = Components.Get<HealthComponent>();
-		modelRenderer = Components.Get<ModelRenderer>();
+		modelRenderer = Components.Get<SkinnedModelRenderer>() as ModelRenderer
+		             ?? Components.Get<ModelRenderer>();
 
 		if (modelRenderer is not null)
 		{
@@ -86,7 +89,7 @@ public sealed class Hunter : Component
 
 			// Listen to health events
 			health.OnDeath += OnHunterDeath;
-			health.OnDamageTakenWithAttacker += OnHunterDamaged;
+			health.OnDamageTakenWithPosition += OnHunterDamaged;
 		}
 
 		if (player is null)
@@ -99,11 +102,25 @@ public sealed class Hunter : Component
 		}
 
 		Log.Info("Hunter spawned successfully");
+		deathHandled = false;
 	}
 
 	protected override void OnUpdate()
 	{
-		if (!Enabled || player is null || characterController is null)
+		if (!Enabled)
+		{
+			return;
+		}
+
+		// Skip AI if dead
+		if (health is not null && health.IsDead)
+		{
+			Log.Warning( $"Hunter.OnUpdate: health.IsDead=true — triggering death (deathHandled={deathHandled})" );
+			OnHunterDeath();
+			return;
+		}
+
+		if (player is null || characterController is null)
 		{
 			return;
 		}
@@ -117,14 +134,6 @@ public sealed class Hunter : Component
 				if (modelRenderer is not null)
 					modelRenderer.Tint = originalColor;
 			}
-		}
-
-		// Skip AI if dead
-		if (health is not null && health.IsDead)
-		{
-			currentState = HunterState.Idle;
-			characterController.Velocity = Vector3.Zero;
-			return;
 		}
 
 		// State machine
@@ -265,7 +274,7 @@ public sealed class Hunter : Component
 		}
 
 		// Pin the player
-		var playerMovement = player.Components.Get<PlayerMovement>();
+		var playerMovement = player.Components.GetInDescendantsOrSelf<PlayerMovement>();
 		if (playerMovement is not null)
 		{
 			playerMovement.IsPinned = true;
@@ -283,7 +292,7 @@ public sealed class Hunter : Component
 
 		if (pinnedPlayer is not null && pinnedPlayer.IsValid)
 		{
-			var playerMovement = pinnedPlayer.Components.Get<PlayerMovement>();
+			var playerMovement = pinnedPlayer.Components.GetInDescendantsOrSelf<PlayerMovement>();
 			if (playerMovement is not null)
 			{
 				playerMovement.IsPinned = false;
@@ -323,6 +332,10 @@ public sealed class Hunter : Component
 
 	void OnHunterDeath()
 	{
+		if (deathHandled)
+			return;
+
+		deathHandled = true;
 		Log.Info("Hunter died");
 		currentState = HunterState.Idle;
 		moveDirection = Vector3.Zero;
@@ -335,7 +348,6 @@ public sealed class Hunter : Component
 			characterController.Velocity = Vector3.Zero;
 		}
 
-		// Convert to ragdoll
 		if (modelRenderer is not null)
 		{
 			modelRenderer.Tint = Color.White;
@@ -356,12 +368,25 @@ public sealed class Hunter : Component
 		}
 
 		// Disable AI
-		Enabled = false;
+		_ = DisableAfterDelay();
 	}
 
-	void OnHunterDamaged(float damageAmount, GameObject attacker)
+	async Task DisableAfterDelay()
 	{
-		if (characterController is null || attacker is null)
+		await Task.DelaySeconds( 4f );
+		if ( GameObject.IsValid() )
+			Enabled = false;
+	}
+
+	void OnHunterDamaged(float damageAmount, Vector3 attackerPosition)
+	{
+		if (characterController is null)
+			return;
+
+		if (attackerPosition.IsNearZeroLength && player is not null)
+			attackerPosition = player.WorldPosition;
+
+		if (attackerPosition.IsNearZeroLength)
 			return;
 
 		// Flash effect
@@ -379,7 +404,9 @@ public sealed class Hunter : Component
 		}
 
 		// Apply knockback
-		Vector3 directionFromAttacker = (WorldPosition - attacker.WorldPosition).Normal;
+		Vector3 directionFromAttacker = (WorldPosition - attackerPosition).Normal;
+		if (directionFromAttacker.IsNearZeroLength)
+			directionFromAttacker = -WorldRotation.Forward;
 		Vector3 knockbackImpulse = (directionFromAttacker * 200f) + (Vector3.Up * 100f);
 		characterController.Punch(knockbackImpulse);
 	}
@@ -418,7 +445,7 @@ public sealed class Hunter : Component
 		if (health is not null)
 		{
 			health.OnDeath -= OnHunterDeath;
-			health.OnDamageTakenWithAttacker -= OnHunterDamaged;
+			health.OnDamageTakenWithPosition -= OnHunterDamaged;
 		}
 	}
 
@@ -427,6 +454,8 @@ public sealed class Hunter : Component
 	/// </summary>
 	public void ResetSpawnState()
 	{
+		deathHandled = false;
+
 		crouchTimer = 0f;
 		flashTimer = 0f;
 		pinDamageTimer = 0f;

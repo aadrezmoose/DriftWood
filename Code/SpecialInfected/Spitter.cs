@@ -1,5 +1,6 @@
 using Sandbox;
 using System.Linq;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Spitter — ranged special infected. Keeps its distance and launches acid projectiles
@@ -45,6 +46,7 @@ public sealed class Spitter : Component
 	private float growlTimer = 0f;
 	private float staggerTimer = 0f;
 	private Vector3 moveDirection = Vector3.Zero;
+	private bool deathHandled = false;
 
 	// ── Lifecycle ───────────────────────────────────────────────────────
 
@@ -78,16 +80,26 @@ public sealed class Spitter : Component
 			health.MaxHealth = MaxHealth;
 			health.CurrentHealth = MaxHealth;
 			health.OnDeath += OnSpitterDeath;
-			health.OnDamageTakenWithAttacker += OnSpitterDamaged;
+			health.OnDamageTakenWithPosition += OnSpitterDamaged;
 		}
 
 		if ( player is null ) Log.Warning( "Spitter: Could not find player" );
 		Log.Info( "Spitter: Spawned successfully" );
+		deathHandled = false;
 	}
 
 	protected override void OnUpdate()
 	{
-		if ( !Enabled || player is null || characterController is null ) return;
+		if ( !Enabled ) return;
+
+		// Dead check
+		if ( health is not null && health.IsDead )
+		{
+			OnSpitterDeath();
+			return;
+		}
+
+		if ( player is null || characterController is null ) return;
 
 		// Flash timer
 		if ( flashTimer > 0f )
@@ -95,14 +107,6 @@ public sealed class Spitter : Component
 			flashTimer -= Time.Delta;
 			if ( flashTimer <= 0f && modelRenderer is not null )
 				modelRenderer.Tint = originalColor;
-		}
-
-		// Dead check
-		if ( health is not null && health.IsDead )
-		{
-			currentState = SpitterState.Idle;
-			characterController.Velocity = Vector3.Zero;
-			return;
 		}
 
 		// Stagger blocks AI
@@ -242,9 +246,15 @@ public sealed class Spitter : Component
 
 	// ── Damage handlers ─────────────────────────────────────────────────
 
-	void OnSpitterDamaged( float damageAmount, GameObject attacker )
+	void OnSpitterDamaged( float damageAmount, Vector3 attackerPosition )
 	{
-		if ( characterController is null || attacker is null ) return;
+		if ( characterController is null ) return;
+
+		if ( attackerPosition.IsNearZeroLength && player is not null )
+			attackerPosition = player.WorldPosition;
+
+		if ( attackerPosition.IsNearZeroLength )
+			return;
 
 		// Flash
 		if ( modelRenderer is not null )
@@ -261,12 +271,18 @@ public sealed class Spitter : Component
 		staggerTimer = System.Math.Min( System.Math.Max( staggerTimer, addStagger ), 1.0f );
 
 		// Knockback
-		Vector3 dir = (WorldPosition - attacker.WorldPosition).Normal;
+		Vector3 dir = (WorldPosition - attackerPosition).Normal;
+		if ( dir.IsNearZeroLength )
+			dir = -WorldRotation.Forward;
 		characterController.Punch( dir * 200f + Vector3.Up * 100f );
 	}
 
 	void OnSpitterDeath()
 	{
+		if ( deathHandled )
+			return;
+
+		deathHandled = true;
 		Log.Info( "Spitter: Died" );
 		currentState = SpitterState.Idle;
 		moveDirection = Vector3.Zero;
@@ -293,11 +309,20 @@ public sealed class Spitter : Component
 		{
 			skinnedRenderer.Tint = Color.White;
 			var modelPhysics = Components.GetOrCreate<ModelPhysics>();
+			modelPhysics.Enabled = true;
 			modelPhysics.Renderer = skinnedRenderer;
 			modelPhysics.Model = skinnedRenderer.Model;
 		}
 
-		Enabled = false;
+		// Let ragdoll physics run before disabling
+		_ = DisableAfterDelay();
+	}
+
+	async Task DisableAfterDelay()
+	{
+		await Task.DelaySeconds( 4f );
+		if ( GameObject.IsValid() )
+			Enabled = false;
 	}
 
 	// ── Fixed update — movement ─────────────────────────────────────────
@@ -349,7 +374,7 @@ public sealed class Spitter : Component
 		if ( health is not null )
 		{
 			health.OnDeath -= OnSpitterDeath;
-			health.OnDamageTakenWithAttacker -= OnSpitterDamaged;
+			health.OnDamageTakenWithPosition -= OnSpitterDamaged;
 		}
 	}
 }

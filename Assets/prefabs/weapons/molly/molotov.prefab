@@ -51,7 +51,7 @@
         "ColliderFlags": 0,
         "Elasticity": null,
         "Friction": null,
-        "IsTrigger": true,
+        "IsTrigger": false,
         "OnComponentDestroy": null,
         "OnComponentDisabled": null,
         "OnComponentEnabled": null,
@@ -62,7 +62,7 @@
         "OnObjectTriggerExit": null,
         "OnTriggerEnter": null,
         "OnTriggerExit": null,
-        "Radius": 32,
+        "Radius": 8,
         "RollingResistance": null,
         "Static": false,
         "Surface": null,
@@ -85,8 +85,10 @@
         "OnComponentUpdate": null,
         "PickupSound": "sounds/coin1.sound",
         "ProjectilePrefab": "prefabs/weapons/molly/molotovprojectile.prefab",
+        "ProjectileScale": 2,
         "SlotType": "Utility",
-        "ThrowSpeed": 800
+        "ThrowSpeed": 800,
+        "ViewModelOverlayModel": "models/3dmodelscc0/gunsexplosives/molotv_cocktail/molotov_cocktail.vmdl"
       }
     ],
     "Children": [],

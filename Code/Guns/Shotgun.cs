@@ -12,6 +12,7 @@ public sealed class Shotgun : Gun
 	[Property] public float PelletSpread { get; set; } = 0.08f;
 	[Property] public float PelletDamage { get; set; } = 8f; // Per pellet
 	[Property] public float HeadshotMultiplier { get; set; } = 1.5f;
+	[Property] public bool VerboseFireLogging { get; set; } = false;
 	[Property] public SoundEvent FireSound { get; set; }
 	[Property] public SoundEvent PumpSound { get; set; }   // plays after each shot
 	[Property] public SoundEvent InsertSound { get; set; } // plays per shell during reload
@@ -22,18 +23,14 @@ public sealed class Shotgun : Gun
 	private float shellTimer = 0f;
 	private float timePerShell = 0f;
 
-	// Pellet debug visualization
-	private struct PelletTrace { public Vector3 Start, End; public bool Hit; public float TimeLeft; }
-	private System.Collections.Generic.List<PelletTrace> pelletDebug = new();
-	private const float PelletDebugDuration = 1.5f;
-
-	protected override void OnAwake()
+protected override void OnAwake()
 	{
 		Damage = PelletDamage;
 		FireRate = 0.8f;
 		AmmoClip = 8;
-		AmmoReserve = 32;
+		AmmoReserve = 64;
 		ReloadTime = 3.0f; // Total time for a full reload — per-shell = ReloadTime / AmmoClip
+		RecoilAmount = 7.0f;
 
 		base.OnAwake();
 	}
@@ -59,7 +56,7 @@ public sealed class Shotgun : Gun
 				}
 
 				if ( InsertSound != null )
-					Sound.Play( InsertSound );
+					Sound.Play( InsertSound, playerHead?.WorldPosition ?? WorldPosition );
 
 				bool clipFull = currentAmmo >= AmmoClip;
 				bool reserveEmpty = !UnlimitedAmmo && AmmoReserve <= 0;
@@ -75,38 +72,13 @@ public sealed class Shotgun : Gun
 			}
 		}
 
-		// Draw persisted pellet debug traces
-		for ( int i = pelletDebug.Count - 1; i >= 0; i-- )
-		{
-			var p = pelletDebug[i];
-			p.TimeLeft -= Time.Delta;
-			if ( p.TimeLeft <= 0f ) { pelletDebug.RemoveAt( i ); continue; }
-			pelletDebug[i] = p;
-
-			float alpha = p.TimeLeft / PelletDebugDuration;
-			Gizmo.Draw.Color = p.Hit
-				? Color.Red.WithAlpha( alpha )
-				: Color.Gray.WithAlpha( alpha * 0.4f );
-			Gizmo.Draw.Line( p.Start, p.End );
-			if ( p.Hit )
-			{
-				Gizmo.Draw.Color = Color.Orange.WithAlpha( alpha );
-				Gizmo.Draw.LineSphere( p.End, 4f );
-			}
-		}
-
-		base.OnUpdate();
+base.OnUpdate();
 	}
 
 	public override void CancelReload()
 	{
 		shellReloadActive = false;
-		var renderer = GunViewModel.Current?.ModelRenderer;
-		if ( renderer != null )
-		{
-			renderer.Set( "reload", false );
-			renderer.Set( "reload_finished", false );
-		}
+		GunViewModel.Current?.ModelRenderer?.Set( "reload", false );
 		base.CancelReload();
 	}
 
@@ -123,8 +95,7 @@ public sealed class Shotgun : Gun
 		shellTimer = timePerShell;
 		shellReloadActive = true;
 
-		// Start reload animation sequence
-		GunViewModel.Current?.ModelRenderer?.Set( "reload", true );
+		GunViewModel.Current?.PlayReloadAnim();
 	}
 
 	private void FinishShellReload()
@@ -133,17 +104,10 @@ public sealed class Shotgun : Gun
 		isReloading = false;
 		reloadTimeRemaining = 0f;
 
-		// reload is non-auto-reset so must be explicitly cleared, otherwise the
-		// reload_insert state loops forever
-		var renderer = GunViewModel.Current?.ModelRenderer;
-		if ( renderer != null )
-		{
-			renderer.Set( "reload_finished", true );
-			renderer.Set( "reload", false );
-		}
+		GunViewModel.Current?.ModelRenderer?.Set( "reload", false );
 
 		if ( PumpSound != null )
-			_ = PlayDelayed( PumpSound, 0.1f );
+			Sound.Play( PumpSound );
 	}
 
 	protected override void OnFire()
@@ -156,7 +120,7 @@ public sealed class Shotgun : Gun
 
 		if ( FireSound != null )
 		{
-			var snd = Sound.Play( FireSound );
+			var snd = Sound.Play( FireSound, playerHead?.WorldPosition ?? WorldPosition );
 			snd.Volume = 0.4f;
 		}
 
@@ -193,7 +157,7 @@ public sealed class Shotgun : Gun
 						{
 							float headshotDamage = PelletDamage * HeadshotMultiplier * headshotZone.DamageMultiplier;
 							health.TakeDamage( headshotDamage, owner );
-							PlayerStats.ShotsHit++;
+							TrackShotHit();
 
 							// Only trigger headshot stagger once per shot, not per pellet
 							if ( i == 0 )
@@ -211,7 +175,7 @@ public sealed class Shotgun : Gun
 					health ??= trace.GameObject?.Components.GetInDescendantsOrSelf<HealthComponent>();
 
 					if ( health != null && !health.IsPlayer )
-						PlayerStats.ShotsHit++;
+						TrackShotHit();
 
 					health?.TakeDamage( PelletDamage, owner );
 
@@ -222,21 +186,22 @@ public sealed class Shotgun : Gun
 						enemy.ApplyShotgunKnockback( owner );
 				}
 
-				pelletDebug.Add( new PelletTrace { Start = startPos, End = trace.EndPosition, Hit = true, TimeLeft = PelletDebugDuration } );
-			}
-			else
-			{
-				pelletDebug.Add( new PelletTrace { Start = startPos, End = startPos + direction * Range, Hit = false, TimeLeft = PelletDebugDuration } );
-			}
+				// Impact effects on world geometry (not enemies)
+			if ( trace.GameObject?.Components.GetInAncestorsOrSelf<Enemy>() == null &&
+			     trace.GameObject?.Components.GetInDescendantsOrSelf<Enemy>() == null )
+				SpawnImpactEffects( trace );
+
+				}
 		}
 
-		Log.Info( $"Shotgun fired {PelletCount} pellets" );
+		if ( VerboseFireLogging )
+			Log.Info( $"Shotgun fired {PelletCount} pellets" );
 	}
 
 	private async System.Threading.Tasks.Task PlayDelayed( SoundEvent sound, float delay )
 	{
-		await System.Threading.Tasks.Task.Delay( (int)(delay * 1000) );
+		await Task.DelaySeconds( delay );
 		if ( IsValid )
-			Sound.Play( sound );
+			Sound.Play( sound, playerHead?.WorldPosition ?? WorldPosition );
 	}
 }

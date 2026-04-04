@@ -1,0 +1,24 @@
+TEST
+Vince Test:
+My observations:
+	Variations in models
+	Start introducing special infected
+	Seems like the darker it gets the faster it gets darker
+	Flashlight shows player model when crouched sometimes
+	Camera shake heavy when downed, not sure if that was the cause or not
+	Maybe crouch inmproves recoil? Does recoil even affect bullet acc right now?
+	Keep view model consistent no matter FOV
+	Molotov: 
+		Too high arc, need to tweak the throwing overall
+		Fire spot anim ends too soon
+Vince Feeedback:
+Sprinting causes the viewmodel to jitter when trying to sprint with no stam
+Throwables show E to use instead of LMB in Inventory
+Zombie spawns still not working with crane event
+Molotov needs work
+Zombie variants( Headshot only (we have armored), attracted to noise 
+
+Multiplayer Notes:
+Second player joined, camera started at spawn point but seems like a new player model didn't create. I basically also control the host player. Or player model duplicated on the host player. 
+
+	

@@ -7,7 +7,7 @@ using Sandbox;
 /// </summary>
 public sealed class DayNightCycle : Component
 {
-	[Property] public float CycleDuration { get; set; } = 300f; // seconds to go from day to night normally
+	[Property] public float CycleDuration { get; set; } = 600f; // seconds to go from day to night normally
 
 	[Property] public Color DayLightColor { get; set; } = new Color( 1f, 0.95f, 0.8f );
 	[Property] public Color NightLightColor { get; set; } = new Color( 0.05f, 0.08f, 0.2f );
@@ -18,13 +18,17 @@ public sealed class DayNightCycle : Component
 	[Property] public float DayBrightness { get; set; } = 3f;
 	[Property] public float NightBrightness { get; set; } = 0.1f;
 
-	[Property] public float NightTransitionSpeed { get; set; } = 0.5f; // how fast it snaps to night at end room
+	[Property] public float NightTransitionSpeed { get; set; } = 0.15f; // how fast it snaps to night at end room
 
 	[Property] public Color DaySkyboxTint { get; set; } = Color.White;
 	[Property] public Color NightSkyboxTint { get; set; } = new Color( 0.05f, 0.05f, 0.1f );
 
+	[Property] public Color DayFogColor { get; set; } = new Color( 0.55f, 0.55f, 0.55f );
+	[Property] public Color NightFogColor { get; set; } = new Color( 0.02f, 0.02f, 0.04f );
+
 	private DirectionalLight light;
 	private SkyBox2D skybox;
+	private GradientFog fog;
 	private float elapsed = 0f;
 	private float t = 0f;
 	private bool snapToNight = false;
@@ -37,6 +41,7 @@ public sealed class DayNightCycle : Component
 			Log.Warning( "DayNightCycle: No DirectionalLight found in scene." );
 
 		skybox = Scene.GetAllComponents<SkyBox2D>().FirstOrDefault();
+		fog = Scene.GetAllComponents<GradientFog>().FirstOrDefault();
 
 		SafeRoom.OnPlayerEntered += OnPlayerEnteredSafeRoom;
 	}
@@ -45,6 +50,7 @@ public sealed class DayNightCycle : Component
 	{
 		if ( light == null ) return;
 
+		// All players: locally compute t based on elapsed time
 		if ( snapToNight )
 		{
 			t = MathX.Lerp( t, 1f, Time.Delta * NightTransitionSpeed );
@@ -60,11 +66,15 @@ public sealed class DayNightCycle : Component
 
 		if ( skybox != null )
 			skybox.Tint = Color.Lerp( DaySkyboxTint, NightSkyboxTint, t );
+
+		if ( fog != null )
+			fog.Color = Color.Lerp( DayFogColor, NightFogColor, t );
 	}
 
 	private void OnPlayerEnteredSafeRoom( SafeRoom room )
 	{
-		if ( room.IsEndRoom ) snapToNight = true;
+		if ( !room.IsEndRoom ) return;
+		snapToNight = true;
 	}
 
 	protected override void OnDestroy()

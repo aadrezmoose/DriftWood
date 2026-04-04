@@ -15,6 +15,8 @@ public sealed class Flashlight : Component
 
 	private SpotLight spotLight;
 	private bool isOn;
+	private PlayerIdentity _identity;
+	private PlayerIdentity Identity => _identity ??= Components.GetInAncestorsOrSelf<PlayerIdentity>();
 
 	protected override void OnAwake()
 	{
@@ -27,14 +29,40 @@ public sealed class Flashlight : Component
 
 		isOn = StartOn;
 		spotLight.Enabled = isOn;
+
+		// Try to resolve Identity immediately
+		if ( _identity == null )
+			_identity = Components.GetInAncestorsOrSelf<PlayerIdentity>();
+
+		if ( _identity != null )
+			_identity.FlashlightOn = isOn;
+
+		Log.Info( $"[Flashlight] OnAwake: Networking.IsActive={Networking.IsActive}, IsProxy={IsProxy}" );
 	}
 
 	protected override void OnUpdate()
 	{
-		if ( Input.Pressed( "Flashlight" ) )
+		if ( Networking.IsActive )
 		{
-			isOn = !isOn;
-			spotLight.Enabled = isOn;
+			if ( spotLight != null )
+				spotLight.Enabled = false;
+			return;
 		}
+
+		if ( _identity == null )
+			_identity = Components.GetInAncestorsOrSelf<PlayerIdentity>();
+
+		if ( _identity != null )
+			ApplyFlashlightState( _identity.FlashlightOn );
 	}
+
+	private void ApplyFlashlightState( bool enabled )
+	{
+		isOn = enabled;
+		if ( Identity != null )
+			Identity.FlashlightOn = enabled;
+		if ( spotLight != null )
+			spotLight.Enabled = enabled;
+	}
+
 }

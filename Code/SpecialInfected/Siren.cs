@@ -1,5 +1,6 @@
 using Sandbox;
 using System.Linq;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Siren — stationary special infected. Sits and cries until disturbed.
@@ -52,6 +53,7 @@ public sealed class Siren : Component
 	private float flashTimer      = 0f;
 	private float staggerTimer    = 0f;
 	private Vector3 moveDirection = Vector3.Zero;
+	private bool deathHandled = false;
 
 	// Crying ambient sound handle
 	private SoundHandle cryHandle;
@@ -72,7 +74,7 @@ public sealed class Siren : Component
 			health.MaxHealth     = MaxHealth;
 			health.CurrentHealth = MaxHealth;
 			health.OnDeath += OnSirenDeath;
-			health.OnDamageTakenWithAttacker += OnSirenDamaged;
+			health.OnDamageTakenWithPosition += OnSirenDamaged;
 		}
 		else
 		{
@@ -81,6 +83,8 @@ public sealed class Siren : Component
 
 		if ( characterController == null )
 			Log.Warning( "Siren: No CharacterController found" );
+
+		deathHandled = false;
 	}
 
 	protected override void OnStart()
@@ -95,7 +99,11 @@ public sealed class Siren : Component
 
 	protected override void OnUpdate()
 	{
-		if ( health != null && health.IsDead ) return;
+		if ( health != null && health.IsDead )
+		{
+			OnSirenDeath();
+			return;
+		}
 
 		// Flash timer
 		if ( flashTimer > 0f )
@@ -280,8 +288,14 @@ public sealed class Siren : Component
 
 	// ── Damage handlers ──────────────────────────────────────────────────────
 
-	void OnSirenDamaged( float damage, GameObject attacker )
+	void OnSirenDamaged( float damage, Vector3 attackerPosition )
 	{
+		if ( attackerPosition.IsNearZeroLength )
+		{
+			var nearest = FindNearestPlayer();
+			if ( nearest != null ) attackerPosition = nearest.WorldPosition;
+		}
+
 		// Flash
 		if ( modelRenderer != null )
 		{
@@ -296,19 +310,29 @@ public sealed class Siren : Component
 		staggerTimer = System.Math.Min( System.Math.Max( staggerTimer, 0.25f + damage * 0.008f ), 0.8f );
 
 		// Knockback
-		if ( characterController != null )
+		if ( characterController != null && !attackerPosition.IsNearZeroLength )
 		{
-			Vector3 dir = (WorldPosition - attacker.WorldPosition).Normal;
+			Vector3 dir = (WorldPosition - attackerPosition).Normal;
+			if ( dir.IsNearZeroLength )
+				dir = -WorldRotation.Forward;
 			characterController.Punch( dir * 150f + Vector3.Up * 80f );
 		}
 
 		// Shooting the Siren startles her
 		if ( currentState != SirenState.Enraged )
-			Startle( attacker );
+		{
+			var startledBy = FindNearestPlayer();
+			if ( startledBy != null )
+				Startle( startledBy );
+		}
 	}
 
 	void OnSirenDeath()
 	{
+		if ( deathHandled )
+			return;
+
+		deathHandled = true;
 		Log.Info( "Siren: Died" );
 		StopCrying();
 		moveDirection = Vector3.Zero;
@@ -335,9 +359,18 @@ public sealed class Siren : Component
 			var modelPhysics = Components.GetOrCreate<ModelPhysics>();
 			modelPhysics.Renderer = skinnedRenderer;
 			modelPhysics.Model    = skinnedRenderer.Model;
+			modelPhysics.Enabled = true;
 		}
 
-		Enabled = false;
+		// Let ragdoll physics run before disabling
+		_ = DisableAfterDelay();
+	}
+
+	async Task DisableAfterDelay()
+	{
+		await Task.DelaySeconds( 4f );
+		if ( GameObject.IsValid() )
+			Enabled = false;
 	}
 
 	// ── Helpers ──────────────────────────────────────────────────────────────
@@ -372,7 +405,7 @@ public sealed class Siren : Component
 		if ( health != null )
 		{
 			health.OnDeath -= OnSirenDeath;
-			health.OnDamageTakenWithAttacker -= OnSirenDamaged;
+			health.OnDamageTakenWithPosition -= OnSirenDamaged;
 		}
 	}
 }

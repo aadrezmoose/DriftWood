@@ -32,8 +32,10 @@
         "OnComponentUpdate": null,
         "PickupSound": "sounds/coin1.sound",
         "ProjectilePrefab": "prefabs/weapons/pipebomb/pipebombproj.prefab",
+        "ProjectileScale": 2,
         "SlotType": "Utility",
-        "ThrowSpeed": 800
+        "ThrowSpeed": 800,
+        "ViewModelOverlayModel": "models/3dmodelscc0/gunsexplosives/pipe_bomb/pipe_bomb.vmdl"
       },
       {
         "__type": "Sandbox.SphereCollider",
@@ -55,7 +57,7 @@
         "OnObjectTriggerExit": null,
         "OnTriggerEnter": null,
         "OnTriggerExit": null,
-        "Radius": 32,
+        "Radius": 2.9199328,
         "RollingResistance": null,
         "Static": false,
         "Surface": null,

@@ -1,0 +1,150 @@
+DRIFTWOOD — EXECUTION BACKLOG (ORDERED)
+Target: 2-week vertical slice stabilization + one content loop
+
+Sizing
+	S = 0.5-1 day
+	M = 1-2 days
+	L = 3-4 days
+
+P0 — FOUNDATION (DO FIRST)
+	1) Multiplayer state audit + late-join hardening (L)
+		Goal:
+			Make core co-op states deterministic for host/client and rejoin/late-join.
+		Primary files:
+			- Code/PlayerMovement.cs
+			- Code/PlayerIdentity.cs
+			- Code/HealthComponent.cs
+			- Code/IncapacitationComponent.cs
+			- Code/WeaponManager.cs
+			- Code/Items/ThrowableBase.cs
+			- Code/Items/PipeBombProjectile.cs
+			- Code/ObjectiveEvent.cs
+			- Code/SafeRoom.cs
+		Acceptance:
+			- Host/client both see correct health/incap/ammo/active slot/objective state.
+			- Late joiner sees current objective + safe room + weather/day-night state.
+			- No ownership/RPC unknown-object errors in logs during 10-min run.
+
+	2) Flashlight + muzzle effects cleanup pass (S)
+		Goal:
+			Finalize MP visual parity and remove temporary verbose diagnostics.
+		Primary files:
+			- Code/PlayerMovement.cs
+			- Code/WeaponManager.cs
+		Acceptance:
+			- Host/client perceive near-matching beam direction for each other.
+			- No visible face self-shadow artifacts from remote flashlight.
+			- Debug logs reduced to toggleable diagnostics only.
+
+P1 — VERTICAL SLICE GAMEPLAY LOOP
+	3) End-of-level stats screen (M)
+		Goal:
+			Show team performance summary on level completion.
+		Primary files:
+			- Code/PlayerStats.cs
+			- Code/LevelManager.cs
+			- Code/ui/HUD.razor
+			- Code/ui/HUD.razor.scss
+		Acceptance:
+			- Shows: kills, damage taken, times downed, accuracy, revives.
+			- Appears reliably when end safe room completion triggers.
+			- Values reset correctly on new run.
+
+	4) Objective template #1: Breaker chain (L)
+		Goal:
+			Build one reusable multi-step objective (3 steps) with pressure escalation.
+		Primary files:
+			- Code/ObjectiveEvent.cs (extend or split)
+			- Code/CraneEventButton.cs (reuse interaction pattern)
+			- Code/PlayerStats.cs
+			- Code/AIDirector.cs
+			- Assets/scenes/firsttest.scene
+		Acceptance:
+			- Steps must be completed in order.
+			- HUD objective text/progress updates each step.
+			- Pressure ramps by step and clears on completion.
+
+	5) firsttest.scene pacing pass (M)
+		Goal:
+			Hit stable 10-15 min run with 3 intensity phases.
+		Primary files:
+			- Assets/scenes/firsttest.scene
+			- Code/AIDirector.cs
+			- Code/EnemySpawner.cs
+			- Code/StaticEnemyGroup.cs
+			- Code/SpawnNode.cs
+		Acceptance:
+			- Phase flow: onboarding -> pressure spike -> finale spike -> release.
+			- 2-player run completes in target time window.
+			- Down/revive happens sometimes, not every run.
+
+P2 — TUNING + REPLAY VALUE
+	6) Difficulty presets (data-first) (M)
+		Goal:
+			Add Casual/Normal/Expert without new systems complexity.
+		Primary files:
+			- Code/AIDirector.cs
+			- Code/Enemy.cs
+			- Code/EnemySpawner.cs
+			- Code/GameManager.cs (or settings entry point)
+		Acceptance:
+			- Presets alter spawn pressure, damage, cooldown windows.
+			- Same map supports all 3 presets with measurable intensity differences.
+
+	7) Optional loot risk/reward room (S)
+		Goal:
+			Create one optional branch encounter with meaningful resource payout.
+		Primary files:
+			- Assets/scenes/firsttest.scene
+			- Code/StaticEnemyGroup.cs
+			- Code/Items/* (placement only unless behavior tweak needed)
+		Acceptance:
+			- Optional path is skippable.
+			- Triggering it creates clear danger spike + visible reward.
+
+PLAYTEST CHECKLIST (RUN EACH MILESTONE)
+	- Host + client complete full run with no critical desync.
+	- Client late-join at mid-objective and at finale.
+	- Incap + revive + death + win flow all in one session.
+	- Throwable lure/explosion + special infected + objective pressure active together.
+
+IMMEDIATE NEXT 3 TASKS
+	1) P0.1 Multiplayer state audit + late-join hardening
+	2) P1.3 End-of-level stats screen
+	3) P1.4 Breaker chain objective prototype in firsttest.scene
+
+VERTICAL SLICE (NEXT 2 WEEKS)
+	Week 1 — Core Run Quality
+		- Add one objective event to firsttest.scene using ObjectiveEvent + trigger volume
+		- Tune objective duration and pressure so down/revive happens ~1–2 times per run
+		- Balance economy pass: starting ammo, ammo piles, health kit/pills density
+		- Combat readability pass: low-health feedback, low-ammo moments, special telegraph timing
+		- Lock one complete run target: 10–15 minutes start safe room -> end safe room
+
+	Week 2 — Ship-Ready Slice
+		- Add end-of-level polish pass (stats readability + level-complete flow pacing)
+		- Implement one new content pillar fully (either Charger polish pass or one throwable polish pass)
+		- Do a 2-player co-op sync pass (revive, pickups, down state, damage ownership)
+		- Add balance table pass (spawn interval caps, max alive caps, special cooldowns)
+		- Run 3 playtest loops and apply only high-impact fixes
+
+Immediate Next Task (today)
+	- Wire ObjectiveEvent into firsttest.scene and tune Duration/StartMessage/CompleteMessage in-editor.
+	- Crane setup quick list:
+		1) Put ObjectiveEvent on a trigger volume where players start the cargo holdout
+		2) Assign BlockingContainer to the container blocking the path
+		3) Set ContainerMoveOffset so container clears the route (example Y +180)
+		4) Optional: assign CraneVisual + CraneMoveOffset to move hook/arm visually
+		5) Tune HoldDuration/MoveDuration for pressure timing
+
+TODO: 
+	Damage System for players and NPCS/Enemies (even a block prop take dmg, have gun projectiles cause dmg. Friendly fire? Y)
+	Multiplayer lobby diagnostics pass (menu debug strip + host success state + fallback direct join path + 2-account privacy matrix test)
+	
+	Ping
+	Post round stats(superlatives)
+	teammate info to hud
+
+	Roadmap notes and staged objective plan: ROADMAP.md
+	
+

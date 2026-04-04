@@ -1,0 +1,484 @@
+MainMenu
+{
+	font-family: Poppins, sans-serif;
+	pointer-events: all;
+
+	// Full-screen background — child of root, fills the panel
+	.menu-bg
+	{
+		position: absolute;
+		top: 0; left: 0; right: 0; bottom: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		justify-content: center;
+		padding-left: 10%;
+	}
+
+	.menu-bg-img
+	{
+		position: absolute;
+		top: 0; left: 0; right: 0; bottom: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	// Dark tint over the screenshot so text stays readable
+	.menu-tint
+	{
+		position: absolute;
+		top: 0; left: 0; right: 0; bottom: 0;
+		background-color: rgba(5, 10, 16, 0.65);
+	}
+
+	// ── Main panel ──────────────────────────────────────────────────────
+
+	.menu-panel
+	{
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 12px;
+		width: 540px;
+		max-width: 90%;
+		z-index: 1;
+	}
+
+	// ── Title ───────────────────────────────────────────────────────────
+
+	.menu-title
+	{
+		font-size: 56px;
+		font-weight: 900;
+		letter-spacing: 12px;
+		color: white;
+		text-transform: uppercase;
+		text-shadow: 0 0 40px rgba(200, 30, 30, 0.6);
+		margin-bottom: 4px;
+	}
+
+	.menu-subtitle
+	{
+		font-size: 13px;
+		letter-spacing: 4px;
+		color: rgba(255, 255, 255, 0.35);
+		text-transform: uppercase;
+		margin-bottom: 24px;
+	}
+
+	// ── Button list ─────────────────────────────────────────────────────
+
+	.menu-buttons
+	{
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 8px;
+		width: 100%;
+	}
+
+	.menu-btn
+	{
+		padding: 14px 32px;
+		font-size: 15px;
+		font-weight: 700;
+		letter-spacing: 3px;
+		text-transform: uppercase;
+		text-align: center;
+		color: white;
+		background-color: rgba(255, 255, 255, 0.06);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+
+		&:hover
+		{
+			background-color: rgba(200, 30, 30, 0.25);
+			border-color: rgba(220, 50, 50, 0.8);
+			color: rgb(255, 150, 150);
+		}
+
+		&:active
+		{
+			background-color: rgba(200, 30, 30, 0.45);
+		}
+
+		&.menu-btn-secondary
+		{
+			color: rgba(255, 255, 255, 0.5);
+			background-color: transparent;
+			border-color: rgba(255, 255, 255, 0.08);
+
+			&:hover
+			{
+				background-color: rgba(255, 255, 255, 0.08);
+				border-color: rgba(255, 255, 255, 0.3);
+				color: white;
+			}
+		}
+
+		&.disabled
+		{
+			opacity: 0.45;
+			border-color: rgba(255, 255, 255, 0.08);
+			color: rgba(255, 255, 255, 0.45);
+
+			&:hover
+			{
+				background-color: rgba(255, 255, 255, 0.06);
+				border-color: rgba(255, 255, 255, 0.08);
+				color: rgba(255, 255, 255, 0.45);
+			}
+		}
+	}
+
+	// Row of buttons side-by-side (lobby screen)
+	.menu-row
+	{
+		display: flex;
+		flex-direction: row;
+		gap: 8px;
+		width: 100%;
+		margin-top: 8px;
+		justify-content: center;
+
+		.menu-btn
+		{
+			flex: 1 1 0;
+			min-width: 140px;
+			white-space: nowrap;
+		}
+	}
+
+	// ── Lobby browser ───────────────────────────────────────────────────
+
+	.lobby-status
+	{
+		font-size: 13px;
+		letter-spacing: 2px;
+		color: rgba(255, 255, 255, 0.4);
+		text-transform: uppercase;
+		text-align: center;
+		padding: 20px 0;
+	}
+
+	.lobby-room-meta
+	{
+		font-size: 11px;
+		letter-spacing: 2px;
+		color: rgba(255, 255, 255, 0.55);
+		text-transform: uppercase;
+		margin-bottom: 4px;
+	}
+
+	.lobby-config
+	{
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		padding: 4px 0 8px 0;
+	}
+
+	.lobby-list
+	{
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		width: 100%;
+		max-height: 300px;
+		margin-bottom: 4px;
+	}
+
+	.lobby-row
+	{
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		padding: 12px 16px;
+		background-color: rgba(255, 255, 255, 0.04);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+
+		&:hover
+		{
+			background-color: rgba(200, 30, 30, 0.15);
+			border-color: rgba(200, 30, 30, 0.5);
+		}
+	}
+
+	.lobby-name
+	{
+		font-size: 14px;
+		font-weight: 600;
+		color: white;
+	}
+
+	.lobby-players
+	{
+		font-size: 12px;
+		color: rgba(220, 100, 100, 0.9);
+	}
+
+	.lobby-host
+	{
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 2px;
+		color: rgba(220, 100, 100, 0.95);
+		text-transform: uppercase;
+	}
+
+	.lobby-value
+	{
+		width: 130px;
+		text-align: center;
+		font-size: 13px;
+		font-weight: 600;
+		letter-spacing: 1px;
+		color: white;
+		text-transform: uppercase;
+	}
+
+	// ── Settings ────────────────────────────────────────────────────────
+
+	.settings-row
+	{
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		padding: 10px 0;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+		gap: 32px;
+	}
+
+	.settings-label
+	{
+		font-size: 12px;
+		letter-spacing: 3px;
+		color: rgba(255, 255, 255, 0.5);
+		text-transform: uppercase;
+	}
+
+	.settings-controls
+	{
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.settings-btn
+	{
+		width: 28px;
+		height: 28px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 18px;
+		font-weight: 700;
+		color: white;
+		background-color: rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		cursor: pointer;
+
+		&:hover
+		{
+			background-color: rgba(200, 30, 30, 0.25);
+			border-color: rgba(200, 30, 30, 0.6);
+		}
+	}
+
+	// Privacy selection buttons (larger)
+	.settings-controls .settings-btn
+	{
+		width: 48px;
+		height: 48px;
+		font-size: 13px;
+		font-weight: 600;
+		letter-spacing: 1px;
+		text-transform: uppercase;
+		transition: all 0.2s ease;
+
+		&:hover
+		{
+			background-color: rgba(200, 30, 30, 0.3);
+			border-color: rgba(200, 30, 30, 0.8);
+			transform: scale(1.05);
+		}
+	}
+
+	.settings-value
+	{
+		font-size: 14px;
+		font-weight: 600;
+		color: white;
+		min-width: 36px;
+		text-align: center;
+	}
+
+	.char-dropdown
+	{
+		position: relative;
+		width: 220px;
+		flex-shrink: 0;
+	}
+
+	.char-dropdown-backdrop
+	{
+		position: absolute;
+		top: 0; left: 0; right: 0; bottom: 0;
+		z-index: 998;
+		pointer-events: all;
+	}
+
+	.char-dropdown-btn
+	{
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		padding: 8px 12px;
+		background: rgba(255, 255, 255, 0.07);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		cursor: pointer;
+
+		&:hover
+		{
+			background: rgba(200, 30, 30, 0.15);
+			border-color: rgba(200, 30, 30, 0.5);
+		}
+	}
+
+	.char-dropdown-name
+	{
+		font-size: 13px;
+		font-weight: 600;
+		letter-spacing: 1px;
+		color: white;
+		text-transform: uppercase;
+	}
+
+	.char-dropdown-arrow
+	{
+		font-size: 10px;
+		color: rgba(255, 255, 255, 0.5);
+	}
+
+	.char-dropdown-list
+	{
+		position: absolute;
+		top: 100%;
+		left: 0px;
+		right: 0px;
+		display: flex;
+		flex-direction: column;
+		background: rgb(12, 12, 14);
+		border: 1px solid rgba(200, 30, 30, 0.5);
+		border-top: none;
+		z-index: 999;
+	}
+
+	.char-dropdown-item
+	{
+		display: flex;
+		flex-direction: column;
+		padding: 10px 12px;
+		cursor: pointer;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+		border-left: 3px solid transparent;
+
+		&:hover
+		{
+			background: rgba(200, 30, 30, 0.2);
+			border-left-color: rgba(200, 30, 30, 0.6);
+		}
+
+		&.selected
+		{
+			background: rgba(200, 30, 30, 0.3);
+			border-left-color: rgb(200, 30, 30);
+		}
+	}
+
+	.char-item-name
+	{
+		font-size: 12px;
+		font-weight: 700;
+		letter-spacing: 2px;
+		color: rgba(255, 255, 255, 0.75);
+		text-transform: uppercase;
+	}
+
+	.char-dropdown-item.selected .char-item-name
+	{
+		color: rgb(255, 140, 140);
+	}
+
+	.char-item-desc
+	{
+		font-size: 10px;
+		color: rgba(255, 255, 255, 0.35);
+		margin-top: 2px;
+		font-style: italic;
+		text-transform: none;
+		letter-spacing: 0;
+	}
+
+	// ── Privacy Selection ───────────────────────────────────────────────
+
+	.privacy-section
+	{
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 16px;
+		width: 100%;
+		padding: 24px 0;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	}
+
+	.privacy-label
+	{
+		font-size: 11px;
+		letter-spacing: 3px;
+		color: rgba(255, 255, 255, 0.5);
+		text-transform: uppercase;
+	}
+
+	.privacy-buttons
+	{
+		display: flex;
+		flex-direction: row;
+		gap: 12px;
+		justify-content: center;
+	}
+
+	.privacy-btn
+	{
+		padding: 12px 24px;
+		font-size: 12px;
+		font-weight: 600;
+		letter-spacing: 2px;
+		text-transform: uppercase;
+		color: rgba(255, 255, 255, 0.6);
+		background-color: rgba(255, 255, 255, 0.05);
+		border: 1.5px solid rgba(255, 255, 255, 0.15);
+		cursor: pointer;
+		transition: all 0.2s ease;
+
+		&:hover
+		{
+			background-color: rgba(200, 30, 30, 0.15);
+			border-color: rgba(200, 30, 30, 0.5);
+			color: rgba(255, 255, 255, 0.8);
+		}
+
+		&.active
+		{
+			background-color: rgba(200, 30, 30, 0.3);
+			border-color: rgb(200, 30, 30);
+			color: rgb(255, 140, 140);
+			box-shadow: 0 0 16px rgba(200, 30, 30, 0.3);
+		}
+	}
+}

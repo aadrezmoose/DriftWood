@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\austi\\Documents\\s&box projects\\my_project\\Code\\my_project.csproj": {}
+    "C:\\Users\\austi\\Documents\\s&box projects\\DriftWood\\Code\\my_project.csproj": {}
   },
   "projects": {
-    "C:\\Users\\austi\\Documents\\s&box projects\\my_project\\Code\\my_project.csproj": {
+    "C:\\Users\\austi\\Documents\\s&box projects\\DriftWood\\Code\\my_project.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\austi\\Documents\\s&box projects\\my_project\\Code\\my_project.csproj",
+        "projectUniqueName": "C:\\Users\\austi\\Documents\\s&box projects\\DriftWood\\Code\\my_project.csproj",
         "projectName": "my_project",
-        "projectPath": "C:\\Users\\austi\\Documents\\s&box projects\\my_project\\Code\\my_project.csproj",
+        "projectPath": "C:\\Users\\austi\\Documents\\s&box projects\\DriftWood\\Code\\my_project.csproj",
         "packagesPath": "C:\\Users\\austi\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\austi\\Documents\\s&box projects\\my_project\\Code\\obj\\",
+        "outputPath": "C:\\Users\\austi\\Documents\\s&box projects\\DriftWood\\Code\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\austi\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -28,8 +28,8 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "E:\\SteamLibrary\\steamapps\\common\\sbox\\addons\\base\\Code\\Base Library.csproj": {
-                "projectPath": "E:\\SteamLibrary\\steamapps\\common\\sbox\\addons\\base\\Code\\Base Library.csproj"
+              "E:\\SteamLibrary\\steamapps\\common\\sbox\\addons\\base\\code\\Base Library.csproj": {
+                "projectPath": "E:\\SteamLibrary\\steamapps\\common\\sbox\\addons\\base\\code\\Base Library.csproj"
               }
             }
           }
@@ -338,14 +338,14 @@
         }
       }
     },
-    "E:\\SteamLibrary\\steamapps\\common\\sbox\\addons\\base\\Code\\Base Library.csproj": {
+    "E:\\SteamLibrary\\steamapps\\common\\sbox\\addons\\base\\code\\Base Library.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\SteamLibrary\\steamapps\\common\\sbox\\addons\\base\\Code\\Base Library.csproj",
+        "projectUniqueName": "E:\\SteamLibrary\\steamapps\\common\\sbox\\addons\\base\\code\\Base Library.csproj",
         "projectName": "Base Library",
-        "projectPath": "E:\\SteamLibrary\\steamapps\\common\\sbox\\addons\\base\\Code\\Base Library.csproj",
+        "projectPath": "E:\\SteamLibrary\\steamapps\\common\\sbox\\addons\\base\\code\\Base Library.csproj",
         "packagesPath": "C:\\Users\\austi\\.nuget\\packages\\",
-        "outputPath": "E:\\SteamLibrary\\steamapps\\common\\sbox\\addons\\base\\Code\\obj\\",
+        "outputPath": "E:\\SteamLibrary\\steamapps\\common\\sbox\\addons\\base\\code\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\austi\\AppData\\Roaming\\NuGet\\NuGet.Config",

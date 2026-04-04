@@ -10,6 +10,8 @@ using System.Linq;
 /// </summary>
 public sealed class StaticEnemyGroup : Component
 {
+	private bool IsAuthoritativeInstance() => !Networking.IsActive || Connection.Local?.IsHost == true;
+
 	public static readonly List<StaticEnemyGroup> All = new();
 
 	[Property] public GameObject EnemyPrefab { get; set; }
@@ -43,6 +45,9 @@ public sealed class StaticEnemyGroup : Component
 	protected override void OnStart()
 	{
 		All.Add( this );
+
+		if ( !IsAuthoritativeInstance() )
+			return;
 
 		if ( PlayerReference is not null )
 			player = PlayerReference;
@@ -124,14 +129,14 @@ public sealed class StaticEnemyGroup : Component
 		if ( go.Components.Get<BoxCollider>() is null )
 		{
 			var col    = go.Components.Create<BoxCollider>();
-			col.Scale  = new Vector3( 40f, 40f, 100f );
-			col.Center = new Vector3( 0f, 0f, 50f );
+			col.Scale  = new Vector3( 40f, 40f, 72f );
+			col.Center = new Vector3( 0f, 0f, 36f );
 		}
 
 		// Headshot zone
 		var head           = new GameObject( true, "HeadshotZone" );
 		head.Parent        = go;
-		head.LocalPosition = new Vector3( 0f, 0f, 80f );
+		head.LocalPosition = new Vector3( 0f, 0f, 62f );
 		head.Tags.Add( "headzone" );
 		var headCol        = head.Components.Create<BoxCollider>();
 		headCol.Scale      = new Vector3( 30f, 30f, 30f );
@@ -157,8 +162,8 @@ public sealed class StaticEnemyGroup : Component
 		var enemy = go.Components.GetAll<Enemy>().FirstOrDefault()
 			?? go.Components.Create<Enemy>();
 
-		enemy.Enabled         = true;
-		enemy.PlayerReference = player;
+		enemy.Enabled = true;
+		// Enemy targets via PlayerIdentity.Nearest() — no PlayerReference needed
 
 		// Re-wire animation helper
 		var skinned = go.Components.Get<SkinnedModelRenderer>();
@@ -167,6 +172,9 @@ public sealed class StaticEnemyGroup : Component
 			var anim    = go.Components.GetOrCreate<CitizenAnimationHelper>();
 			anim.Target = skinned;
 		}
+
+		if ( Networking.IsActive )
+			go.NetworkSpawn();
 
 		spawnedEnemies.Add( go );
 		Log.Info( $"[StaticGroup] Spawned at {spawnPos} (Z={spawnPos.z:F0}, dist from player={( player != null ? Vector3.DistanceBetween( spawnPos, player.WorldPosition ).ToString( "F0" ) : "?" )})" );

@@ -1,5 +1,6 @@
 using Sandbox;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 public sealed class Tank : Component, Component.ITriggerListener
 {
@@ -49,13 +50,15 @@ public sealed class Tank : Component, Component.ITriggerListener
 	private float chargeTimer = 0f;
 	private Vector3 moveDirection = Vector3.Zero;
 	private Vector3 chargeDirection = Vector3.Zero;
+	private bool deathHandled = false;
 
 	protected override void OnAwake()
 	{
 		// Cache components
 		characterController = Components.Get<CharacterController>();
 		health = Components.Get<HealthComponent>();
-		modelRenderer = Components.Get<ModelRenderer>();
+		modelRenderer = Components.Get<SkinnedModelRenderer>() as ModelRenderer
+		             ?? Components.Get<ModelRenderer>();
 
 		if ( modelRenderer is not null )
 		{
@@ -107,20 +110,28 @@ public sealed class Tank : Component, Component.ITriggerListener
 		if ( health is not null )
 		{
 			health.OnDeath += OnTankDeath;
-			health.OnDamageTakenWithAttacker += OnTankDamaged;
+			health.OnDamageTakenWithPosition += OnTankDamaged;
 		}
+
+		deathHandled = false;
 
 		Log.Info( $"Tank spawned with {MaxHealth} HP" );
 	}
 
 	protected override void OnUpdate()
 	{
-		if ( !Enabled || player is null || characterController is null )
+		if ( !Enabled )
+			return;
+
+		if ( health is not null && health.IsDead )
 		{
-			if ( player is null )
-				Log.Warning( "Tank update skipped: player is null" );
+			OnTankDeath();
 			return;
 		}
+
+		if ( player is null || characterController is null )
+			return;
+
 
 		// Update flash timer
 		if ( flashTimer > 0f )
@@ -148,13 +159,6 @@ public sealed class Tank : Component, Component.ITriggerListener
 			currentState = TankState.Idle;
 			moveDirection = Vector3.Zero;
 			return; // skip AI while staggered
-		}
-
-		if ( health is not null && health.IsDead )
-		{
-			currentState = TankState.Idle;
-			characterController.Velocity = Vector3.Zero;
-			return;
 		}
 
 		// Determine state based on distance to player
@@ -309,6 +313,10 @@ public sealed class Tank : Component, Component.ITriggerListener
 
 	void OnTankDeath()
 	{
+		if ( deathHandled )
+			return;
+
+		deathHandled = true;
 		currentState = TankState.Idle;
 		moveDirection = Vector3.Zero;
 
@@ -344,18 +352,29 @@ public sealed class Tank : Component, Component.ITriggerListener
 			rigidbody.PhysicsBody.AngularVelocity = Vector3.Random * 2f;
 		}
 
-		// Disable AI
-		Enabled = false;
-
-		Log.Info( "Tank died" );
+		// Let ragdoll physics run before disabling
+		_ = DisableAfterDelay();
 	}
 
-	void OnTankDamaged( float damageAmount, GameObject attacker )
+	async Task DisableAfterDelay()
 	{
-		if ( characterController is null || attacker is null )
+		await Task.DelaySeconds( 4f );
+		if ( GameObject.IsValid() )
+			Enabled = false;
+	}
+
+	void OnTankDamaged( float damageAmount, Vector3 attackerPosition )
+	{
+		if ( characterController is null )
 			return;
 
-		ApplyDamageEffects( damageAmount, attacker, isHeadshot: false );
+		if ( attackerPosition.IsNearZeroLength && player is not null )
+			attackerPosition = player.WorldPosition;
+
+		if ( attackerPosition.IsNearZeroLength )
+			return;
+
+		ApplyDamageEffects( damageAmount, attackerPosition, isHeadshot: false );
 	}
 
 	public void OnHeadshotDamage( float damageAmount, GameObject attacker )
@@ -363,13 +382,15 @@ public sealed class Tank : Component, Component.ITriggerListener
 		if ( characterController is null || attacker is null )
 			return;
 
-		ApplyDamageEffects( damageAmount, attacker, isHeadshot: true );
+		ApplyDamageEffects( damageAmount, attacker.WorldPosition, isHeadshot: true );
 	}
 
-	private void ApplyDamageEffects( float damageAmount, GameObject attacker, bool isHeadshot )
+	private void ApplyDamageEffects( float damageAmount, Vector3 attackerPosition, bool isHeadshot )
 	{
 		// Calculate direction away from attacker
-		Vector3 directionFromAttacker = (WorldPosition - attacker.WorldPosition).Normal;
+		Vector3 directionFromAttacker = (WorldPosition - attackerPosition).Normal;
+		if ( directionFromAttacker.IsNearZeroLength )
+			directionFromAttacker = -WorldRotation.Forward;
 
 		// Apply reduced knockback (Tank is heavy)
 		Vector3 knockbackImpulse = (directionFromAttacker * 150f) + (Vector3.Up * 100f);
@@ -428,7 +449,7 @@ public sealed class Tank : Component, Component.ITriggerListener
 		if ( health is not null )
 		{
 			health.OnDeath -= OnTankDeath;
-			health.OnDamageTakenWithAttacker -= OnTankDamaged;
+			health.OnDamageTakenWithPosition -= OnTankDamaged;
 		}
 	}
 
@@ -437,6 +458,8 @@ public sealed class Tank : Component, Component.ITriggerListener
 	/// </summary>
 	public void ResetSpawnState()
 	{
+		deathHandled = false;
+
 		// Reset all timers
 		staggerTimer = 0f;
 		flashTimer = 0f;

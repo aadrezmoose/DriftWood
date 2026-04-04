@@ -11,17 +11,39 @@ public sealed class AmbientSoundLoop : Component
 	[Property] public float Volume { get; set; } = 1f;
 
 	private SoundHandle handle;
-	private bool playing = false;
+	private bool isPlaying = false;
 
 	protected override void OnStart()
 	{
+		PlaySound();
+	}
+
+	protected override void OnUpdate()
+	{
 		if ( AmbientSound == null ) return;
-		handle = Sound.Play( AmbientSound );
-		playing = true;
+		if ( isPlaying )
+		{
+			// Detect when the sound finishes so we can restart it
+			try { if ( !handle.IsPlaying ) isPlaying = false; }
+			catch { isPlaying = false; }
+		}
+		else
+		{
+			PlaySound();
+		}
 	}
 
 	protected override void OnDestroy()
 	{
-		if ( playing ) handle.Stop();
+		if ( isPlaying ) handle.Stop();
+		isPlaying = false;
+	}
+
+	private void PlaySound()
+	{
+		if ( AmbientSound == null ) return;
+		handle = Sound.Play( AmbientSound );
+		handle.Volume = Volume;
+		isPlaying = true;
 	}
 }

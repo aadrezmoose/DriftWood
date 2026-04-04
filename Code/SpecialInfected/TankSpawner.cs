@@ -4,6 +4,8 @@ using System.Linq;
 
 public sealed class TankSpawner : Component
 {
+	private bool IsAuthoritativeInstance() => !Networking.IsActive || Connection.Local?.IsHost == true;
+
 	[Property] public float SpawnRadius { get; set; } = 500f; // Distance from player to spawn Tank
 	[Property] public GameObject TankPrefab { get; set; } // Prefab to spawn
 	[Property] public GameObject PlayerReference { get; set; } // Optional: manually assign the player
@@ -84,6 +86,9 @@ public sealed class TankSpawner : Component
 
 	protected override void OnUpdate()
 	{
+		if ( !IsAuthoritativeInstance() )
+			return;
+
 		if ( !Enabled )
 		{
 			return;
@@ -132,6 +137,9 @@ public sealed class TankSpawner : Component
 	/// </summary>
 	public bool TrySpawnTank()
 	{
+		if ( !IsAuthoritativeInstance() )
+			return false;
+
 		if ( !Enabled )
 		{
 			Log.Warning( "TankSpawner: Spawner is disabled" );
@@ -194,7 +202,7 @@ public sealed class TankSpawner : Component
 				return false;
 			}
 
-			Vector3 spawnPos = trace.EndPosition + Vector3.Up * 80f;  // Place above ground
+			Vector3 spawnPos = trace.EndPosition + Vector3.Up * 5f;  // Just above ground
 
 			// Validate spawn position - reject if it's below a certain threshold
 			if ( spawnPos.z < 20f )
@@ -214,7 +222,8 @@ public sealed class TankSpawner : Component
 			}
 
 			// 1. Set color to red FIRST (before Tank.OnAwake runs)
-			var modelRenderer = spawnedTank.Components.Get<ModelRenderer>();
+			var modelRenderer = spawnedTank.Components.Get<SkinnedModelRenderer>() as ModelRenderer
+			                 ?? spawnedTank.Components.Get<ModelRenderer>();
 			if ( modelRenderer is not null )
 			{
 				modelRenderer.Tint = Color.Red;
@@ -299,6 +308,9 @@ public sealed class TankSpawner : Component
 				spawnedTankComponent.HeadshotStaggerMultiplier = cachedHeadshotStaggerMultiplier;
 				Log.Info( $"TankSpawner: Applied cached properties to spawned Tank" );
 			}
+
+			if ( Networking.IsActive )
+				spawnedTank.NetworkSpawn();
 
 			Log.Info( $"TankSpawner: Successfully spawned Tank at distance {distance:F0}" );
 			return true;

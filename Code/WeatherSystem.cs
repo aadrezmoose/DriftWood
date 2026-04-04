@@ -10,6 +10,8 @@ public enum WeatherPhase { Clear, RainingLight, RainingHeavy }
 /// </summary>
 public sealed class WeatherSystem : Component
 {
+	private bool IsAuthoritativeInstance() => !Networking.IsActive || Connection.Local?.IsHost == true;
+
 	// --- Phase durations ---
 	[Property] public float ClearDuration { get; set; } = 120f;
 	[Property] public float RainingLightDuration { get; set; } = 60f;
@@ -29,46 +31,87 @@ public sealed class WeatherSystem : Component
 	// Triggered by entering an end safe room
 	private bool snapToHeavyRain = false;
 
+	[Sync] public int SyncedPhase { get; set; } = (int)WeatherPhase.Clear;
+	[Sync] public float SyncedPhaseTimer { get; set; } = 0f;
+	[Sync] public bool SyncedSnapToHeavyRain { get; set; } = false;
+
 	protected override void OnStart()
 	{
 		SafeRoom.OnPlayerEntered += OnPlayerEnteredSafeRoom;
 
 		// Begin in the Clear phase
 		EnterPhase( WeatherPhase.Clear );
+
+		if ( IsAuthoritativeInstance() )
+		{
+			SyncedPhase = (int)currentPhase;
+			SyncedPhaseTimer = phaseTimer;
+			SyncedSnapToHeavyRain = snapToHeavyRain;
+		}
 	}
 
 	protected override void OnUpdate()
 	{
-		// If the end safe room was reached, override everything and snap to heavy rain.
-		if ( snapToHeavyRain )
+		if ( IsAuthoritativeInstance() )
 		{
-			EnsureRainPlaying();
-			// Do not advance the phase timer while snapped — stay here.
+			// If the end safe room was reached, override everything and snap to heavy rain.
+			if ( snapToHeavyRain )
+			{
+				EnsureRainPlaying();
+				// Do not advance the phase timer while snapped — stay here.
+			}
+			else
+			{
+				// Advance phase timer and transition when it expires.
+				phaseTimer -= Time.Delta;
+				if ( phaseTimer <= 0f )
+				{
+					WeatherPhase next = currentPhase switch
+					{
+						WeatherPhase.Clear         => WeatherPhase.RainingLight,
+						WeatherPhase.RainingLight  => WeatherPhase.RainingHeavy,
+						WeatherPhase.RainingHeavy  => WeatherPhase.Clear,
+						_                          => WeatherPhase.Clear,
+					};
+					EnterPhase( next );
+				}
+			}
+
+			SyncedPhase = (int)currentPhase;
+			SyncedPhaseTimer = phaseTimer;
+			SyncedSnapToHeavyRain = snapToHeavyRain;
 		}
 		else
 		{
-			// Advance phase timer and transition when it expires.
-			phaseTimer -= Time.Delta;
-			if ( phaseTimer <= 0f )
+			snapToHeavyRain = SyncedSnapToHeavyRain;
+			phaseTimer = SyncedPhaseTimer;
+
+			var syncedPhase = (WeatherPhase)SyncedPhase;
+			if ( syncedPhase != currentPhase )
+				EnterPhase( syncedPhase );
+
+			if ( snapToHeavyRain )
 			{
-				WeatherPhase next = currentPhase switch
+				EnsureRainPlaying();
+			}
+			else if ( currentPhase == WeatherPhase.Clear )
+			{
+				if ( raining )
 				{
-					WeatherPhase.Clear         => WeatherPhase.RainingLight,
-					WeatherPhase.RainingLight  => WeatherPhase.RainingHeavy,
-					WeatherPhase.RainingHeavy  => WeatherPhase.Clear,
-					_                          => WeatherPhase.Clear,
-				};
-				EnterPhase( next );
+					rainHandle.Stop();
+					raining = false;
+				}
 			}
 		}
-
 	}
 
 	private void OnPlayerEnteredSafeRoom( SafeRoom room )
 	{
 		if ( !room.IsEndRoom ) return;
+		if ( !IsAuthoritativeInstance() ) return;
 
 		snapToHeavyRain = true;
+		SyncedSnapToHeavyRain = true;
 		EnsureRainPlaying();
 		Log.Info( "WeatherSystem: End safe room reached — snapping to heavy rain." );
 	}

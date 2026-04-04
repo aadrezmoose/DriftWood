@@ -35,6 +35,7 @@ public static class PlayerStats
 	// Exposed for UI. Updated by WeaponManager.
 	public static int CurrentAmmo { get; set; }
 	public static int ReserveAmmo { get; set; }
+	public static int AmmoClip { get; set; } = 1;
 	public static string WeaponName { get; set; } = "Pistol";
 
 	// Incapacitation / death state
@@ -45,17 +46,35 @@ public static class PlayerStats
 	// Win condition
 	public static bool LevelComplete { get; set; } = false;
 
+	// Objective state for HUD
+	public static string ObjectiveText { get; set; } = string.Empty;
+	public static float ObjectiveProgress01 { get; set; } = -1f; // < 0 hides bar
+	public static bool ObjectiveUrgent { get; set; } = false;
+
+	// Pause state — set by PauseMenu, read by CameraMovement
+	public static bool IsPaused { get; set; } = false;
+
+	// Recoil — written by Gun.Fire(), consumed by CameraMovement
+	public static float PendingRecoil { get; set; } = 0f;
+
 	// End-of-level stats
 	public static int TotalKills { get; set; } = 0;
 	public static int TotalDamageTaken { get; set; } = 0;
 	public static int TimesIncapacitated { get; set; } = 0;
 	public static int ShotsFired { get; set; } = 0;
 	public static int ShotsHit { get; set; } = 0;
-	public static float AccuracyPercent => ShotsFired > 0 ? (float)ShotsHit / ShotsFired * 100f : 0f;
+	public static float AccuracyPercent => ShotsFired > 0 ? System.Math.Min( (float)ShotsHit / ShotsFired * 100f, 100f ) : 0f;
+	public static float LevelElapsedSeconds { get; set; } = 0f;
 
-	// Directional damage indicators
-	// Pending additions come from any thread via ConcurrentQueue — no lock needed
-	private static readonly System.Collections.Concurrent.ConcurrentQueue<DamageIndicator> _pending = new();
+	// Heal progress — -1 when not healing, 0-1 while holding medkit
+	public static float HealProgress { get; set; } = -1f;
+	// Name of the teammate being healed, empty = healing self
+	public static string HealTargetName { get; set; } = string.Empty;
+	// True when the progress bar represents a manual revive rather than a medkit heal
+	public static bool HealIsRevive { get; set; } = false;
+
+	// Directional damage indicators (all access is on the game thread — no concurrent queue needed)
+	private static readonly System.Collections.Generic.Queue<DamageIndicator> _pending = new();
 	private static readonly System.Collections.Generic.List<DamageIndicator> _active = new();
 
 	/// <summary>Read-only snapshot for HUD rendering. Swapped each game tick.</summary>
@@ -64,7 +83,7 @@ public static class PlayerStats
 	/// <summary>Call from OnAwake to clear stale state between editor play sessions.</summary>
 	public static void ResetDamageIndicators()
 	{
-		while ( _pending.TryDequeue( out _ ) ) { }
+		_pending.Clear();
 		_active.Clear();
 		DamageIndicatorsSnapshot = System.Array.Empty<DamageIndicator>();
 
@@ -73,6 +92,12 @@ public static class PlayerStats
 		BleedOutHealth = 100f;
 		IsDead = false;
 		LevelComplete = false;
+		IsPaused = false;
+		PendingRecoil = 0f;
+		ShowDirectorDebug = false;
+		ObjectiveText = string.Empty;
+		ObjectiveProgress01 = -1f;
+		ObjectiveUrgent = false;
 
 		// Reset stats
 		TotalKills = 0;
@@ -80,9 +105,13 @@ public static class PlayerStats
 		TimesIncapacitated = 0;
 		ShotsFired = 0;
 		ShotsHit = 0;
+		LevelElapsedSeconds = 0f;
+		HealProgress = -1f;
+		HealTargetName = string.Empty;
+		HealIsRevive = false;
 	}
 
-	/// <summary>Thread-safe: enqueue a new damage indicator.</summary>
+	/// <summary>Enqueue a new damage indicator (game-thread only).</summary>
 	public static void AddDamageIndicator( float angle )
 	{
 		_pending.Enqueue( new DamageIndicator { Angle = angle, Alpha = 1f } );
@@ -91,9 +120,9 @@ public static class PlayerStats
 	/// <summary>Call once per frame from the game thread (CameraMovement.OnUpdate).</summary>
 	public static void TickDamageIndicators( float delta )
 	{
-		// Drain any pending additions (cross-thread safe via ConcurrentQueue)
-		while ( _pending.TryDequeue( out var incoming ) )
-			_active.Add( incoming );
+		// Drain pending additions
+		while ( _pending.Count > 0 )
+			_active.Add( _pending.Dequeue() );
 
 		// Fade and remove expired indicators
 		for ( int i = _active.Count - 1; i >= 0; i-- )
@@ -112,6 +141,9 @@ public static class PlayerStats
 
 	// Human-readable debug message the HUD can show when something is wrong.
 	public static string DebugMessage { get; set; } = string.Empty;
+
+	// Director debug overlay toggle — toggled via console command "director_debug"
+	public static bool ShowDirectorDebug { get; set; } = false;
 
 	// Health system events
 	public static event System.Action<float> OnDamageTaken;

@@ -7,11 +7,11 @@
 
 	<!-- Left: Fixed 5-slot inventory column -->
 	<div class="inv-column">
-		@for ( int i = 0; i < PlayerStats.AllSlotNames.Count; i++ )
+		@for ( int i = 0; i < (PI?.AllSlotNames ?? PlayerStats.AllSlotNames).Count; i++ )
 		{
-			var slotName = PlayerStats.AllSlotNames[i];
-			bool isActive = i == PlayerStats.ActiveSlotIndex;
-			bool isWeapon = i < PlayerStats.WeaponSlotCount;
+			var slotName = (PI?.AllSlotNames ?? PlayerStats.AllSlotNames)[i];
+			bool isActive = i == (PI?.ActiveSlotIndex ?? PlayerStats.ActiveSlotIndex);
+			bool isWeapon = i < (PI?.WeaponSlotCount ?? PlayerStats.WeaponSlotCount);
 			bool isEmpty = slotName == "Primary" || slotName == "Secondary"
 				|| slotName == "Main Heal" || slotName == "Sub Heal"
 				|| slotName == "Utility";
@@ -32,11 +32,26 @@
 				<div class="inv-name">@SlotDisplayName( slotName )</div>
 				@if ( isActive && !isEmpty )
 				{
-					<div class="inv-hint">@(isWeapon ? "[LMB]" : "[E]")</div>
+					<div class="inv-hint">@(isWeapon || i == 4 ? "[LMB]" : "[E]")</div>
 				}
 			</div>
 		}
 	</div>
+
+	<!-- Bottom-left: Health + Stamina -->
+	@if (!string.IsNullOrEmpty(PI?.ObjectiveText ?? PlayerStats.ObjectiveText))
+	{
+		<div class="objective-panel @((PI?.ObjectiveUrgent ?? PlayerStats.ObjectiveUrgent) ? "objective-urgent" : "")">
+			<div class="objective-label">OBJECTIVE</div>
+			<div class="objective-text">@(PI?.ObjectiveText ?? PlayerStats.ObjectiveText)</div>
+			@if ((PI?.ObjectiveProgress01 ?? PlayerStats.ObjectiveProgress01) >= 0f)
+			{
+				<div class="objective-track">
+					<div class="objective-fill" style="width:@ObjectiveWidth"></div>
+				</div>
+			}
+		</div>
+	}
 
 	<!-- Bottom-left: Health + Stamina -->
 	<div class="bottom-left">
@@ -45,7 +60,7 @@
 			<div class="bar-track">
 				<div class="bar-fill health-fill" style="width:@HealthWidth"></div>
 			</div>
-			<div class="bar-value">@((int)PlayerStats.CurrentHealth)</div>
+			<div class="bar-value">@((int)(PI?.CurrentHealth ?? PlayerStats.CurrentHealth))</div>
 		</div>
 		<div class="bar-row">
 			<div class="bar-label">STM</div>
@@ -53,47 +68,123 @@
 				<div class="bar-fill stamina-fill" style="width:@StaminaWidth"></div>
 			</div>
 		</div>
-		@if (PlayerStats.IsIncapacitated)
+		@if (PI?.IsIncapacitated ?? PlayerStats.IsIncapacitated)
 		{
 			<div class="bar-row incap-row">
 				<div class="bar-label incap-label">BLEED</div>
 				<div class="bar-track">
 					<div class="bar-fill bleedout-fill" style="width:@BleedOutWidth"></div>
 				</div>
-				<div class="bar-value incap-value">@((int)PlayerStats.BleedOutHealth)%</div>
+				<div class="bar-value incap-value">@((int)(PI?.BleedOutHealth ?? PlayerStats.BleedOutHealth))%</div>
 			</div>
 		}
 	</div>
 
 	<!-- Bottom-right: Ammo -->
+	@{
+		var _ammoClip    = PI?.AmmoClip    ?? PlayerStats.AmmoClip;
+		var _currentAmmo = PI?.CurrentAmmo ?? PlayerStats.CurrentAmmo;
+		var _reserveAmmo = PI?.ReserveAmmo ?? PlayerStats.ReserveAmmo;
+		bool isLowAmmo   = _ammoClip > 0 && _currentAmmo <= _ammoClip / 4 && _currentAmmo > 0;
+		bool isEmptyAmmo = _currentAmmo == 0;
+	}
 	<div class="bottom-right">
-		<div class="weapon-name">@PlayerStats.WeaponName</div>
+		<div class="weapon-name">@(PI?.WeaponName ?? PlayerStats.WeaponName)</div>
 		<div class="ammo-row">
-			<span class="ammo-current">@PlayerStats.CurrentAmmo</span>
+			<span class="ammo-current @(isEmptyAmmo ? "ammo-empty" : isLowAmmo ? "ammo-low" : "")">@_currentAmmo</span>
 			<span class="ammo-sep"> / </span>
-			<span class="ammo-reserve">@(PlayerStats.ReserveAmmo == -1 ? "∞" : PlayerStats.ReserveAmmo.ToString())</span>
+			<span class="ammo-reserve">@(_reserveAmmo == -1 ? "∞" : _reserveAmmo.ToString())</span>
 		</div>
+		@if ( isEmptyAmmo )
+		{
+			<div class="ammo-warning">RELOAD</div>
+		}
+		else if ( isLowAmmo )
+		{
+			<div class="ammo-warning ammo-warning-low">LOW AMMO</div>
+		}
 	</div>
 
 	<!-- Directional damage indicators -->
 	<div class="damage-indicator-container">
-		@foreach (var ind in PlayerStats.DamageIndicatorsSnapshot)
+		@foreach (var ind in PI?.DamageIndicatorsSnapshot ?? PlayerStats.DamageIndicatorsSnapshot)
 		{
 			<div class="damage-indicator" style=@($"transform: rotate({ind.Angle:F1}deg); opacity: {ind.Alpha:F2}") ></div>
 		}
 	</div>
 
 	<!-- Pickup hint -->
-	@if (!string.IsNullOrEmpty(PlayerStats.NearbyPickupHint))
+	@{
+		var _pickupHint = PI?.NearbyPickupHint ?? PlayerStats.NearbyPickupHint;
+	}
+	@if (!string.IsNullOrEmpty(_pickupHint))
 	{
-		<div class="pickup-hint">
-			<span class="pickup-key">E</span>
-			<span class="pickup-label"> Pick up @PlayerStats.NearbyPickupHint</span>
+		@if (_pickupHint.StartsWith("[RMB]"))
+		{
+			<div class="pickup-hint">
+				<span class="pickup-key">RMB</span>
+				<span class="pickup-label"> @_pickupHint.Substring(5).TrimStart()</span>
+			</div>
+		}
+		else
+		{
+			<div class="pickup-hint">
+				<span class="pickup-key">E</span>
+				<span class="pickup-label"> @_pickupHint</span>
+			</div>
+		}
+	}
+
+	<!-- Teammate status panel -->
+	@{
+		var _teammates = PlayerIdentity.All.Where( p => p != null && p.IsValid && p != PI ).ToList();
+	}
+	@if ( _teammates.Count > 0 && !(PI?.IsDead ?? PlayerStats.IsDead) && !(PI?.LevelComplete ?? PlayerStats.LevelComplete) )
+	{
+		<div class="teammates-panel">
+			@foreach ( var tm in _teammates )
+			{
+				var _tmStatus   = tm.IsDead ? "DEAD" : (tm.IsIncapacitated ? "DOWN" : string.Empty);
+				var _tmHealthPct = tm.HealthMax > 0f ? tm.CurrentHealth / tm.HealthMax : 1f;
+				var _tmBarClass = tm.IsDead ? "tm-bar-dead"
+					: (tm.IsIncapacitated ? "tm-bar-incap"
+					: (_tmHealthPct <= 0.25f ? "tm-bar-red"
+					: (_tmHealthPct <= 0.50f ? "tm-bar-orange"
+					: (_tmHealthPct <= 0.75f ? "tm-bar-yellow" : "tm-bar-ok"))));
+				var _tmFill     = tm.IsDead ? 0f : (tm.IsIncapacitated ? tm.BleedOutHealth : (tm.HealthMax > 0f ? tm.CurrentHealth / tm.HealthMax * 100f : 100f));
+				<div class="teammate-row @(tm.IsDead ? "teammate-dead" : "")">
+					<div class="teammate-name">@(string.IsNullOrEmpty(tm.PlayerName) ? "Player" : tm.PlayerName)</div>
+					<div class="teammate-health-track">
+						<div class="teammate-health-fill @_tmBarClass" style="width:@($"{_tmFill:F0}%")"></div>
+					</div>
+					@if ( !string.IsNullOrEmpty( _tmStatus ) )
+					{
+						<div class="teammate-status">@_tmStatus</div>
+					}
+				</div>
+			}
+		</div>
+	}
+
+	<!-- Heal progress bar (centered, below crosshair) -->
+	@{
+		var _healProg    = PI?.HealProgress   ?? PlayerStats.HealProgress;
+		var _healTarget  = PI?.HealTargetName ?? PlayerStats.HealTargetName;
+		var _isRevive    = PI?.HealIsRevive   ?? PlayerStats.HealIsRevive;
+		var _healAction  = _isRevive ? "REVIVING" : "HEALING";
+	}
+	@if (_healProg >= 0f)
+	{
+		<div class="heal-progress-container">
+			<div class="heal-progress-label">@(string.IsNullOrEmpty(_healTarget) ? _healAction : $"{_healAction} {_healTarget.ToUpper()}")</div>
+			<div class="heal-progress-track">
+				<div class="heal-progress-fill" style="width:@($"{_healProg * 100f:F0}%")"></div>
+			</div>
 		</div>
 	}
 
 	<!-- Crosshair -->
-	@if (!PlayerStats.IsDead)
+	@if (!(PI?.IsDead ?? PlayerStats.IsDead))
 	{
 		<div class="crosshair">
 			<div class="crosshair-dot"></div>
@@ -105,7 +196,7 @@
 	}
 
 	<!-- Death Screen -->
-	@if (PlayerStats.IsDead)
+	@if (PI?.IsDead ?? PlayerStats.IsDead)
 	{
 		<div class="death-overlay">
 			<div class="death-title">YOU DIED</div>
@@ -115,22 +206,80 @@
 		</div>
 	}
 
-	<!-- Win Screen -->
-	@if (PlayerStats.LevelComplete)
+	<!-- Settings Panel (Tab to toggle) -->
+	@if (_settingsOpen)
 	{
+		var sensStr = GameSettings.Sensitivity.ToString( "F1" );
+		var fovStr  = ((int)GameSettings.FOV).ToString();
+		<div class="settings-overlay">
+			<div class="settings-panel">
+				<div class="settings-title">SETTINGS</div>
+				<div class="settings-row">
+					<div class="settings-label">SENSITIVITY</div>
+					<div class="settings-controls">
+						<div class="settings-btn" onclick=@(() => { GameSettings.Sensitivity -= 0.1f; StateHasChanged(); })>-</div>
+						<div class="settings-value">@sensStr</div>
+						<div class="settings-btn" onclick=@(() => { GameSettings.Sensitivity += 0.1f; StateHasChanged(); })>+</div>
+					</div>
+				</div>
+				<div class="settings-row">
+					<div class="settings-label">FOV</div>
+					<div class="settings-controls">
+						<div class="settings-btn" onclick=@(() => { GameSettings.FOV -= 5f; StateHasChanged(); })>-</div>
+						<div class="settings-value">@fovStr</div>
+						<div class="settings-btn" onclick=@(() => { GameSettings.FOV += 5f; StateHasChanged(); })>+</div>
+					</div>
+				</div>
+				<div class="settings-close" onclick=@(() => { _settingsOpen = false; StateHasChanged(); })>CLOSE</div>
+			<div class="settings-close settings-restart" onclick=@(() => { _settingsOpen = false; Restart(); })>RESTART</div>
+			</div>
+		</div>
+	}
+
+	<!-- Win Screen -->
+	@if (PI?.LevelComplete ?? PlayerStats.LevelComplete)
+	{
+		var _winPlayers = PlayerIdentity.All.Where( p => p != null && p.IsValid ).ToList();
+		bool _hasTeam   = _winPlayers.Count > 1;
 		<div class="win-overlay">
 			<div class="win-title">YOU MADE IT</div>
-			<div class="stats-panel">
-				<div class="stat-row"><span class="stat-label">Kills</span><span class="stat-value">@PlayerStats.TotalKills</span></div>
-				<div class="stat-row"><span class="stat-label">Damage Taken</span><span class="stat-value">@PlayerStats.TotalDamageTaken</span></div>
-				<div class="stat-row"><span class="stat-label">Times Downed</span><span class="stat-value">@PlayerStats.TimesIncapacitated</span></div>
-				<div class="stat-row"><span class="stat-label">Accuracy</span><span class="stat-value">@($"{PlayerStats.AccuracyPercent:F0}%")</span></div>
+			<div class="win-time">@FormatTime( PlayerStats.LevelElapsedSeconds )</div>
+			<div class="stats-grid">
+				<div class="stats-grid-row stats-header-row">
+					<div class="sgcol sgcol-name">PLAYER</div>
+					<div class="sgcol">KILLS</div>
+					<div class="sgcol">DAMAGE</div>
+					<div class="sgcol">DOWNED</div>
+					<div class="sgcol">ACCURACY</div>
+				</div>
+				@foreach ( var p in _winPlayers )
+				{
+					var _isMe = ReferenceEquals( p, PI );
+					<div class="stats-grid-row @(_isMe ? "stats-mine-row" : "")">
+						<div class="sgcol sgcol-name">@(string.IsNullOrEmpty(p.PlayerName) ? "Player" : p.PlayerName)</div>
+						<div class="sgcol">@p.TotalKills</div>
+						<div class="sgcol">@p.TotalDamageTaken</div>
+						<div class="sgcol">@p.TimesIncapacitated</div>
+						<div class="sgcol">@($"{p.AccuracyPercent:F0}%")</div>
+					</div>
+				}
+				@if ( _hasTeam )
+				{
+					<div class="stats-grid-row stats-totals-row">
+						<div class="sgcol sgcol-name">TEAM</div>
+						<div class="sgcol">@_winPlayers.Sum( p => p.TotalKills )</div>
+						<div class="sgcol">@_winPlayers.Sum( p => p.TotalDamageTaken )</div>
+						<div class="sgcol">@_winPlayers.Sum( p => p.TimesIncapacitated )</div>
+						<div class="sgcol">—</div>
+					</div>
+				}
 			</div>
 			<div class="death-buttons">
 				<div class="death-btn" onclick=@Restart>PLAY AGAIN</div>
 			</div>
 		</div>
 	}
+
 
 </root>
 
@@ -140,37 +289,97 @@
 	private float lastStamina = 0f;
 	private int lastAmmo = -1;
 	private int lastReserve = -1;
+	private bool _settingsOpen = false;
+
+	/// <summary>Shorthand for PlayerIdentity.Local — primary data source for HUD.</summary>
+	private static PlayerIdentity PI => PlayerIdentity.Local;
 
 	protected override void OnUpdate()
 	{
-		var h = PlayerStats.CurrentHealth;
-		var s = PlayerStats.CurrentStamina;
-		var a = PlayerStats.CurrentAmmo;
-		var r = PlayerStats.ReserveAmmo;
+		// Show cursor on death/win/settings screens so buttons are clickable
+		bool isDead         = PI?.IsDead          ?? PlayerStats.IsDead;
+		bool levelComplete  = PI?.LevelComplete    ?? PlayerStats.LevelComplete;
+		bool needsCursor    = isDead || levelComplete || _settingsOpen;
+		Mouse.Visible = needsCursor;
+		// Suppress mouse look so cursor events reach the UI in published builds
+		if ( needsCursor )
+			Input.AnalogLook = default;
+
+		PlayerStats.IsPaused = _settingsOpen;
+		if ( PI != null ) PI.IsPaused = _settingsOpen;
+
+		// Keyboard fallback for restart — works even if cursor clicks don't register in published build
+		if ( (isDead || levelComplete) && Input.Pressed( "jump" ) )
+		{
+			Restart();
+			return;
+		}
+
+		if ( Input.Pressed( "score" ) )
+		{
+			_settingsOpen = !_settingsOpen;
+			StateHasChanged();
+			return;
+		}
+
+		var h = PI?.CurrentHealth  ?? PlayerStats.CurrentHealth;
+		var s = PI?.CurrentStamina ?? PlayerStats.CurrentStamina;
+		var a = PI?.CurrentAmmo    ?? PlayerStats.CurrentAmmo;
+		var r = PI?.ReserveAmmo    ?? PlayerStats.ReserveAmmo;
+		var objectiveText     = PI?.ObjectiveText       ?? PlayerStats.ObjectiveText;
+		var objectiveProgress = PI?.ObjectiveProgress01 ?? PlayerStats.ObjectiveProgress01;
+		var objectiveUrgent   = PI?.ObjectiveUrgent     ?? PlayerStats.ObjectiveUrgent;
+
+		var healProg   = PI?.HealProgress    ?? PlayerStats.HealProgress;
+		var healTarget = PI?.HealTargetName  ?? PlayerStats.HealTargetName;
 
 		bool changed = lastHealth != h || lastStamina != s || lastAmmo != a || lastReserve != r;
+		changed = changed || objectiveText != _lastObjectiveText || objectiveProgress != _lastObjectiveProgress || objectiveUrgent != _lastObjectiveUrgent;
+		changed = changed || System.Math.Abs( healProg - _lastHealProgress ) > 0.005f;
+		changed = changed || healTarget != _lastHealTargetName;
 		lastHealth = h;
 		lastStamina = s;
 		lastAmmo = a;
 		lastReserve = r;
+		_lastObjectiveText = objectiveText;
+		_lastObjectiveProgress = objectiveProgress;
+		_lastObjectiveUrgent = objectiveUrgent;
+		_lastHealProgress = healProg;
+		_lastHealTargetName = healTarget;
 
-		if ( changed || PlayerStats.DamageIndicatorsSnapshot.Length > 0 )
+		var indicatorsSnapshot = PI?.DamageIndicatorsSnapshot ?? PlayerStats.DamageIndicatorsSnapshot;
+		if ( changed || indicatorsSnapshot.Length > 0 )
 			StateHasChanged();
 	}
 
 	protected override int BuildHash()
 	{
 		var h1 = System.HashCode.Combine(
-			(int)PlayerStats.CurrentStamina,
-			(int)PlayerStats.CurrentHealth,
-			PlayerStats.CurrentAmmo,
-			PlayerStats.ReserveAmmo,
-			PlayerStats.WeaponName,
-			PlayerStats.IsIncapacitated,
-			PlayerStats.IsDead,
-			(int)PlayerStats.BleedOutHealth
+			(int)(PI?.CurrentStamina  ?? PlayerStats.CurrentStamina),
+			(int)(PI?.CurrentHealth   ?? PlayerStats.CurrentHealth),
+			PI?.CurrentAmmo           ?? PlayerStats.CurrentAmmo,
+			PI?.ReserveAmmo           ?? PlayerStats.ReserveAmmo,
+			PI?.WeaponName            ?? PlayerStats.WeaponName,
+			PI?.IsIncapacitated       ?? PlayerStats.IsIncapacitated,
+			PI?.IsDead                ?? PlayerStats.IsDead,
+			(int)(PI?.BleedOutHealth  ?? PlayerStats.BleedOutHealth)
 		);
-		return System.HashCode.Combine( h1, PlayerStats.AllSlotNames.Count, PlayerStats.ActiveSlotIndex, PlayerStats.NearbyPickupHint, PlayerStats.LevelComplete, PlayerStats.TotalKills, PlayerStats.ShotsFired );
+		var h2 = System.HashCode.Combine(
+			(PI?.AllSlotNames ?? PlayerStats.AllSlotNames).Count,
+			PI?.ActiveSlotIndex    ?? PlayerStats.ActiveSlotIndex,
+			PI?.NearbyPickupHint   ?? PlayerStats.NearbyPickupHint,
+			PI?.LevelComplete      ?? PlayerStats.LevelComplete,
+			PI?.TotalKills         ?? PlayerStats.TotalKills,
+			PI?.ShotsFired         ?? PlayerStats.ShotsFired,
+			_settingsOpen,
+			PI?.ObjectiveText      ?? PlayerStats.ObjectiveText
+		);
+		var h3 = System.HashCode.Combine( h2, (int)((PI?.ObjectiveProgress01 ?? PlayerStats.ObjectiveProgress01) * 100f), PI?.ObjectiveUrgent ?? PlayerStats.ObjectiveUrgent, (int)((PI?.HealProgress ?? PlayerStats.HealProgress) * 20f), (PI?.HealTargetName ?? PlayerStats.HealTargetName)?.GetHashCode() ?? 0, PI?.HealIsRevive ?? PlayerStats.HealIsRevive );
+		int tmHash = 0;
+		foreach ( var tm in PlayerIdentity.All )
+			if ( tm != null && tm.IsValid && !ReferenceEquals( tm, PI ) )
+				tmHash = System.HashCode.Combine( tmHash, (int)tm.CurrentHealth, tm.IsIncapacitated, tm.IsDead );
+		return System.HashCode.Combine( h1, System.HashCode.Combine( h3, tmHash ) );
 	}
 
 	private static string SlotIconPath( string name ) => name switch
@@ -205,10 +414,36 @@
 		PlayerStats.IsDead = false;
 		PlayerStats.IsIncapacitated = false;
 		PlayerStats.BleedOutHealth = 100f;
-		Game.ActiveScene.Load( Game.ActiveScene.Source );
+
+		if ( PI != null )
+		{
+			PI.IsDead = false;
+			PI.IsIncapacitated = false;
+			PI.BleedOutHealth = 100f;
+		}
+
+		var scene = Game.ActiveScene.Source
+			?? ResourceLibrary.Get<SceneFile>( "scenes/firsttest.scene" )
+			?? ResourceLibrary.Get<SceneFile>( "scenes/firstTest.scene" );
+
+		if ( scene != null )
+			Game.ActiveScene.Load( scene );
 	}
 
-	private string HealthWidth   => PlayerStats.HealthMax   > 0 ? $"{PlayerStats.CurrentHealth  / PlayerStats.HealthMax   * 100f:F0}%" : "0%";
-	private string StaminaWidth  => PlayerStats.StaminaMax  > 0 ? $"{PlayerStats.CurrentStamina / PlayerStats.StaminaMax  * 100f:F0}%" : "0%";
-	private string BleedOutWidth => $"{PlayerStats.BleedOutHealth:F0}%";
+	private static string FormatTime( float seconds )
+	{
+		int m = (int)seconds / 60;
+		int s = (int)seconds % 60;
+		return $"{m}:{s:D2}";
+	}
+
+	private string HealthWidth   => (PI?.HealthMax  ?? PlayerStats.HealthMax)  > 0 ? $"{(PI?.CurrentHealth  ?? PlayerStats.CurrentHealth)  / (PI?.HealthMax  ?? PlayerStats.HealthMax)  * 100f:F0}%" : "0%";
+	private string StaminaWidth  => (PI?.StaminaMax ?? PlayerStats.StaminaMax) > 0 ? $"{(PI?.CurrentStamina ?? PlayerStats.CurrentStamina) / (PI?.StaminaMax ?? PlayerStats.StaminaMax) * 100f:F0}%" : "0%";
+	private string BleedOutWidth => $"{(PI?.BleedOutHealth ?? PlayerStats.BleedOutHealth):F0}%";
+	private string ObjectiveWidth => $"{System.Math.Clamp( PI?.ObjectiveProgress01 ?? PlayerStats.ObjectiveProgress01, 0f, 1f ) * 100f:F0}%";
+	private string _lastObjectiveText = string.Empty;
+	private float _lastObjectiveProgress = -1f;
+	private bool _lastObjectiveUrgent = false;
+	private float _lastHealProgress = -1f;
+	private string _lastHealTargetName = string.Empty;
 }

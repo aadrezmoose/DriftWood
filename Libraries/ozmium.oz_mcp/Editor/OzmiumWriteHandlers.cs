@@ -1,0 +1,570 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using Editor;
+using Sandbox;
+
+namespace SboxMcpServer;
+
+/// <summary>
+/// Handlers for all scene-write MCP tools:
+/// create_game_object, add_component, remove_component, set_component_property,
+/// destroy_game_object, reparent_game_object, set_game_object_tags,
+/// instantiate_prefab, save_scene, undo, redo.
+/// </summary>
+internal static class OzmiumWriteHandlers
+{
+	private static readonly JsonSerializerOptions _json = new()
+	{
+		PropertyNamingPolicy   = JsonNamingPolicy.CamelCase,
+		DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+	};
+
+	// ── create_game_object ──────────────────────────────────────────────────
+
+	internal static object CreateGameObject( JsonElement args )
+	{
+		var scene    = OzmiumSceneHelpers.ResolveScene();
+		if ( scene == null ) return Txt( "No active scene." );
+
+		string name     = Get( args, "name",     "New GameObject" );
+		string parentId = Get( args, "parentId", (string)null );
+
+		try
+		{
+			var go = scene.CreateObject();
+			go.Name = name;
+
+			if ( !string.IsNullOrEmpty( parentId ) && Guid.TryParse( parentId, out var guid ) )
+			{
+				var parent = OzmiumSceneHelpers.WalkAll( scene, true ).FirstOrDefault( g => g.Id == guid );
+				if ( parent != null ) go.SetParent( parent );
+			}
+
+			return Txt( JsonSerializer.Serialize( new
+			{
+				message = $"Created '{go.Name}'.",
+				id      = go.Id.ToString(),
+				path    = OzmiumSceneHelpers.GetObjectPath( go )
+			}, _json ) );
+		}
+		catch ( Exception ex ) { return Txt( $"Error: {ex.Message}" ); }
+	}
+
+	// ── add_component ───────────────────────────────────────────────────────
+
+	internal static object AddComponent( JsonElement args )
+	{
+		var scene = OzmiumSceneHelpers.ResolveScene();
+		if ( scene == null ) return Txt( "No active scene." );
+
+		string id   = Get( args, "id",            (string)null );
+		string name = Get( args, "name",          (string)null );
+		string type = Get( args, "componentType", (string)null );
+
+		if ( string.IsNullOrEmpty( type ) ) return Txt( "Provide 'componentType'." );
+
+		var go = OzmiumSceneHelpers.FindGo( scene, id, name );
+		if ( go == null ) return Txt( "Object not found." );
+
+		try
+		{
+			// Use TypeLibrary (indexed, fast) to find the component type
+			var td = FindComponentTypeDescription( type );
+			if ( td == null ) return Txt( $"Component type '{type}' not found. Use the exact class name." );
+			go.Components.Create( td );
+			return Txt( $"Added '{td.Name}' to '{go.Name}'." );
+		}
+		catch ( Exception ex ) { return Txt( $"Error: {ex.Message}" ); }
+	}
+
+	// ── remove_component ────────────────────────────────────────────────────
+
+	internal static object RemoveComponent( JsonElement args )
+	{
+		var scene = OzmiumSceneHelpers.ResolveScene();
+		if ( scene == null ) return Txt( "No active scene." );
+
+		string id   = Get( args, "id",            (string)null );
+		string name = Get( args, "name",          (string)null );
+		string type = Get( args, "componentType", (string)null );
+
+		var go = OzmiumSceneHelpers.FindGo( scene, id, name );
+		if ( go == null ) return Txt( "Object not found." );
+
+		var comp = go.Components.GetAll().FirstOrDefault( c =>
+			c.GetType().Name.IndexOf( type ?? "", StringComparison.OrdinalIgnoreCase ) >= 0 );
+		if ( comp == null ) return Txt( $"No component '{type}' found on '{go.Name}'." );
+
+		try
+		{
+			comp.Destroy();
+			return Txt( $"Removed '{comp.GetType().Name}' from '{go.Name}'." );
+		}
+		catch ( Exception ex ) { return Txt( $"Error: {ex.Message}" ); }
+	}
+
+	// ── set_component_property ──────────────────────────────────────────────
+
+	internal static object SetComponentProperty( JsonElement args )
+	{
+		var scene = OzmiumSceneHelpers.ResolveScene();
+		if ( scene == null ) return Txt( "No active scene." );
+
+		string id           = Get( args, "id",            (string)null );
+		string objName      = Get( args, "name",          (string)null );
+		string compType     = Get( args, "componentType", (string)null );
+		string propName     = Get( args, "propertyName",  (string)null );
+
+		if ( string.IsNullOrEmpty( propName ) ) return Txt( "Provide 'propertyName'." );
+		if ( !args.TryGetProperty( "value", out var valEl ) ) return Txt( "Provide 'value'." );
+
+		var go = OzmiumSceneHelpers.FindGo( scene, id, objName );
+		if ( go == null ) return Txt( "Object not found." );
+
+		var comp = go.Components.GetAll().FirstOrDefault( c =>
+			string.IsNullOrEmpty( compType ) ||
+			c.GetType().Name.IndexOf( compType, StringComparison.OrdinalIgnoreCase ) >= 0 );
+		if ( comp == null ) return Txt( $"Component '{compType}' not found." );
+
+		var prop = comp.GetType().GetProperty( propName,
+			System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance );
+		if ( prop == null ) return Txt( $"Property '{propName}' not found on '{comp.GetType().Name}'." );
+		if ( !prop.CanWrite ) return Txt( $"Property '{propName}' is read-only." );
+
+		try
+		{
+			object converted = ConvertJsonValue( valEl, prop.PropertyType );
+			prop.SetValue( comp, converted );
+			var readback = prop.GetValue( comp );
+			return Txt( $"Set '{comp.GetType().Name}.{propName}' = {readback}" );
+		}
+		catch ( Exception ex ) { return Txt( $"Error setting property: {ex.Message}" ); }
+	}
+
+	// ── destroy_game_object ─────────────────────────────────────────────────
+
+	internal static object DestroyGameObject( JsonElement args )
+	{
+		var scene = OzmiumSceneHelpers.ResolveScene();
+		if ( scene == null ) return Txt( "No active scene." );
+
+		string id   = Get( args, "id",   (string)null );
+		string name = Get( args, "name", (string)null );
+
+		var go = OzmiumSceneHelpers.FindGo( scene, id, name );
+		if ( go == null ) return Txt( "Object not found." );
+
+		var displayName = go.Name;
+		try
+		{
+			go.Destroy();
+			return Txt( $"Destroyed '{displayName}'." );
+		}
+		catch ( Exception ex ) { return Txt( $"Error: {ex.Message}" ); }
+	}
+
+	// ── reparent_game_object ────────────────────────────────────────────────
+
+	internal static object ReparentGameObject( JsonElement args )
+	{
+		var scene = OzmiumSceneHelpers.ResolveScene();
+		if ( scene == null ) return Txt( "No active scene." );
+
+		string id       = Get( args, "id",       (string)null );
+		string name     = Get( args, "name",     (string)null );
+		string parentId = Get( args, "parentId", (string)null );
+
+		var go = OzmiumSceneHelpers.FindGo( scene, id, name );
+		if ( go == null ) return Txt( "Object not found." );
+
+		try
+		{
+			if ( string.IsNullOrEmpty( parentId ) || parentId == "null" )
+			{
+				go.SetParent( null );
+				return Txt( $"Moved '{go.Name}' to scene root." );
+			}
+
+			if ( !Guid.TryParse( parentId, out var guid ) ) return Txt( "Invalid parentId GUID." );
+			var parent = OzmiumSceneHelpers.WalkAll( scene, true ).FirstOrDefault( g => g.Id == guid );
+			if ( parent == null ) return Txt( $"Parent '{parentId}' not found." );
+			go.SetParent( parent );
+			return Txt( $"Moved '{go.Name}' under '{parent.Name}'." );
+		}
+		catch ( Exception ex ) { return Txt( $"Error: {ex.Message}" ); }
+	}
+
+	// ── set_game_object_tags ────────────────────────────────────────────────
+
+	internal static object SetGameObjectTags( JsonElement args )
+	{
+		var scene = OzmiumSceneHelpers.ResolveScene();
+		if ( scene == null ) return Txt( "No active scene." );
+
+		string id   = Get( args, "id",   (string)null );
+		string name = Get( args, "name", (string)null );
+
+		var go = OzmiumSceneHelpers.FindGo( scene, id, name );
+		if ( go == null ) return Txt( "Object not found." );
+
+		try
+		{
+			// set: replace all tags
+			if ( args.TryGetProperty( "set", out var setEl ) && setEl.ValueKind == JsonValueKind.Array )
+			{
+				go.Tags.RemoveAll();
+				foreach ( var t in setEl.EnumerateArray() ) go.Tags.Add( t.GetString() );
+				return Txt( $"Tags on '{go.Name}': {string.Join( ", ", go.Tags.TryGetAll() )}" );
+			}
+			// add/remove individual tags
+			if ( args.TryGetProperty( "add", out var addEl ) && addEl.ValueKind == JsonValueKind.Array )
+				foreach ( var t in addEl.EnumerateArray() ) go.Tags.Add( t.GetString() );
+			if ( args.TryGetProperty( "remove", out var remEl ) && remEl.ValueKind == JsonValueKind.Array )
+				foreach ( var t in remEl.EnumerateArray() ) go.Tags.Remove( t.GetString() );
+
+			return Txt( $"Tags on '{go.Name}': {string.Join( ", ", go.Tags.TryGetAll() )}" );
+		}
+		catch ( Exception ex ) { return Txt( $"Error: {ex.Message}" ); }
+	}
+
+	// ── instantiate_prefab ──────────────────────────────────────────────────
+
+	internal static object InstantiatePrefab( JsonElement args )
+	{
+		var scene = OzmiumSceneHelpers.ResolveScene();
+		if ( scene == null ) return Txt( "No active scene." );
+
+		string path     = NormalizePath( Get( args, "path", (string)null ) );
+		float  x        = Get( args, "x",        0f );
+		float  y        = Get( args, "y",        0f );
+		float  z        = Get( args, "z",        0f );
+		string parentId = Get( args, "parentId", (string)null );
+
+		if ( string.IsNullOrEmpty( path ) ) return Txt( "Provide 'path' (prefab asset path)." );
+
+		try
+		{
+			// Verify the asset exists
+			var asset = AssetSystem.FindByPath( path );
+			if ( asset == null )
+				return Txt( $"Asset not found: '{path}'. Use browse_assets with type='prefab' to find valid prefab paths." );
+
+			var prefabFile = ResourceLibrary.Get<PrefabFile>( path );
+			if ( prefabFile == null )
+				return Txt( $"Could not load prefab: '{path}'." );
+
+			var prefabScene = SceneUtility.GetPrefabScene( prefabFile );
+			var go = prefabScene.Clone();
+			go.WorldPosition = new Vector3( x, y, z );
+
+			if ( !string.IsNullOrEmpty( parentId ) && Guid.TryParse( parentId, out var guid ) )
+			{
+				var parent = OzmiumSceneHelpers.WalkAll( scene, true ).FirstOrDefault( g => g.Id == guid );
+				if ( parent != null ) go.SetParent( parent );
+			}
+
+			return Txt( JsonSerializer.Serialize( new
+			{
+				message  = $"Instantiated '{path}'.",
+				id       = go.Id.ToString(),
+				name     = go.Name,
+				position = OzmiumSceneHelpers.V3( go.WorldPosition )
+			}, _json ) );
+		}
+		catch ( Exception ex ) { return Txt( $"Error: {ex.Message}" ); }
+	}
+
+	// ── save_scene ──────────────────────────────────────────────────────────
+
+	internal static object SaveScene()
+	{
+		try
+		{
+			var session = SceneEditorSession.Active;
+			if ( session == null ) return Txt( "No editor session active." );
+			session.Save( false );
+			return Txt( $"Saved '{session.Scene?.Name}'." );
+		}
+		catch ( Exception ex ) { return Txt( $"Error saving: {ex.Message}" ); }
+	}
+
+	// ── undo / redo ─────────────────────────────────────────────────────────
+
+	internal static object Undo()
+	{
+		try
+		{
+			var session = SceneEditorSession.Active;
+			if ( session == null ) return Txt( "No editor session active." );
+			var us = session.UndoSystem;
+			if ( us == null ) return Txt( "UndoSystem not available." );
+			us.Undo();
+			return Txt( "Undo performed." );
+		}
+		catch ( Exception ex ) { return Txt( $"Error: {ex.Message}" ); }
+	}
+
+	internal static object Redo()
+	{
+		try
+		{
+			var session = SceneEditorSession.Active;
+			if ( session == null ) return Txt( "No editor session active." );
+			var us = session.UndoSystem;
+			if ( us == null ) return Txt( "UndoSystem not available." );
+			us.Redo();
+			return Txt( "Redo performed." );
+		}
+		catch ( Exception ex ) { return Txt( $"Error: {ex.Message}" ); }
+	}
+
+	// ── Private helpers ─────────────────────────────────────────────────────
+
+	/// <summary>
+	/// Fast component type lookup using TypeLibrary (indexed).
+	/// Prefers game-assembly types over Sandbox built-ins when names collide.
+	/// </summary>
+	private static TypeDescription FindComponentTypeDescription( string typeName )
+	{
+		// Search all component types in TypeLibrary for a name match.
+		// TypeLibrary.GetTypes<Component>() is indexed and fast.
+		// We search here FIRST so we can prefer game-assembly types over engine built-ins.
+		TypeDescription fallback = null;
+		foreach ( var candidate in TypeLibrary.GetTypes<Component>() )
+		{
+			if ( !candidate.Name.Equals( typeName, StringComparison.OrdinalIgnoreCase ) )
+				continue;
+
+			// Prefer game types (not in Sandbox namespace) over engine built-ins
+			var ns = candidate.TargetType.Namespace ?? "";
+			if ( !ns.StartsWith( "Sandbox", StringComparison.OrdinalIgnoreCase ) )
+				return candidate; // Game type found — use it immediately
+
+			fallback ??= candidate; // Remember the first engine match as fallback
+		}
+
+		if ( fallback != null ) return fallback;
+
+		// Last resort: try exact match by full type name (for edge cases)
+		var td = TypeLibrary.GetType( typeName );
+		if ( td != null && td.TargetType.IsClass && !td.TargetType.IsAbstract
+			&& typeof( Component ).IsAssignableFrom( td.TargetType ) )
+			return td;
+
+		return null;
+	}
+
+	private static object ConvertJsonValue( JsonElement el, Type targetType )
+	{
+		if ( targetType == typeof( string ) )
+			return el.ValueKind == JsonValueKind.String ? el.GetString() : el.GetRawText();
+
+		if ( targetType == typeof( bool ) )
+		{
+			if ( el.ValueKind == JsonValueKind.True )  return true;
+			if ( el.ValueKind == JsonValueKind.False ) return false;
+			if ( el.ValueKind == JsonValueKind.String ) return bool.Parse( el.GetString() );
+			return el.GetBoolean();
+		}
+
+		if ( targetType == typeof( int ) )
+		{
+			if ( el.ValueKind == JsonValueKind.String ) return int.Parse( el.GetString() );
+			return el.GetInt32();
+		}
+
+		if ( targetType == typeof( float ) )
+		{
+			if ( el.ValueKind == JsonValueKind.String ) return float.Parse( el.GetString(), System.Globalization.CultureInfo.InvariantCulture );
+			return el.GetSingle();
+		}
+
+		if ( targetType == typeof( double ) )
+		{
+			if ( el.ValueKind == JsonValueKind.String ) return double.Parse( el.GetString(), System.Globalization.CultureInfo.InvariantCulture );
+			return el.GetDouble();
+		}
+
+		if ( targetType == typeof( Vector3 ) && el.ValueKind == JsonValueKind.Object )
+		{
+			float vx = 0, vy = 0, vz = 0;
+			if ( el.TryGetProperty( "x", out var xp ) ) vx = xp.GetSingle();
+			if ( el.TryGetProperty( "y", out var yp ) ) vy = yp.GetSingle();
+			if ( el.TryGetProperty( "z", out var zp ) ) vz = zp.GetSingle();
+			return new Vector3( vx, vy, vz );
+		}
+
+		if ( targetType.IsEnum )
+		{
+			var str = el.ValueKind == JsonValueKind.String ? el.GetString() : el.GetRawText();
+			return Enum.Parse( targetType, str, ignoreCase: true );
+		}
+
+		// Handle Sandbox.Model (e.g. for SkinnedModelRenderer.Model, ModelRenderer.Model)
+		if ( targetType == typeof( Model ) )
+		{
+			var path = el.ValueKind == JsonValueKind.String ? el.GetString() : el.GetRawText();
+			if ( string.IsNullOrEmpty( path ) || path == "null" ) return null;
+			return Model.Load( path );
+		}
+
+		if ( typeof( Component ).IsAssignableFrom( targetType ) )
+		{
+			string guidStr = null;
+			if ( el.ValueKind == JsonValueKind.String )
+				guidStr = el.GetString();
+			else if ( el.ValueKind == JsonValueKind.Object )
+			{
+				if ( el.TryGetProperty( "Id", out var idProp ) ) guidStr = idProp.GetString();
+				else if ( el.TryGetProperty( "id", out var idProp2 ) ) guidStr = idProp2.GetString();
+			}
+
+			if ( !string.IsNullOrEmpty( guidStr ) && Guid.TryParse( guidStr, out var compGuid ) )
+			{
+				var scene = OzmiumSceneHelpers.ResolveScene();
+				if ( scene != null )
+				{
+					foreach ( var go in OzmiumSceneHelpers.WalkAll( scene, true ) )
+					{
+						var match = go.Components.GetAll().FirstOrDefault( c => c.Id == compGuid );
+						if ( match != null && targetType.IsAssignableFrom( match.GetType() ) )
+							return match;
+					}
+				}
+			}
+			return null;
+		}
+
+		if ( typeof( GameObject ).IsAssignableFrom( targetType ) )
+		{
+			string guidStr = null;
+			if ( el.ValueKind == JsonValueKind.String )
+				guidStr = el.GetString();
+			else if ( el.ValueKind == JsonValueKind.Object )
+			{
+				if ( el.TryGetProperty( "Id", out var idProp ) ) guidStr = idProp.GetString();
+				else if ( el.TryGetProperty( "id", out var idProp2 ) ) guidStr = idProp2.GetString();
+			}
+
+			if ( !string.IsNullOrEmpty( guidStr ) && Guid.TryParse( guidStr, out var goGuid ) )
+			{
+				var scene = OzmiumSceneHelpers.ResolveScene();
+				if ( scene != null )
+				{
+					return OzmiumSceneHelpers.WalkAll( scene, true ).FirstOrDefault( g => g.Id == goGuid );
+				}
+			}
+			return null;
+		}
+
+		// Fallback: try parsing from string
+		var raw = el.ValueKind == JsonValueKind.String ? el.GetString() : el.GetRawText();
+		return Convert.ChangeType( raw, targetType );
+	}
+
+	private static string NormalizePath( string path )
+	{
+		if ( path == null ) return null;
+		if ( path.StartsWith( "Assets/", StringComparison.OrdinalIgnoreCase ) )
+			path = path.Substring( "Assets/".Length );
+		return path;
+	}
+
+	private static object Txt( string text ) => new { content = new object[] { new { type = "text", text } } };
+
+	private static T Get<T>( JsonElement el, string key, T def )
+	{
+		if ( el.ValueKind == JsonValueKind.Undefined ) return def;
+		if ( !el.TryGetProperty( key, out var p ) ) return def;
+		try
+		{
+			var t = typeof( T );
+			if ( t == typeof( string ) ) return (T)(object)( p.ValueKind == JsonValueKind.Null ? null : p.GetString() );
+			if ( t == typeof( bool ) )   return (T)(object)p.GetBoolean();
+			if ( t == typeof( int ) )    return (T)(object)p.GetInt32();
+			if ( t == typeof( float ) )  return (T)(object)p.GetSingle();
+			return def;
+		}
+		catch { return def; }
+	}
+
+	// ── Tool schemas (used by ToolDefinitions.All) ───────────────────────────
+
+	private static Dictionary<string, object> S( string name, string desc, Dictionary<string, object> props, string[] req = null )
+	{
+		var schema = new Dictionary<string, object> { ["type"] = "object", ["properties"] = props };
+		if ( req != null ) schema["required"] = req;
+		return new Dictionary<string, object> { ["name"] = name, ["description"] = desc, ["inputSchema"] = schema };
+	}
+	private static Dictionary<string, object> Ps( params (string k, string type, string d)[] fields )
+	{
+		var d = new Dictionary<string, object>();
+		foreach ( var (k, tp, desc) in fields )
+			d[k] = new Dictionary<string, object> { ["type"] = tp, ["description"] = desc };
+		return d;
+	}
+
+	internal static Dictionary<string, object> SchemaCreateGameObject => S( "create_game_object",
+		"Create a new empty GameObject in the current scene.",
+		Ps( ("name", "string", "Name (default 'New GameObject')."), ("parentId", "string", "Parent GUID.") ) );
+
+	internal static Dictionary<string, object> SchemaAddComponent => S( "add_component",
+		"Add a component to a GameObject. Use exact C# class name (e.g. 'PointLight', 'ModelRenderer').",
+		Ps( ("id","string","GUID."), ("name","string","Exact name."), ("componentType","string","C# class name.") ),
+		new[] { "componentType" } );
+
+	internal static Dictionary<string, object> SchemaRemoveComponent => S( "remove_component",
+		"Remove a component from a GameObject.",
+		Ps( ("id","string","GUID."), ("name","string","Exact name."), ("componentType","string","Type substring.") ),
+		new[] { "componentType" } );
+
+	internal static Dictionary<string, object> SchemaSetComponentProperty => S( "set_component_property",
+		"Set a property on a component. Supports string, bool, int, float, Vector3 {x,y,z}, enum.",
+		new Dictionary<string, object>
+		{
+			["id"]            = new Dictionary<string, object> { ["type"] = "string",  ["description"] = "GUID." },
+			["name"]          = new Dictionary<string, object> { ["type"] = "string",  ["description"] = "Exact name." },
+			["componentType"] = new Dictionary<string, object> { ["type"] = "string",  ["description"] = "Type substring." },
+			["propertyName"]  = new Dictionary<string, object> { ["type"] = "string",  ["description"] = "Exact C# property name." },
+			["value"]         = new Dictionary<string, object> { ["description"] = "The value to set. Can be string, number, boolean, object {x,y,z} for Vector3, or Component/GameObject GUID." }
+		},
+		new[] { "propertyName" } );
+
+	internal static Dictionary<string, object> SchemaDestroyGameObject => S( "destroy_game_object",
+		"Delete a GameObject.",
+		Ps( ("id","string","GUID."), ("name","string","Exact name.") ) );
+
+	internal static Dictionary<string, object> SchemaReparentGameObject => S( "reparent_game_object",
+		"Move a GameObject under a new parent. Pass parentId='null' for root.",
+		Ps( ("id","string","GUID."), ("name","string","Exact name."), ("parentId","string","New parent GUID or 'null'.") ) );
+
+	internal static Dictionary<string, object> SchemaSetGameObjectTags => S( "set_game_object_tags",
+		"Set/add/remove tags. Use 'set' array to replace all, 'add'/'remove' for incremental.",
+		new Dictionary<string, object>
+		{
+			["id"]     = new Dictionary<string, object> { ["type"] = "string", ["description"] = "GUID." },
+			["name"]   = new Dictionary<string, object> { ["type"] = "string", ["description"] = "Exact name." },
+			["set"]    = new Dictionary<string, object> { ["type"] = "array",  ["description"] = "Replace all tags with this list.", ["items"] = new Dictionary<string, object> { ["type"] = "string" } },
+			["add"]    = new Dictionary<string, object> { ["type"] = "array",  ["description"] = "Tags to add.", ["items"] = new Dictionary<string, object> { ["type"] = "string" } },
+			["remove"] = new Dictionary<string, object> { ["type"] = "array",  ["description"] = "Tags to remove.", ["items"] = new Dictionary<string, object> { ["type"] = "string" } },
+		} );
+
+	internal static Dictionary<string, object> SchemaInstantiatePrefab => S( "instantiate_prefab",
+		"Spawn a prefab at a world position. Use browse_assets to find the path first.",
+		Ps( ("path","string","Prefab asset path."), ("x","number","World X."), ("y","number","World Y."), ("z","number","World Z."), ("parentId","string","Optional parent GUID.") ),
+		new[] { "path" } );
+
+	internal static Dictionary<string, object> SchemaSaveScene => S( "save_scene",
+		"Save the currently open scene or prefab to disk.",
+		new Dictionary<string, object>() );
+
+	internal static Dictionary<string, object> SchemaUndo => S( "undo",
+		"Undo the last editor operation.",
+		new Dictionary<string, object>() );
+
+	internal static Dictionary<string, object> SchemaRedo => S( "redo",
+		"Redo the last undone editor operation.",
+		new Dictionary<string, object>() );
+}
