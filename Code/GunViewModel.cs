@@ -74,20 +74,19 @@ public sealed class GunViewModel : Component
 		}
 
 		// Self-register so WeaponManager sees this VM before its first OnUpdate
-		Components.GetInAncestorsOrSelf<WeaponManager>()?.RegisterViewModel( this );
+		try
+		{
+			Components.GetInAncestorsOrSelf<WeaponManager>()?.RegisterViewModel( this );
+		}
+		catch ( Exception e )
+		{
+			Log.Error( $"[GunViewModel] RegisterViewModel failed: {e.Message}" );
+		}
 	}
 
 	protected override void OnUpdate()
 	{
 		if ( modelObject == null ) return;
-
-		// In multiplayer, hide viewmodels that belong to remote players.
-		// _isLocalPlayer is set by WeaponManager at registration time.
-		if ( Networking.IsActive && _isLocalPlayer != true )
-		{
-			modelObject.Enabled = false;
-			return;
-		}
 
 		bool isWeaponSlotActive = PlayerStats.ActiveSlotIndex < PlayerStats.WeaponSlotCount;
 		bool isThisSlotActive   = PlayerStats.ActiveSlotIndex == WeaponSlotIndex;
