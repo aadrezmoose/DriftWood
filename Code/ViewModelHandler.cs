@@ -238,6 +238,7 @@ public sealed class ViewModelHandler : Component
 	/// </summary>
 	public void ForceRestState( Vector3 position, Rotation rotation )
 	{
+		Log.Info( $"[ViewModelHandler] ForceRestState called: pos={position}, rot={rotation.Angles()}" );
 		restPosition = position;
 		restAngles = rotation.Angles();
 		_lastWrittenPos = position;

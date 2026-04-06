@@ -144,7 +144,14 @@ public sealed class WeaponManager : Component
 
 			// Only lock the cache once we successfully find it
 			if ( ViewModelHandlerCache != null )
+			{
 				ViewModelHandlerFound = true;
+				Log.Info( "[WeaponManager] Found ViewModelHandler via lazy-load" );
+			}
+			else if ( !ViewModelHandlerFound )
+			{
+				Log.Warning( "[WeaponManager] ViewModelHandler not found yet (will retry next frame)" );
+			}
 
 			return ViewModelHandlerCache;
 		}
@@ -532,6 +539,7 @@ public sealed class WeaponManager : Component
 		// Update the single GunViewModel directly
 		if ( ViewModel != null )
 		{
+			Log.Info( $"[WeaponManager] Calling UpdateWeapon in EquipWeaponPickup: model={pickup.ViewModelModel?.ResourcePath ?? "null"}, pos={pickup.ViewModelPositionOffset}" );
 			ViewModel.UpdateWeapon(
 				pickup.ViewModelModel,
 				pickup.ViewModelAnimGraph,
@@ -542,7 +550,12 @@ public sealed class WeaponManager : Component
 				pickup.AnimReloadEmptyParam
 			);
 			// Notify ViewModelHandler of the new rest state to prevent stale cached values
+			Log.Info( $"[WeaponManager] Calling ForceRestState in EquipWeaponPickup" );
 			ViewModelHandler?.ForceRestState( pickup.ViewModelPositionOffset, Rotation.Identity );
+		}
+		else
+		{
+			Log.Warning( "[WeaponManager] ViewModel is null in EquipWeaponPickup, skipping UpdateWeapon" );
 		}
 
 		pickup.Pickup( GameObject );
