@@ -71,6 +71,21 @@ public sealed class WeaponPickup : Component
 		       worldRenderer.Model = WorldModel;
 	       }
 
+		// Auto-create a collider so raycasts can detect this pickup
+		if ( Components.Get<Collider>() == null )
+		{
+			if ( WorldModel != null )
+			{
+				var col = Components.GetOrCreate<ModelCollider>();
+				col.Model = WorldModel;
+			}
+			else
+			{
+				var box = Components.GetOrCreate<BoxCollider>();
+				box.Scale = new Vector3( 20, 20, 20 );
+			}
+		}
+
 	       // Always re-enable the pickup for each client (per-player pickup)
 	       GameObject.Enabled = true;
 	}

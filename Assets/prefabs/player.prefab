@@ -163,8 +163,7 @@
         "SecondarySlot": null,
         "ShoveCooldown": 1.2,
         "ShoveRadius": 30,
-        "ShoveRange": 110,
-        "ThrowDelay": 0.45
+        "ShoveRange": 110
       },
       {
         "__type": "IncapacitationComponent",
@@ -255,7 +254,7 @@
         "Scale": "1,1,1",
         "Tags": "",
         "Enabled": true,
-        "NetworkMode": 0,
+        "NetworkMode": 1,
         "NetworkFlags": 0,
         "NetworkOrphaned": 0,
         "NetworkTransmit": true,
@@ -273,7 +272,7 @@
         "Scale": "1,1,1",
         "Tags": "",
         "Enabled": true,
-        "NetworkMode": 0,
+        "NetworkMode": 1,
         "NetworkFlags": 0,
         "NetworkOrphaned": 0,
         "NetworkTransmit": true,
@@ -290,7 +289,7 @@
             "Scale": "1,1,1",
             "Tags": "maincamera",
             "Enabled": true,
-            "NetworkMode": 0,
+            "NetworkMode": 1,
             "NetworkFlags": 0,
             "NetworkOrphaned": 0,
             "NetworkTransmit": true,
@@ -366,32 +365,10 @@
               {
                 "__type": "GunViewModel",
                 "__guid": "597026b9-d226-40b6-9cd6-f320da6b1290",
-                "__enabled": false,
-                "Flags": 0,
-                "AnimFireParam": "fire",
-                "AnimGraph": "weapons/swb/remington/v_remington.vanmgrph",
-                "AnimReloadEmptyParam": "reload_empty",
-                "AnimReloadParam": "reload",
-                "HandsModel": "models/first_person/v_first_person_arms_human.vmdl",
-                "OnComponentDestroy": null,
-                "OnComponentDisabled": null,
-                "OnComponentEnabled": null,
-                "OnComponentFixedUpdate": null,
-                "OnComponentStart": null,
-                "OnComponentUpdate": null,
-                "OverlayModel": null,
-                "PositionOffset": "10,-5,-8",
-                "RotationOffset": "0,0,0,1",
-                "WeaponModel": "weapons/swb/remington/v_remington.vmdl",
-                "WeaponSlotIndex": 0
-              },
-              {
-                "__type": "GunViewModel",
-                "__guid": "2f173cf8-f7fe-41d4-a01a-f6d65172f6b1",
                 "__enabled": true,
                 "Flags": 0,
                 "AnimFireParam": "fire",
-                "AnimGraph": "weapons/swb/colt/v_colt.vanmgrph",
+                "AnimGraph": null,
                 "AnimReloadEmptyParam": "reload_empty",
                 "AnimReloadParam": "reload",
                 "HandsModel": null,
@@ -402,10 +379,9 @@
                 "OnComponentStart": null,
                 "OnComponentUpdate": null,
                 "OverlayModel": null,
-                "PositionOffset": "13,-5,-6",
+                "PositionOffset": "25,6,-10",
                 "RotationOffset": "0,0,0,1",
-                "WeaponModel": "weapons/swb/colt/v_colt.vmdl",
-                "WeaponSlotIndex": 1
+                "WeaponModel": null
               },
               {
                 "__type": "ViewModelHandler",
@@ -501,8 +477,7 @@
                 "OverlayModel": null,
                 "PositionOffset": "25,6,-10",
                 "RotationOffset": "0,0,0,1",
-                "WeaponModel": "models/first_person/v_first_person_arms_human.vmdl",
-                "WeaponSlotIndex": 4
+                "WeaponModel": "models/first_person/v_first_person_arms_human.vmdl"
               },
               {
                 "__type": "GunViewModel",
@@ -523,8 +498,7 @@
                 "OverlayModel": null,
                 "PositionOffset": "25,6,-10",
                 "RotationOffset": "0,0,0,1",
-                "WeaponModel": "models/first_person/v_first_person_arms_human.vmdl",
-                "WeaponSlotIndex": 2
+                "WeaponModel": "models/first_person/v_first_person_arms_human.vmdl"
               }
             ],
             "Children": []

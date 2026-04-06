@@ -68,7 +68,6 @@ public sealed class GameManager : Component
 
 	protected override void OnStart()
 	{
-        Log.Info("[GameManager] OnStart called");
 		if ( SceneUsesBuiltInNetworkHelper() )
 		{
 			_disabledByNetworkHelper = true;
@@ -95,7 +94,6 @@ public sealed class GameManager : Component
 
 	protected override void OnUpdate()
 	{
-        Log.Info("[GameManager] OnUpdate called");
 		if ( _disabledByNetworkHelper ) return;
 		if ( DisableIfDuplicateManager() )
 			return;

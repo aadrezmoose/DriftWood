@@ -24,6 +24,10 @@ public sealed class CameraMovement : Component
 	public bool isFirstPerson => Distance == 0f;
 	[Property] public float RecoilRecovery { get; set; } = 6f;
 
+	/// <summary>Exact ray used to render this frame. Use for interaction raycasts instead of WorldPosition/WorldRotation.</summary>
+	public Ray EyeRay { get; private set; }
+
+	private int _eyeRayDebugFrameCount = 0;
 	private CameraComponent camera;
 	private Vector3 CurrentOffset = Vector3.Zero;
 	private float shakeMagnitude = 0f;
@@ -239,6 +243,15 @@ public sealed class CameraMovement : Component
 
 	protected override void OnUpdate()
 	{
+		if ( _eyeRayDebugFrameCount % 60 == 0 )
+			Log.Warning( $"[CM] OnUpdate running" );
+
+		// Compute EyeRay early so it's always available, even if Player is null
+		var tempEyeWorldPos = Head?.WorldPosition ?? (Player?.WorldPosition + Vector3.Up * 64f) ?? WorldPosition;
+		var tempEyeAngles = (Head?.WorldRotation ?? Player?.GameObject.WorldRotation ?? WorldRotation).Angles();
+		var tempCamPos = tempEyeWorldPos + Vector3.Zero + tempEyeAngles.ToRotation() * EyeOffset;
+		EyeRay = new Ray( tempCamPos, tempEyeAngles.ToRotation().Forward );
+
 		if ( camera == null ) camera = Components.Get<CameraComponent>();
 		var hierarchyPlayer = Player ?? Components.GetInAncestorsOrSelf<PlayerMovement>();
 		bool externalPresentation = LocalPresentationController.ShouldHandleLocalPresentation( hierarchyPlayer );
@@ -440,6 +453,14 @@ public sealed class CameraMovement : Component
 				.Run();
 			camPos = camTrace.Hit ? camTrace.HitPosition + camTrace.Normal : camTrace.EndPosition;
 		}
+
+		// Update EyeRay with final camera position (including shake and third-person offset)
+		EyeRay = new Ray( camPos + shakeOffset, eyeAngles.ToRotation().Forward );
+
+		// DEBUG
+		if ( _eyeRayDebugFrameCount % 60 == 0 )
+			Log.Warning( $"[CM] EyeRay final: camPos={camPos:F1}, shake={shakeOffset:F1}, eyeAngles={eyeAngles}" );
+		_eyeRayDebugFrameCount++;
 
 		WorldPosition = camPos + shakeOffset;
 		WorldRotation = eyeAngles.ToRotation();

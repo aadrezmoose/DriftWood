@@ -123,8 +123,8 @@ public abstract class Gun : Component
 		currentAmmo = AmmoClip;
 		maxAmmoReserve = AmmoReserve;
 
-		// Try to find or create viewmodel
-		viewModel = Components.Get<GunViewModel>();
+		// Use the shared GunViewModel instance from WeaponManager
+		viewModel = GunViewModel.Current;
 
 		// Load muzzle flash prefab if not set in inspector
 		if ( MuzzleFlashParticle == null )

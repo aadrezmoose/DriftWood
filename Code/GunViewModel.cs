@@ -1,5 +1,4 @@
 using Sandbox;
-using System;
 
 public sealed class GunViewModel : Component
 {
@@ -9,9 +8,6 @@ public sealed class GunViewModel : Component
 	[Property] public Vector3 PositionOffset { get; set; } = new Vector3( 25, 6, -10 );
 	[Property] public Rotation RotationOffset { get; set; } = Rotation.Identity;
 
-	/// <summary>Which weapon slot index this viewmodel belongs to (0 = first slot, 1 = second, etc.).</summary>
-	[Property] public int WeaponSlotIndex { get; set; } = 0;
-
 	/// <summary>Animation parameter name triggered on fire.</summary>
 	[Property] public string AnimFireParam { get; set; } = "fire";
 	/// <summary>Animation parameter name triggered on reload.</summary>
@@ -19,10 +15,11 @@ public sealed class GunViewModel : Component
 	/// <summary>Animation parameter name triggered on empty reload.</summary>
 	[Property] public string AnimReloadEmptyParam { get; set; } = "reload_empty";
 
-	/// <summary>The active viewmodel instance — kept for backwards compat, points to whichever slot is active.</summary>
-	public static GunViewModel Current { get; private set; }
+	/// <summary>The active viewmodel instance — kept for backwards compat, set by WeaponManager.</summary>
+	public static GunViewModel Current { get; set; }
 
 	private GameObject modelObject;
+	public GameObject ModelObject => modelObject;
 	public SkinnedModelRenderer ModelRenderer { get; private set; }
 
 	private GameObject overlayGO;
@@ -31,14 +28,9 @@ public sealed class GunViewModel : Component
 	/// <summary>Inspector-assigned overlay model (throwables/heal items). Usually null — assigned at runtime.</summary>
 	[Property] public Model OverlayModel { get; set; }
 
-	// Set by WeaponManager when it registers this VM
-	private bool? _isLocalPlayer;
-
-	public void SetLocalPlayerFlag( bool isLocal ) => _isLocalPlayer = isLocal;
-
 	protected override void OnStart()
 	{
-		modelObject = new GameObject( true, "GunModel" );
+		modelObject = new GameObject( false, "GunModel" );  // Start disabled
 		modelObject.Parent = GameObject;
 		modelObject.LocalPosition = PositionOffset;
 		modelObject.LocalRotation = RotationOffset;
@@ -74,34 +66,16 @@ public sealed class GunViewModel : Component
 			overlayGO.Enabled = true;
 		}
 
-		// Self-register so WeaponManager sees this VM before its first OnUpdate
-		try
-		{
-			Components.GetInAncestorsOrSelf<WeaponManager>()?.RegisterViewModel( this );
-		}
-		catch ( Exception e )
-		{
-			Log.Error( $"[GunViewModel] RegisterViewModel failed: {e.Message}" );
-		}
+		// Always start disabled - WeaponManager will enable when needed
+		modelObject.Enabled = false;
+
+		Log.Info( $"[GunViewModel] OnStart: WeaponModel={WeaponModel?.ResourcePath ?? "null"}, HandsModel={HandsModel?.ResourcePath ?? "null"}" );
 	}
 
-	protected override void OnUpdate()
+	/// <summary>Show or hide the viewmodel based on whether the current slot has content.</summary>
+	public void ShowModel( bool show )
 	{
-		if ( modelObject == null ) return;
-
-		bool isWeaponSlotActive = PlayerStats.ActiveSlotIndex < PlayerStats.WeaponSlotCount;
-		bool isThisSlotActive   = PlayerStats.ActiveSlotIndex == WeaponSlotIndex;
-
-		// Hide arms when the slot has no weapon equipped (shows placeholder name)
-		bool slotHasWeapon = PlayerStats.AllSlotNames.Count > WeaponSlotIndex
-			&& PlayerStats.AllSlotNames[WeaponSlotIndex] != "Primary"
-			&& PlayerStats.AllSlotNames[WeaponSlotIndex] != "Secondary";
-
-		modelObject.Enabled = isWeaponSlotActive && isThisSlotActive && slotHasWeapon;
-
-		// Keep Current pointing at whichever viewmodel is visible
-		if ( modelObject.Enabled )
-			Current = this;
+		if ( modelObject != null ) modelObject.Enabled = show;
 	}
 
 	/// <summary>Trigger a bool animation parameter (auto-resets in the graph).</summary>
@@ -161,6 +135,7 @@ public sealed class GunViewModel : Component
 		if ( animGraph != null ) ModelRenderer.AnimationGraph = animGraph;
 		Log.Info($"[GunViewModel] Applying LocalPosition offset: {positionOffset}");
 		modelObject.LocalPosition = positionOffset;
+		modelObject.LocalRotation = RotationOffset;  // Reset rotation to the inspector value
 		if ( !string.IsNullOrEmpty( animFireParam ) ) AnimFireParam = animFireParam;
 		if ( !string.IsNullOrEmpty( animReloadParam ) ) AnimReloadParam = animReloadParam;
 		if ( !string.IsNullOrEmpty( animReloadEmptyParam ) ) AnimReloadEmptyParam = animReloadEmptyParam;
@@ -182,7 +157,6 @@ public sealed class GunViewModel : Component
 	protected override void OnDestroy()
 	{
 		if ( Current == this ) Current = null;
-		Components.GetInAncestorsOrSelf<WeaponManager>()?.UnregisterViewModel( this );
 		modelObject?.Destroy();
 	}
 }

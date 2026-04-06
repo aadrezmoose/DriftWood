@@ -30,6 +30,7 @@ public sealed class ViewModelHandler : Component
 
 	// Sway state
 	private Rotation lastEyeRot;
+	private Angles lastAngDif = Angles.Zero;
 
 	// Jump animation state
 	private float jumpTime;
@@ -42,10 +43,11 @@ public sealed class ViewModelHandler : Component
 	{
 		if ( Player is null ) return;
 
-		// Re-find GunModel whenever the cached one is disabled (weapon switched) or gone
+		// Find GunViewModel and use its ModelObject reference
 		if ( gunModel is null || !gunModel.IsValid() || !gunModel.Enabled )
 		{
-			gunModel = FindDescendantByName( GameObject, "GunModel" );
+			var vm = Components.GetInDescendantsOrSelf<GunViewModel>();
+			gunModel = vm?.ModelObject;
 			if ( gunModel is null ) return;
 			restPosition = gunModel.LocalPosition;
 			restAngles   = gunModel.LocalRotation.Angles();
@@ -53,10 +55,26 @@ public sealed class ViewModelHandler : Component
 			finalRot     = Vector3.Zero;
 		}
 
-		// Smooth lerp toward targets
-		var speed = 10f * AnimSpeed;
+		// Update rest state when the gun model's rotation changes (weapon swap)
+		// This prevents accumulated rotation from previous weapons
+		var currentAngles = gunModel.LocalRotation.Angles();
+		if ( currentAngles != restAngles )
+		{
+			restAngles = currentAngles;
+			finalRot = Vector3.Zero;  // Reset procedural rotation when swapping
+		}
+
+		// Smooth lerp toward targets - slower for stability while strafing
+		var speed = 12f * AnimSpeed;
 		finalPos = Vector3.Lerp( finalPos, targetPos, speed * Time.Delta );
 		finalRot = Vector3.Lerp( finalRot, targetRot, speed * Time.Delta );
+
+		// Clamp final rotation to prevent wild spinning
+		finalRot = new Vector3(
+			Math.Clamp( finalRot.x, -5f, 5f ),
+			Math.Clamp( finalRot.y, -5f, 5f ),
+			Math.Clamp( finalRot.z, -5f, 5f )
+		);
 
 		// Apply to gun model local transform
 		gunModel.LocalPosition = restPosition + finalPos;
@@ -81,23 +99,14 @@ public sealed class ViewModelHandler : Component
 		HandleSprintAnimation();
 	}
 
-	private static GameObject FindDescendantByName( GameObject parent, string name )
-	{
-		foreach ( var child in parent.Children )
-		{
-			if ( child.Name == name && child.Enabled ) return child;
-			var found = FindDescendantByName( child, name );
-			if ( found is not null ) return found;
-		}
-		return null;
-	}
-
 	// ── Breathing idle sway ───────────────────────────────────────────
 	private void HandleIdleAnimation()
 	{
 		var t = Time.Now * 2f;
-		targetPos -= new Vector3( MathF.Cos( t / 4f ) / 8f, 0f, -MathF.Cos( t / 4f ) / 32f );
-		targetRot -= new Vector3( MathF.Cos( t / 5f ), MathF.Cos( t / 4f ), MathF.Cos( t / 7f ) );
+		// Minimal idle sway - just subtle breathing
+		targetPos -= new Vector3( MathF.Cos( t / 4f ) / 16f, 0f, -MathF.Cos( t / 4f ) / 64f );
+		// Very minimal idle rotation
+		targetRot -= new Vector3( MathF.Cos( t / 5f ) * 0.1f, MathF.Cos( t / 4f ) * 0.05f, 0f );
 
 		if ( Player.isCrouching && Player.IsOnGround )
 			targetPos += new Vector3( -1f, -1f, 0.5f );
@@ -113,15 +122,15 @@ public sealed class ViewModelHandler : Component
 		var maxSpeed = Player.isSprinting ? 100f : 200f;
 		var t = Time.Now * (Player.isSprinting ? 18f : 16f);
 
-		var roll = localVel.x > 0f ? -7f * (localVel.x / maxSpeed) : 0f;
-		var yaw  = localVel.x < 0f ?  3f * (localVel.x / maxSpeed) : 0f;
+		var roll = localVel.x > 0f ? -0.5f * (localVel.x / maxSpeed) : 0f;  // Minimal roll when strafing right
+		var yaw  = localVel.x < 0f ?  1f * (localVel.x / maxSpeed) : 0f;  // Reduced yaw from 3 to 1
 
 		targetPos -= new Vector3(
-			(-MathF.Cos( t / 2f ) / 5f) * walkSpeed / maxSpeed - yaw / 4f,
+			(-MathF.Cos( t / 2f ) / 8f) * walkSpeed / maxSpeed - yaw / 6f,  // Reduced walk bob movement
 			0f, 0f );
 		targetRot -= new Vector3(
 			(Math.Clamp( MathF.Cos( t ), -0.3f, 0.3f ) * 2f) * walkSpeed / maxSpeed,
-			(-MathF.Cos( t / 2f ) * 1.2f) * walkSpeed / maxSpeed - yaw * 1.5f,
+			(-MathF.Cos( t / 2f ) * 0.5f) * walkSpeed / maxSpeed - yaw * 0.5f,  // Reduced yaw rotation from 1.2f to 0.5f
 			roll );
 	}
 
@@ -136,13 +145,17 @@ public sealed class ViewModelHandler : Component
 			MathX.RadianToDegree( MathF.Atan2( MathF.Sin( MathX.DegreeToRadian( angDif.yaw ) ), MathF.Cos( MathX.DegreeToRadian( angDif.yaw ) ) ) ),
 			0f );
 
+		// Lerp toward zero when rotation difference is small (stopped turning) - faster return to center
+		lastAngDif = Angles.Lerp( lastAngDif, angDif, 20f * Time.Delta );
+
+		// Minimal sway to keep gun in frame - very heavily clamped
 		targetPos += new Vector3(
-			Math.Clamp( angDif.yaw   * 0.04f, -1.5f, 1.5f ),
+			Math.Clamp( lastAngDif.yaw   * 0.005f, -0.3f, 0.3f ),
 			0f,
-			Math.Clamp( angDif.pitch * 0.04f, -1.5f, 1.5f ) );
+			Math.Clamp( lastAngDif.pitch * 0.005f, -0.3f, 0.3f ) );
 		targetRot += new Vector3(
-			Math.Clamp( angDif.pitch * 0.2f, -4f, 4f ),
-			Math.Clamp( angDif.yaw   * 0.2f, -4f, 4f ),
+			Math.Clamp( lastAngDif.pitch * 0.02f, -0.5f, 0.5f ),
+			Math.Clamp( lastAngDif.yaw   * 0.02f, -0.5f, 0.5f ),
 			0f );
 	}
 

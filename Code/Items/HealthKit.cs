@@ -15,9 +15,13 @@ public sealed class HealthKit : BaseItem
 	{
 		// Health kits can be carried, not auto-used
 		ItemName = "Health Kit";
+		PickupSound = "sounds/coin1.sound";
+	}
+
+	protected override void OnAwake()
+	{
 		CanCarry = true;
 		AutoUse = false;
-		PickupSound = "sounds/coin1.sound";
 	}
 
 	/// <summary>
