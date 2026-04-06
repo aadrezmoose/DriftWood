@@ -167,25 +167,6 @@ public sealed class LocalPresentationController : Component
 
 		var cameraObject = new GameObject( true, "RuntimeMainCamera" );
 		renderCamera = cameraObject.Components.Create<CameraComponent>();
-
-		// Ensure GunViewModel and ViewModelHandler exist on the camera for the weapon viewmodel system
-		if ( cameraObject.Components.Get<GunViewModel>() == null )
-		{
-			cameraObject.Components.Create<GunViewModel>();
-			if ( EnableDiagnostics )
-				Log.Info( "[LocalPresentationController] Created GunViewModel on RuntimeMainCamera" );
-		}
-
-		if ( cameraObject.Components.Get<ViewModelHandler>() == null )
-		{
-			var vmHandler = cameraObject.Components.Create<ViewModelHandler>();
-			// ViewModelHandler needs a reference to the PlayerMovement component
-			var localPlayer = FindLocalPlayer();
-			if ( localPlayer != null )
-				vmHandler.Player = localPlayer;
-			if ( EnableDiagnostics )
-				Log.Info( "[LocalPresentationController] Created ViewModelHandler on RuntimeMainCamera" );
-		}
 	}
 
 	private PlayerMovement FindLocalPlayer()
