@@ -550,8 +550,9 @@ public sealed class WeaponManager : Component
 				pickup.AnimReloadEmptyParam
 			);
 			// Notify ViewModelHandler of the new rest state to prevent stale cached values
-			Log.Info( $"[WeaponManager] Calling ForceRestState in EquipWeaponPickup" );
-			ViewModelHandler?.ForceRestState( pickup.ViewModelPositionOffset, Rotation.Identity );
+			// Pass the actual rotation that UpdateWeapon() set on the modelObject, not a hardcoded Identity
+			Log.Info( $"[WeaponManager] Calling ForceRestState in EquipWeaponPickup with actual modelObject rotation" );
+			ViewModelHandler?.ForceRestState( pickup.ViewModelPositionOffset, ViewModel.ModelObject?.LocalRotation ?? Rotation.Identity );
 		}
 		else
 		{
@@ -646,7 +647,8 @@ public sealed class WeaponManager : Component
 				if ( EnableDiagnostics )
 					Log.Info( $"[WeaponManager] Weapon slot {slotToUpdate}: model={slotData.WeaponModel?.ResourcePath ?? "null"}" );
 				ViewModel.UpdateWeapon( slotData.WeaponModel, slotData.AnimGraph, slotData.HandsModel, positionOffset );
-				ViewModelHandler?.ForceRestState( positionOffset, Rotation.Identity );
+				// Pass the actual rotation that UpdateWeapon() set on the modelObject, not a hardcoded Identity
+				ViewModelHandler?.ForceRestState( positionOffset, ViewModel.ModelObject?.LocalRotation ?? Rotation.Identity );
 				ViewModel.UpdateOverlayModel( null );
 			}
 		}
@@ -658,7 +660,8 @@ public sealed class WeaponManager : Component
 			if ( EnableDiagnostics )
 				Log.Info( $"[WeaponManager] Item slot {slotToUpdate}: overlay={slotData.OverlayModel?.ResourcePath ?? "null"}" );
 			ViewModel.UpdateWeapon( armsModel, slotData.AnimGraph, slotData.HandsModel, positionOffset );
-			ViewModelHandler?.ForceRestState( positionOffset, Rotation.Identity );
+			// Pass the actual rotation that UpdateWeapon() set on the modelObject, not a hardcoded Identity
+			ViewModelHandler?.ForceRestState( positionOffset, ViewModel.ModelObject?.LocalRotation ?? Rotation.Identity );
 			ViewModel.UpdateOverlayModel( slotData.OverlayModel );
 		}
 	}
