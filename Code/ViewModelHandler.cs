@@ -39,6 +39,10 @@ public sealed class ViewModelHandler : Component
 	// Per-frame local velocity (camera-relative)
 	private Vector3 localVel;
 
+	// Track last-written position and angles to detect external changes from UpdateWeapon()
+	private Vector3 _lastWrittenPos;
+	private Angles _lastWrittenAngles;
+
 	protected override void OnUpdate()
 	{
 		if ( Player is null ) return;
@@ -49,19 +53,30 @@ public sealed class ViewModelHandler : Component
 			var vm = Components.GetInDescendantsOrSelf<GunViewModel>();
 			gunModel = vm?.ModelObject;
 			if ( gunModel is null ) return;
-			restPosition = gunModel.LocalPosition;
-			restAngles   = gunModel.LocalRotation.Angles();
-			finalPos     = Vector3.Zero;
-			finalRot     = Vector3.Zero;
+			restPosition       = gunModel.LocalPosition;
+			restAngles         = gunModel.LocalRotation.Angles();
+			_lastWrittenPos    = restPosition;
+			_lastWrittenAngles = restAngles;
+			finalPos           = Vector3.Zero;
+			finalRot           = Vector3.Zero;
 		}
 
-		// Update rest state when the gun model's rotation changes (weapon swap)
-		// This prevents accumulated rotation from previous weapons
+		// Detect external rotation changes (from UpdateWeapon() on weapon swap).
+		// Only update if current rotation differs from what we last wrote — prevents
+		// false positives when ViewModelHandler's own procedural rotation is read back.
 		var currentAngles = gunModel.LocalRotation.Angles();
-		if ( currentAngles != restAngles )
+		if ( currentAngles != _lastWrittenAngles )
 		{
 			restAngles = currentAngles;
 			finalRot = Vector3.Zero;  // Reset procedural rotation when swapping
+		}
+
+		// Detect external position changes (from UpdateWeapon() or ForceRestState())
+		var currentPos = gunModel.LocalPosition;
+		if ( currentPos != _lastWrittenPos )
+		{
+			restPosition = currentPos;
+			finalPos = Vector3.Zero;  // Reset procedural position when swapping
 		}
 
 		// Smooth lerp toward targets - slower for stability while strafing
@@ -76,9 +91,14 @@ public sealed class ViewModelHandler : Component
 			Math.Clamp( finalRot.z, -5f, 5f )
 		);
 
-		// Apply to gun model local transform
+		// Apply to gun model local transform and record what we wrote
+		// so that next frame's drift guards only fire on EXTERNAL changes
 		gunModel.LocalPosition = restPosition + finalPos;
-		gunModel.LocalRotation = Rotation.From( restAngles + new Angles( finalRot.x, finalRot.y, finalRot.z ) );
+		_lastWrittenPos = gunModel.LocalPosition;
+
+		var newRot = Rotation.From( restAngles + new Angles( finalRot.x, finalRot.y, finalRot.z ) );
+		gunModel.LocalRotation = newRot;
+		_lastWrittenAngles = newRot.Angles();
 
 		// Reset targets for this frame
 		targetPos = Vector3.Zero;
@@ -210,4 +230,19 @@ public sealed class ViewModelHandler : Component
 	// Quadratic bezier interpolation (from SWB)
 	private static float BezierY( float t, float p0, float p1, float p2 )
 		=> MathF.Pow( 1 - t, 2 ) * p0 + 2f * (1 - t) * t * p1 + MathF.Pow( t, 2 ) * p2;
+
+	/// <summary>
+	/// Called by WeaponManager after every UpdateWeapon() to immediately lock in the new
+	/// position/rotation as the procedural base. Prevents stale rest-state from persisting
+	/// when the model is already enabled (client-specific timing issue).
+	/// </summary>
+	public void ForceRestState( Vector3 position, Rotation rotation )
+	{
+		restPosition = position;
+		restAngles = rotation.Angles();
+		_lastWrittenPos = position;
+		_lastWrittenAngles = restAngles;
+		finalPos = Vector3.Zero;
+		finalRot = Vector3.Zero;
+	}
 }

@@ -83,6 +83,10 @@ public sealed class WeaponManager : Component
 	private GunViewModel ViewModelCache;
 	private bool ViewModelFound = false;
 
+	// ViewModelHandler for notifying rest-state changes on weapon swaps
+	private ViewModelHandler ViewModelHandlerCache;
+	private bool ViewModelHandlerFound = false;
+
 	private GunViewModel ViewModel
 	{
 		get
@@ -125,6 +129,24 @@ public sealed class WeaponManager : Component
 				_cameraFound = true;
 
 			return _cameraCache;
+		}
+	}
+
+	private ViewModelHandler ViewModelHandler
+	{
+		get
+		{
+			// If we already found it, use the cache
+			if ( ViewModelHandlerFound ) return ViewModelHandlerCache;
+
+			// Try to find it (might fail on client's first frame)
+			ViewModelHandlerCache = Components.GetInDescendantsOrSelf<ViewModelHandler>();
+
+			// Only lock the cache once we successfully find it
+			if ( ViewModelHandlerCache != null )
+				ViewModelHandlerFound = true;
+
+			return ViewModelHandlerCache;
 		}
 	}
 
@@ -519,6 +541,8 @@ public sealed class WeaponManager : Component
 				pickup.AnimReloadParam,
 				pickup.AnimReloadEmptyParam
 			);
+			// Notify ViewModelHandler of the new rest state to prevent stale cached values
+			ViewModelHandler?.ForceRestState( pickup.ViewModelPositionOffset, Rotation.Identity );
 		}
 
 		pickup.Pickup( GameObject );
@@ -609,6 +633,7 @@ public sealed class WeaponManager : Component
 				if ( EnableDiagnostics )
 					Log.Info( $"[WeaponManager] Weapon slot {slotToUpdate}: model={slotData.WeaponModel?.ResourcePath ?? "null"}" );
 				ViewModel.UpdateWeapon( slotData.WeaponModel, slotData.AnimGraph, slotData.HandsModel, positionOffset );
+				ViewModelHandler?.ForceRestState( positionOffset, Rotation.Identity );
 				ViewModel.UpdateOverlayModel( null );
 			}
 		}
@@ -620,6 +645,7 @@ public sealed class WeaponManager : Component
 			if ( EnableDiagnostics )
 				Log.Info( $"[WeaponManager] Item slot {slotToUpdate}: overlay={slotData.OverlayModel?.ResourcePath ?? "null"}" );
 			ViewModel.UpdateWeapon( armsModel, slotData.AnimGraph, slotData.HandsModel, positionOffset );
+			ViewModelHandler?.ForceRestState( positionOffset, Rotation.Identity );
 			ViewModel.UpdateOverlayModel( slotData.OverlayModel );
 		}
 	}
