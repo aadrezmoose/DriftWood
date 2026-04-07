@@ -58,7 +58,17 @@ public sealed class WeaponManager : Component
 	private PlayerIdentity _identity;
 	private PlayerIdentity Identity => _identity ??= Components.GetInDescendantsOrSelf<PlayerIdentity>();
 
-	private bool IsLocallyControlled() => PlayerIdentity.IsOwnedByLocal( GameObject );
+	private bool IsLocallyControlled()
+	{
+		if ( !Networking.IsActive ) return true;
+
+		var owner = Identity?.GameObject?.Network?.Owner;
+		var localConn = Connection.Local;
+		if ( owner != null && localConn != null )
+			return owner.SteamId == localConn.SteamId;
+
+		return false;
+	}
 
 	// Per-slot viewmodel data cache — stores model/animgraph/hands/overlay for each slot
 	private struct SlotViewModelData
@@ -102,12 +112,6 @@ public sealed class WeaponManager : Component
 			{
 				ViewModelFound = true;
 				GunViewModel.Current = ViewModelCache;
-				if ( EnableDiagnostics )
-					Log.Info( "[WeaponManager] Found GunViewModel via lazy-load property" );
-			}
-			else if ( EnableDiagnostics && !ViewModelFound )
-			{
-				Log.Info( "[WeaponManager] GunViewModel not found yet (will retry next frame)" );
 			}
 
 			return ViewModelCache;
@@ -146,11 +150,6 @@ public sealed class WeaponManager : Component
 			if ( ViewModelHandlerCache != null )
 			{
 				ViewModelHandlerFound = true;
-				Log.Info( "[WeaponManager] Found ViewModelHandler via lazy-load" );
-			}
-			else if ( !ViewModelHandlerFound )
-			{
-				Log.Warning( "[WeaponManager] ViewModelHandler not found yet (will retry next frame)" );
 			}
 
 			return ViewModelHandlerCache;
@@ -182,21 +181,21 @@ public sealed class WeaponManager : Component
 
 	protected override void OnAwake()
 	{
-		_movement = Components.Get<PlayerMovement>();
-		// Camera is now lazy-loaded via the Camera property to handle multiplayer timing
-		var playerMovement = _movement;
-		if ( playerMovement?.Head != null )
-		{
-			var head = playerMovement.Head;
-			PrimarySlot?.Components.GetInDescendantsOrSelf<Gun>()?.SetPlayerHead( head );
-			PrimarySlot?.Components.GetInDescendantsOrSelf<Gun>()?.SetOwner( GameObject );
-			SecondarySlot?.Components.GetInDescendantsOrSelf<Gun>()?.SetPlayerHead( head );
-			SecondarySlot?.Components.GetInDescendantsOrSelf<Gun>()?.SetOwner( GameObject );
-			SecondarySlot?.Components.GetInDescendantsOrSelf<MeleeWeapon>()?.SetPlayerHead( head );
-			SecondarySlot?.Components.GetInDescendantsOrSelf<MeleeWeapon>()?.SetOwner( GameObject );
-		}
+		   _movement = Components.Get<PlayerMovement>();
+		   // Camera is now lazy-loaded via the Camera property to handle multiplayer timing
+		   var playerMovement = _movement;
+		   if ( playerMovement?.Head != null )
+		   {
+			   var head = playerMovement.Head;
+			   PrimarySlot?.Components.GetInDescendantsOrSelf<Gun>()?.SetPlayerHead( head );
+			   PrimarySlot?.Components.GetInDescendantsOrSelf<Gun>()?.SetOwner( GameObject );
+			   SecondarySlot?.Components.GetInDescendantsOrSelf<Gun>()?.SetPlayerHead( head );
+			   SecondarySlot?.Components.GetInDescendantsOrSelf<Gun>()?.SetOwner( GameObject );
+			   SecondarySlot?.Components.GetInDescendantsOrSelf<MeleeWeapon>()?.SetPlayerHead( head );
+			   SecondarySlot?.Components.GetInDescendantsOrSelf<MeleeWeapon>()?.SetOwner( GameObject );
+		   }
 
-		SyncAllSlots();
+		   SyncAllSlots();
 	}
 
 	protected override void OnStart()
@@ -220,7 +219,6 @@ public sealed class WeaponManager : Component
 
 		if ( shoveCooldown > 0f ) shoveCooldown -= Time.Delta;
 
-		SyncAllSlots();
 		UpdateViewModelVisibility(currentSlot);
 
 		if ( PlayerStats.IsDead ) return;
@@ -380,12 +378,6 @@ public sealed class WeaponManager : Component
 		if ( ray.Forward == Vector3.Zero )
 			ray = new Ray( cam.WorldPosition, cam.WorldRotation.Forward );
 
-		if ( _onUpdateFrameCount % 60 == 0 )
-		{
-			Log.Warning( $"[WM] Ray trace running, IsLocal={IsLocallyControlled()}" );
-		}
-		_onUpdateFrameCount++;
-
 		var tr = Scene.Trace.Ray( ray, InteractRange )
 			.IgnoreGameObject( GameObject )
 			.WithoutTags( "trigger", "headzone" )
@@ -492,7 +484,6 @@ public sealed class WeaponManager : Component
 
 	public void EquipWeaponPickup( WeaponPickup pickup )
 	{
-		Log.Info( $"[WeaponManager] EquipWeaponPickup called: {pickup.WeaponDisplayName}" );
 		if ( pickup.WeaponPrefab == null ) return;
 
 		var pm = _movement;
@@ -539,7 +530,6 @@ public sealed class WeaponManager : Component
 		// Update the single GunViewModel directly
 		if ( ViewModel != null )
 		{
-			Log.Info( $"[WeaponManager] Calling UpdateWeapon in EquipWeaponPickup: model={pickup.ViewModelModel?.ResourcePath ?? "null"}, pos={pickup.ViewModelPositionOffset}" );
 			ViewModel.UpdateWeapon(
 				pickup.ViewModelModel,
 				pickup.ViewModelAnimGraph,
@@ -551,17 +541,11 @@ public sealed class WeaponManager : Component
 			);
 			// Notify ViewModelHandler of the new rest state to prevent stale cached values
 			// Pass the actual rotation that UpdateWeapon() set on the modelObject, not a hardcoded Identity
-			Log.Info( $"[WeaponManager] Calling ForceRestState in EquipWeaponPickup with actual modelObject rotation" );
 			ViewModelHandler?.ForceRestState( pickup.ViewModelPositionOffset, ViewModel.ModelObject?.LocalRotation ?? Rotation.Identity );
-		}
-		else
-		{
-			Log.Warning( "[WeaponManager] ViewModel is null in EquipWeaponPickup, skipping UpdateWeapon" );
 		}
 
 		pickup.Pickup( GameObject );
 		currentSlot = slotIndex;
-		Log.Info( $"Equipped {pickup.WeaponDisplayName} in slot {slotIndex}" );
 		SyncAllSlots();
 	}
 
@@ -586,8 +570,6 @@ public sealed class WeaponManager : Component
 
 	private int lastSlotUpdated = -1;
 	private string lastSlotContent = "";
-	private int _onUpdateFrameCount = 0;
-
 	/// <summary>Update single GunViewModel visibility and content based on given slot.</summary>
 	private void UpdateViewModelVisibility( int slotToUpdate )
 	{
@@ -604,8 +586,6 @@ public sealed class WeaponManager : Component
 			_ => false
 		};
 
-		ViewModel.ShowModel( slotHasContent );
-
 		// Get a unique ID for the current slot's content (to detect weapon swaps within same slot)
 		string currentContent = slotToUpdate switch
 		{
@@ -619,10 +599,17 @@ public sealed class WeaponManager : Component
 
 		// Only update viewmodel if slot changed OR content changed
 		if ( slotToUpdate == lastSlotUpdated && currentContent == lastSlotContent )
+		{
+			// Slot hasn't changed — only update ShowModel state if content changed
+			ViewModel.ShowModel( slotHasContent );
 			return;
+		}
 
 		lastSlotUpdated = slotToUpdate;
 		lastSlotContent = currentContent;
+
+		// Slot changed — update visibility and model
+		ViewModel.ShowModel( slotHasContent );
 
 		if ( !slotHasContent )
 		{
@@ -631,8 +618,6 @@ public sealed class WeaponManager : Component
 			return;
 		}
 
-		if ( EnableDiagnostics )
-			Log.Info( $"[WeaponManager] UpdateViewModelVisibility: slot={slotToUpdate}" );
 
 		// Apply the cached slot data for the current slot
 		var slotData = _slotData[slotToUpdate];
@@ -644,8 +629,6 @@ public sealed class WeaponManager : Component
 			if ( slotData.WeaponModel != null )
 			{
 				Vector3 positionOffset = slotData.PositionOffset != Vector3.Zero ? slotData.PositionOffset : new Vector3( 25, 6, -10 );
-				if ( EnableDiagnostics )
-					Log.Info( $"[WeaponManager] Weapon slot {slotToUpdate}: model={slotData.WeaponModel?.ResourcePath ?? "null"}" );
 				ViewModel.UpdateWeapon( slotData.WeaponModel, slotData.AnimGraph, slotData.HandsModel, positionOffset );
 				// Pass the actual rotation that UpdateWeapon() set on the modelObject, not a hardcoded Identity
 				ViewModelHandler?.ForceRestState( positionOffset, ViewModel.ModelObject?.LocalRotation ?? Rotation.Identity );
@@ -657,8 +640,6 @@ public sealed class WeaponManager : Component
 			// Item slot — show arms + overlay model only if there's an item
 			Model armsModel = slotData.WeaponModel ?? Model.Load( "models/first_person/v_first_person_arms_human.vmdl" );
 			Vector3 positionOffset = slotData.PositionOffset != Vector3.Zero ? slotData.PositionOffset : new Vector3( 25, 6, -10 );
-			if ( EnableDiagnostics )
-				Log.Info( $"[WeaponManager] Item slot {slotToUpdate}: overlay={slotData.OverlayModel?.ResourcePath ?? "null"}" );
 			ViewModel.UpdateWeapon( armsModel, slotData.AnimGraph, slotData.HandsModel, positionOffset );
 			// Pass the actual rotation that UpdateWeapon() set on the modelObject, not a hardcoded Identity
 			ViewModelHandler?.ForceRestState( positionOffset, ViewModel.ModelObject?.LocalRotation ?? Rotation.Identity );

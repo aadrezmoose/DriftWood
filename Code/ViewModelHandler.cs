@@ -43,16 +43,30 @@ public sealed class ViewModelHandler : Component
 	private Vector3 _lastWrittenPos;
 	private Angles _lastWrittenAngles;
 
+	private CameraComponent GetActiveRenderCamera()
+	{
+		return Scene?.GetAllComponents<CameraComponent>()
+			?.FirstOrDefault( camera => camera != null && camera.Enabled && camera.IsMainCamera );
+	}
+
 	protected override void OnUpdate()
 	{
 		if ( Player is null ) return;
+		var renderCamera = GetActiveRenderCamera();
+		var viewRotation = renderCamera?.GameObject?.WorldRotation ?? WorldRotation;
 
 		// Find GunViewModel and use its ModelObject reference
-		if ( gunModel is null || !gunModel.IsValid() || !gunModel.Enabled )
+		if ( gunModel is not null && gunModel.IsValid() && !gunModel.Enabled )
+		{
+			return;
+		}
+
+		if ( gunModel is null || !gunModel.IsValid() )
 		{
 			var vm = Components.GetInDescendantsOrSelf<GunViewModel>();
 			gunModel = vm?.ModelObject;
-			if ( gunModel is null ) return;
+			if ( gunModel is null || !gunModel.IsValid() ) return;
+			if ( !gunModel.Enabled ) return;
 			restPosition       = gunModel.LocalPosition;
 			restAngles         = gunModel.LocalRotation.Angles();
 			_lastWrittenPos    = restPosition;
@@ -62,13 +76,16 @@ public sealed class ViewModelHandler : Component
 		}
 
 		// Detect external rotation changes (from UpdateWeapon() on weapon swap).
-		// Only update if current rotation differs from what we last wrote — prevents
-		// false positives when ViewModelHandler's own procedural rotation is read back.
+		// Use epsilon comparison to avoid false positives from floating point rounding
+		// when reading back angles we just wrote through Rotation.From() -> .Angles().
 		var currentAngles = gunModel.LocalRotation.Angles();
-		if ( currentAngles != _lastWrittenAngles )
+		var dPitch = MathF.Abs( currentAngles.pitch - _lastWrittenAngles.pitch );
+		var dYaw   = MathF.Abs( currentAngles.yaw   - _lastWrittenAngles.yaw   );
+		var dRoll  = MathF.Abs( currentAngles.roll   - _lastWrittenAngles.roll  );
+		if ( dPitch > 0.05f || dYaw > 0.05f || dRoll > 0.05f )
 		{
 			restAngles = currentAngles;
-			finalRot = Vector3.Zero;  // Reset procedural rotation when swapping
+			finalRot = Vector3.Zero;
 		}
 
 		// Detect external position changes (from UpdateWeapon() or ForceRestState())
@@ -107,8 +124,8 @@ public sealed class ViewModelHandler : Component
 		// Camera-local velocity for walk/sway calculations
 		var vel = Player.Velocity;
 		localVel = new Vector3(
-			WorldRotation.Right.Dot( vel ),
-			WorldRotation.Forward.Dot( vel ),
+			viewRotation.Right.Dot( vel ),
+			viewRotation.Forward.Dot( vel ),
 			vel.z
 		);
 
@@ -157,9 +174,10 @@ public sealed class ViewModelHandler : Component
 	// ── Mouse look sway ───────────────────────────────────────────────
 	private void HandleSwayAnimation()
 	{
-		lastEyeRot = Rotation.Lerp( lastEyeRot, WorldRotation, 5f * Time.Delta );
+		var viewRotation = GetActiveRenderCamera()?.GameObject?.WorldRotation ?? WorldRotation;
+		lastEyeRot = Rotation.Lerp( lastEyeRot, viewRotation, 5f * Time.Delta );
 
-		var angDif = WorldRotation.Angles() - lastEyeRot.Angles();
+		var angDif = viewRotation.Angles() - lastEyeRot.Angles();
 		angDif = new Angles(
 			angDif.pitch,
 			MathX.RadianToDegree( MathF.Atan2( MathF.Sin( MathX.DegreeToRadian( angDif.yaw ) ), MathF.Cos( MathX.DegreeToRadian( angDif.yaw ) ) ) ),
@@ -238,7 +256,6 @@ public sealed class ViewModelHandler : Component
 	/// </summary>
 	public void ForceRestState( Vector3 position, Rotation rotation )
 	{
-		Log.Info( $"[ViewModelHandler] ForceRestState called: pos={position}, rot={rotation.Angles()}" );
 		restPosition = position;
 		restAngles = rotation.Angles();
 		_lastWrittenPos = position;
