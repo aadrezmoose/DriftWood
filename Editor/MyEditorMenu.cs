@@ -1,5 +1,105 @@
 public static class MyEditorMenu
 {
+	/// <summary>
+	/// Scans the active scene and rewires all commonly-lost inspector references.
+	/// Run this from Editor → My Project → Rewire Scene Components after a hot-reload wipes properties.
+	/// </summary>
+	[Menu( "Editor", "My Project/Rewire Scene Components" )]
+	public static void RewireComponents()
+	{
+		var scene = Game.ActiveScene;
+		if ( scene == null )
+		{
+			Log.Warning( "[Rewire] No active scene." );
+			return;
+		}
+
+		int fixed_count = 0;
+
+		// ── Helpers ──────────────────────────────────────────────────────
+		T Find<T>() where T : Component => scene.GetAllComponents<T>().FirstOrDefault();
+
+		void Set<TComp, TVal>( TComp comp, string propName, TVal value, string label )
+			where TComp : Component
+		{
+			if ( comp == null || value == null ) return;
+			var prop = typeof(TComp).GetProperty( propName );
+			if ( prop == null ) return;
+			var current = prop.GetValue( comp );
+			if ( current != null ) return; // already set — don't overwrite intentional assignments
+			prop.SetValue( comp, value );
+			Log.Info( $"[Rewire] {typeof(TComp).Name}.{propName} → {label}" );
+			fixed_count++;
+		}
+
+		// ── Locate key scene objects ──────────────────────────────────────
+		var playerMovement  = Find<PlayerMovement>();
+		var playerGO        = playerMovement?.GameObject;
+		var enemySpawner    = Find<EnemySpawner>();
+		var aiDirector      = Find<AIDirector>();
+		var tankSpawner     = Find<TankSpawner>();
+		var hunterSpawner   = Find<HunterSpawner>();
+		var spitterSpawner  = Find<SpitterSpawner>();
+		var chargerSpawner  = Find<ChargerSpawner>();
+		var cameraMovement  = Find<CameraMovement>();
+
+		// Head / Body are child GameObjects — find by name
+		GameObject headGO = null, bodyGO = null;
+		if ( playerGO != null )
+		{
+			foreach ( var child in playerGO.Children )
+			{
+				var name = child.Name.ToLower();
+				if ( headGO == null && name.Contains( "head" ) ) headGO = child;
+				if ( bodyGO == null && name.Contains( "body" ) ) bodyGO = child;
+			}
+		}
+
+		// ── AIDirector ────────────────────────────────────────────────────
+		if ( aiDirector != null )
+		{
+			Set( aiDirector, "EnemySpawner",   enemySpawner,   "EnemySpawner"   );
+			Set( aiDirector, "TankSpawner",    tankSpawner,    "TankSpawner"    );
+			Set( aiDirector, "HunterSpawner",  hunterSpawner,  "HunterSpawner"  );
+			Set( aiDirector, "SpitterSpawner", spitterSpawner, "SpitterSpawner" );
+			Set( aiDirector, "ChargerSpawner", chargerSpawner, "ChargerSpawner" );
+			Set( aiDirector, "Player",         playerGO,       "Player"         );
+		}
+
+		// ── EnemySpawner ──────────────────────────────────────────────────
+		if ( enemySpawner != null )
+		{
+			Set( enemySpawner, "PlayerReference", playerGO,    "Player"     );
+			Set( enemySpawner, "Director",        aiDirector,  "AIDirector" );
+		}
+
+		// ── CameraMovement ────────────────────────────────────────────────
+		if ( cameraMovement != null )
+		{
+			Set( cameraMovement, "Player", playerMovement, "PlayerMovement" );
+			Set( cameraMovement, "Head",   headGO,         "Head"           );
+			Set( cameraMovement, "Body",   bodyGO,         "Body"           );
+		}
+
+		// ── DirectorDebugHUD ──────────────────────────────────────────────
+		var debugHUD = Find<DirectorDebugHUD>();
+		if ( debugHUD != null )
+			Set( debugHUD, "Director", aiDirector, "AIDirector" );
+
+		// ── PlayerMovement ────────────────────────────────────────────────
+		if ( playerMovement != null )
+		{
+			Set( playerMovement, "Head", headGO, "Head" );
+			Set( playerMovement, "Body", bodyGO, "Body" );
+		}
+
+		// ── Done ──────────────────────────────────────────────────────────
+		if ( fixed_count == 0 )
+			Log.Info( "[Rewire] All references already assigned — nothing to fix." );
+		else
+			Log.Info( $"[Rewire] Done. Fixed {fixed_count} missing reference(s). Save the scene to persist." );
+	}
+
 	[Menu("Editor", "My Project/My Menu Option")]
 	public static void OpenMyMenu()
 	{

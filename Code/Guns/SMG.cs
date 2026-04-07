@@ -14,11 +14,12 @@ public sealed class SMG : Gun
 	protected override void OnAwake()
 	{
 		// Set SMG stats - spray and pray style
-		Damage = 12f;
+		Damage = 15f;
 		FireRate = 0.08f; // ~12.5 shots per second
 		AmmoClip = 30;
-		AmmoReserve = 150;
+		AmmoReserve = 360;
 		ReloadTime = 2.0f;
+		RecoilAmount = 1.5f;
 
 		base.OnAwake();
 	}
@@ -31,22 +32,18 @@ public sealed class SMG : Gun
 			return;
 		}
 
-		// Play fire sound
 		if ( FireSound != null )
-		{
-			Sound.Play( FireSound );
-		}
+			Sound.Play( FireSound, playerHead?.WorldPosition ?? WorldPosition );
 
-		// Get firing direction with spread
-		var startPos = playerHead.WorldPosition;
-		var baseDirection = playerHead.WorldRotation.Forward;
+		// Shoot from camera so shots align with crosshair
+		var fireOrigin = playerCamera ?? playerHead;
+		var startPos = fireOrigin.WorldPosition;
+		var baseDirection = fireOrigin.WorldRotation.Forward;
 
-		// Add random spread
 		float spreadX = Game.Random.Float( -Spread, Spread );
 		float spreadY = Game.Random.Float( -Spread, Spread );
-		var direction = (baseDirection + playerHead.WorldRotation.Right * spreadX + playerHead.WorldRotation.Up * spreadY).Normal;
+		var direction = (baseDirection + fireOrigin.WorldRotation.Right * spreadX + fireOrigin.WorldRotation.Up * spreadY).Normal;
 
-		// Perform raycast
 		var trace = Scene.Trace.Ray( startPos, startPos + direction * Range )
 			.IgnoreGameObject( owner )
 			.WithoutTags( "trigger" )
@@ -54,7 +51,6 @@ public sealed class SMG : Gun
 
 		if ( trace.Hit )
 		{
-			// Check for headshot
 			var headshotZone = trace.GameObject?.Components.Get<HeadshotZone>();
 			if ( headshotZone != null )
 			{
@@ -66,41 +62,34 @@ public sealed class SMG : Gun
 					{
 						float headshotDamage = Damage * HeadshotMultiplier * headshotZone.DamageMultiplier;
 						health.TakeDamage( headshotDamage, owner );
-						PlayerStats.ShotsHit++;
+						TrackShotHit();
 
 						var enemy = targetEntity.Components.Get<Enemy>();
-						if ( enemy != null )
-						{
-							enemy.OnHeadshotDamage( headshotDamage, owner );
-						}
+						enemy?.OnHeadshotDamage( headshotDamage, owner );
 					}
 				}
 			}
 			else
 			{
-				// Regular body shot
-				var health = trace.GameObject?.Components.Get<HealthComponent>();
-				if ( health != null )
-				{
-					if ( !health.IsPlayer )
-						PlayerStats.ShotsHit++;
-					health.TakeDamage( Damage, owner );
-				}
-				else
-				{
-					health = trace.GameObject?.Components.GetInDescendantsOrSelf<HealthComponent>();
-					if ( health != null )
-					{
-						if ( !health.IsPlayer )
-							PlayerStats.ShotsHit++;
-						health.TakeDamage( Damage, owner );
-					}
-				}
+				var health = trace.GameObject?.Components.Get<HealthComponent>()
+					?? trace.GameObject?.Components.GetInAncestorsOrSelf<HealthComponent>()
+					?? trace.GameObject?.Components.GetInDescendantsOrSelf<HealthComponent>();
+
+				if ( health != null && !health.IsPlayer )
+					TrackShotHit();
+				health?.TakeDamage( Damage, owner );
 			}
 
-			// Visual feedback
+			// Impact effects on world geometry (not enemies)
+			if ( trace.GameObject?.Components.GetInAncestorsOrSelf<Enemy>() == null &&
+			     trace.GameObject?.Components.GetInDescendantsOrSelf<Enemy>() == null )
+				SpawnImpactEffects( trace );
+
+			// Tracer from muzzle to hit point
+			var muzzleAttach = GunViewModel.Current?.ModelRenderer?.GetAttachment( "muzzle" );
+			var tracerStart = muzzleAttach?.Position ?? startPos;
 			Gizmo.Draw.Color = Color.Orange;
-			Gizmo.Draw.Line( startPos, trace.EndPosition );
+			Gizmo.Draw.Line( tracerStart, trace.EndPosition );
 		}
 	}
 
@@ -109,8 +98,6 @@ public sealed class SMG : Gun
 		base.Reload();
 
 		if ( isReloading && ReloadSound != null )
-		{
-			Sound.Play( ReloadSound );
-		}
+			Sound.Play( ReloadSound, playerHead?.WorldPosition ?? WorldPosition );
 	}
 }

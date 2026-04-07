@@ -8,6 +8,8 @@ using System.Linq;
 /// </summary>
 public sealed class ChargerSpawner : Component
 {
+	private bool IsAuthoritativeInstance() => !Networking.IsActive || Connection.Local?.IsHost == true;
+
 	[Property] public float SpawnCooldown { get; set; } = 60f;
 	[Property] public int MaxChargers { get; set; } = 1;
 	[Property] public float SpawnRadius { get; set; } = 600f;
@@ -53,6 +55,9 @@ public sealed class ChargerSpawner : Component
 
 	protected override void OnUpdate()
 	{
+		if ( !IsAuthoritativeInstance() )
+			return;
+
 		if ( !Enabled || player is null || ChargerPrefab is null ) return;
 
 		// Cleanup dead / invalid chargers
@@ -97,6 +102,7 @@ public sealed class ChargerSpawner : Component
 	/// </summary>
 	public bool TrySpawnCharger()
 	{
+		if ( !IsAuthoritativeInstance() ) return false;
 		if ( IsSafeZoneActive ) return false;
 		if ( spawnedChargers.Count >= MaxChargers ) return false;
 		if ( player is null || ChargerPrefab is null ) return false;
@@ -195,6 +201,9 @@ public sealed class ChargerSpawner : Component
 			chargerComp.Enabled = true;
 
 		chargerComp.PlayerReference = player;
+
+		if ( Networking.IsActive )
+			spawned.NetworkSpawn();
 
 		spawnedChargers.Add( spawned );
 		Log.Info( $"ChargerSpawner: Spawned Charger at distance {distance:F0}. Total: {spawnedChargers.Count}/{MaxChargers}" );

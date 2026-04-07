@@ -34,6 +34,7 @@ public sealed class PipeBomb : ThrowableBase
 
 		var projectileGO = prefabScene.Clone( position );
 		projectileGO.WorldPosition = position;
+		projectileGO.LocalScale = Vector3.One * ProjectileScale;
 
 		// Wire up owner for damage attribution
 		var proj = projectileGO.Components.GetInDescendantsOrSelf<PipeBombProjectile>();

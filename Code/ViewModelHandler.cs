@@ -30,6 +30,7 @@ public sealed class ViewModelHandler : Component
 
 	// Sway state
 	private Rotation lastEyeRot;
+	private Angles lastAngDif = Angles.Zero;
 
 	// Jump animation state
 	private float jumpTime;
@@ -38,27 +39,83 @@ public sealed class ViewModelHandler : Component
 	// Per-frame local velocity (camera-relative)
 	private Vector3 localVel;
 
+	// Track last-written position and angles to detect external changes from UpdateWeapon()
+	private Vector3 _lastWrittenPos;
+	private Angles _lastWrittenAngles;
+
+	private CameraComponent GetActiveRenderCamera()
+	{
+		return Scene?.GetAllComponents<CameraComponent>()
+			?.FirstOrDefault( camera => camera != null && camera.Enabled && camera.IsMainCamera );
+	}
+
 	protected override void OnUpdate()
 	{
 		if ( Player is null ) return;
+		var renderCamera = GetActiveRenderCamera();
+		var viewRotation = renderCamera?.GameObject?.WorldRotation ?? WorldRotation;
 
-		// Lazy-find GunModel — created by GunViewModel in OnStart so may not exist yet
-		if ( gunModel is null || !gunModel.IsValid() )
+		// Find GunViewModel and use its ModelObject reference
+		if ( gunModel is not null && gunModel.IsValid() && !gunModel.Enabled )
 		{
-			gunModel = FindDescendantByName( GameObject, "GunModel" );
-			if ( gunModel is null ) return;
-			restPosition = gunModel.LocalPosition;
-			restAngles = gunModel.LocalRotation.Angles();
+			return;
 		}
 
-		// Smooth lerp toward targets
-		var speed = 10f * AnimSpeed;
+		if ( gunModel is null || !gunModel.IsValid() )
+		{
+			var vm = Components.GetInDescendantsOrSelf<GunViewModel>();
+			gunModel = vm?.ModelObject;
+			if ( gunModel is null || !gunModel.IsValid() ) return;
+			if ( !gunModel.Enabled ) return;
+			restPosition       = gunModel.LocalPosition;
+			restAngles         = gunModel.LocalRotation.Angles();
+			_lastWrittenPos    = restPosition;
+			_lastWrittenAngles = restAngles;
+			finalPos           = Vector3.Zero;
+			finalRot           = Vector3.Zero;
+		}
+
+		// Detect external rotation changes (from UpdateWeapon() on weapon swap).
+		// Use epsilon comparison to avoid false positives from floating point rounding
+		// when reading back angles we just wrote through Rotation.From() -> .Angles().
+		var currentAngles = gunModel.LocalRotation.Angles();
+		var dPitch = MathF.Abs( currentAngles.pitch - _lastWrittenAngles.pitch );
+		var dYaw   = MathF.Abs( currentAngles.yaw   - _lastWrittenAngles.yaw   );
+		var dRoll  = MathF.Abs( currentAngles.roll   - _lastWrittenAngles.roll  );
+		if ( dPitch > 0.05f || dYaw > 0.05f || dRoll > 0.05f )
+		{
+			restAngles = currentAngles;
+			finalRot = Vector3.Zero;
+		}
+
+		// Detect external position changes (from UpdateWeapon() or ForceRestState())
+		var currentPos = gunModel.LocalPosition;
+		if ( currentPos != _lastWrittenPos )
+		{
+			restPosition = currentPos;
+			finalPos = Vector3.Zero;  // Reset procedural position when swapping
+		}
+
+		// Smooth lerp toward targets - slower for stability while strafing
+		var speed = 12f * AnimSpeed;
 		finalPos = Vector3.Lerp( finalPos, targetPos, speed * Time.Delta );
 		finalRot = Vector3.Lerp( finalRot, targetRot, speed * Time.Delta );
 
-		// Apply to gun model local transform
+		// Clamp final rotation to prevent wild spinning
+		finalRot = new Vector3(
+			Math.Clamp( finalRot.x, -5f, 5f ),
+			Math.Clamp( finalRot.y, -5f, 5f ),
+			Math.Clamp( finalRot.z, -5f, 5f )
+		);
+
+		// Apply to gun model local transform and record what we wrote
+		// so that next frame's drift guards only fire on EXTERNAL changes
 		gunModel.LocalPosition = restPosition + finalPos;
-		gunModel.LocalRotation = Rotation.From( restAngles + new Angles( finalRot.x, finalRot.y, finalRot.z ) );
+		_lastWrittenPos = gunModel.LocalPosition;
+
+		var newRot = Rotation.From( restAngles + new Angles( finalRot.x, finalRot.y, finalRot.z ) );
+		gunModel.LocalRotation = newRot;
+		_lastWrittenAngles = newRot.Angles();
 
 		// Reset targets for this frame
 		targetPos = Vector3.Zero;
@@ -67,8 +124,8 @@ public sealed class ViewModelHandler : Component
 		// Camera-local velocity for walk/sway calculations
 		var vel = Player.Velocity;
 		localVel = new Vector3(
-			WorldRotation.Right.Dot( vel ),
-			WorldRotation.Forward.Dot( vel ),
+			viewRotation.Right.Dot( vel ),
+			viewRotation.Forward.Dot( vel ),
 			vel.z
 		);
 
@@ -79,23 +136,14 @@ public sealed class ViewModelHandler : Component
 		HandleSprintAnimation();
 	}
 
-	private static GameObject FindDescendantByName( GameObject parent, string name )
-	{
-		foreach ( var child in parent.Children )
-		{
-			if ( child.Name == name ) return child;
-			var found = FindDescendantByName( child, name );
-			if ( found is not null ) return found;
-		}
-		return null;
-	}
-
 	// ── Breathing idle sway ───────────────────────────────────────────
 	private void HandleIdleAnimation()
 	{
 		var t = Time.Now * 2f;
-		targetPos -= new Vector3( MathF.Cos( t / 4f ) / 8f, 0f, -MathF.Cos( t / 4f ) / 32f );
-		targetRot -= new Vector3( MathF.Cos( t / 5f ), MathF.Cos( t / 4f ), MathF.Cos( t / 7f ) );
+		// Minimal idle sway - just subtle breathing
+		targetPos -= new Vector3( MathF.Cos( t / 4f ) / 16f, 0f, -MathF.Cos( t / 4f ) / 64f );
+		// Very minimal idle rotation
+		targetRot -= new Vector3( MathF.Cos( t / 5f ) * 0.1f, MathF.Cos( t / 4f ) * 0.05f, 0f );
 
 		if ( Player.isCrouching && Player.IsOnGround )
 			targetPos += new Vector3( -1f, -1f, 0.5f );
@@ -111,36 +159,41 @@ public sealed class ViewModelHandler : Component
 		var maxSpeed = Player.isSprinting ? 100f : 200f;
 		var t = Time.Now * (Player.isSprinting ? 18f : 16f);
 
-		var roll = localVel.x > 0f ? -7f * (localVel.x / maxSpeed) : 0f;
-		var yaw  = localVel.x < 0f ?  3f * (localVel.x / maxSpeed) : 0f;
+		var roll = localVel.x > 0f ? -0.5f * (localVel.x / maxSpeed) : 0f;  // Minimal roll when strafing right
+		var yaw  = localVel.x < 0f ?  1f * (localVel.x / maxSpeed) : 0f;  // Reduced yaw from 3 to 1
 
 		targetPos -= new Vector3(
-			(-MathF.Cos( t / 2f ) / 5f) * walkSpeed / maxSpeed - yaw / 4f,
+			(-MathF.Cos( t / 2f ) / 8f) * walkSpeed / maxSpeed - yaw / 6f,  // Reduced walk bob movement
 			0f, 0f );
 		targetRot -= new Vector3(
 			(Math.Clamp( MathF.Cos( t ), -0.3f, 0.3f ) * 2f) * walkSpeed / maxSpeed,
-			(-MathF.Cos( t / 2f ) * 1.2f) * walkSpeed / maxSpeed - yaw * 1.5f,
+			(-MathF.Cos( t / 2f ) * 0.5f) * walkSpeed / maxSpeed - yaw * 0.5f,  // Reduced yaw rotation from 1.2f to 0.5f
 			roll );
 	}
 
 	// ── Mouse look sway ───────────────────────────────────────────────
 	private void HandleSwayAnimation()
 	{
-		lastEyeRot = Rotation.Lerp( lastEyeRot, WorldRotation, 5f * Time.Delta );
+		var viewRotation = GetActiveRenderCamera()?.GameObject?.WorldRotation ?? WorldRotation;
+		lastEyeRot = Rotation.Lerp( lastEyeRot, viewRotation, 5f * Time.Delta );
 
-		var angDif = WorldRotation.Angles() - lastEyeRot.Angles();
+		var angDif = viewRotation.Angles() - lastEyeRot.Angles();
 		angDif = new Angles(
 			angDif.pitch,
 			MathX.RadianToDegree( MathF.Atan2( MathF.Sin( MathX.DegreeToRadian( angDif.yaw ) ), MathF.Cos( MathX.DegreeToRadian( angDif.yaw ) ) ) ),
 			0f );
 
+		// Lerp toward zero when rotation difference is small (stopped turning) - faster return to center
+		lastAngDif = Angles.Lerp( lastAngDif, angDif, 20f * Time.Delta );
+
+		// Minimal sway to keep gun in frame - very heavily clamped
 		targetPos += new Vector3(
-			Math.Clamp( angDif.yaw   * 0.04f, -1.5f, 1.5f ),
+			Math.Clamp( lastAngDif.yaw   * 0.005f, -0.3f, 0.3f ),
 			0f,
-			Math.Clamp( angDif.pitch * 0.04f, -1.5f, 1.5f ) );
+			Math.Clamp( lastAngDif.pitch * 0.005f, -0.3f, 0.3f ) );
 		targetRot += new Vector3(
-			Math.Clamp( angDif.pitch * 0.2f, -4f, 4f ),
-			Math.Clamp( angDif.yaw   * 0.2f, -4f, 4f ),
+			Math.Clamp( lastAngDif.pitch * 0.02f, -0.5f, 0.5f ),
+			Math.Clamp( lastAngDif.yaw   * 0.02f, -0.5f, 0.5f ),
 			0f );
 	}
 
@@ -195,4 +248,19 @@ public sealed class ViewModelHandler : Component
 	// Quadratic bezier interpolation (from SWB)
 	private static float BezierY( float t, float p0, float p1, float p2 )
 		=> MathF.Pow( 1 - t, 2 ) * p0 + 2f * (1 - t) * t * p1 + MathF.Pow( t, 2 ) * p2;
+
+	/// <summary>
+	/// Called by WeaponManager after every UpdateWeapon() to immediately lock in the new
+	/// position/rotation as the procedural base. Prevents stale rest-state from persisting
+	/// when the model is already enabled (client-specific timing issue).
+	/// </summary>
+	public void ForceRestState( Vector3 position, Rotation rotation )
+	{
+		restPosition = position;
+		restAngles = rotation.Angles();
+		_lastWrittenPos = position;
+		_lastWrittenAngles = restAngles;
+		finalPos = Vector3.Zero;
+		finalRot = Vector3.Zero;
+	}
 }

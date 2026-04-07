@@ -8,13 +8,20 @@ public sealed class HealthKit : BaseItem
 {
 	[Property] public float HealAmount { get; set; } = 100f;
 
+	/// <summary>Model shown in the first-person viewmodel when this kit is held.</summary>
+	[Property] public Model ViewModelOverlayModel { get; set; }
+
 	public HealthKit()
 	{
 		// Health kits can be carried, not auto-used
 		ItemName = "Health Kit";
+		PickupSound = "sounds/coin1.sound";
+	}
+
+	protected override void OnAwake()
+	{
 		CanCarry = true;
 		AutoUse = false;
-		PickupSound = "sounds/coin1.sound";
 	}
 
 	/// <summary>
@@ -108,7 +115,7 @@ public sealed class HealthKit : BaseItem
 				return;
 			}
 
-			health.Heal(health.MaxHealth * 0.8f);
+			health.Heal( (health.MaxHealth - health.CurrentHealth) * 0.8f );
 			Sound.Play("sounds/coin1.sound", player.WorldPosition);
 			PlayerStats.CarriedItem = "";
 			WasConsumed = true;

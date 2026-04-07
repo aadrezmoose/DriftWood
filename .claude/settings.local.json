@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -v \"_c$\")",
+      "Bash(grep -r \"swb\\\\|SWB\\\\|Simple.*Weapon.*Base\" \"c:\\\\Users\\\\austi\\\\Documents\\\\s&box projects\\\\DriftWood\\\\Code\" --include=*.cs)",
+      "Bash(find \"/c/Users/austi/Documents/s&box projects/DriftWood\" -type d \\\\\\(-name ui -o -name icons -o -name textures -o -name assets \\\\\\))",
+      "Bash(find \"/c/Users/austi/Documents/s&box projects/DriftWood/Assets/attachments/swb\" -type f \\\\\\(-name *.png -o -name *.jpg -o -name *.svg \\\\\\))",
+      "Bash(find \"/c/Users/austi/Documents/s&box projects/DriftWood/Assets/weapons\" -type f \\\\\\(-name *.png -o -name *.jpg -o -name *.svg \\\\\\))",
+      "WebSearch",
+      "WebFetch(domain:sbox.game)",
+      "mcp__sbox__set_component_property"
+    ]
+  }
+}

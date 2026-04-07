@@ -6,6 +6,8 @@ using Sandbox;
 /// </summary>
 public sealed class ZoneTrigger : Component, Component.ITriggerListener
 {
+	private bool IsAuthoritativeInstance() => !Networking.IsActive || Connection.Local?.IsHost == true;
+
 	/// <summary>
 	/// The EnemySpawner to enable or disable when the player enters this trigger.
 	/// </summary>
@@ -23,6 +25,9 @@ public sealed class ZoneTrigger : Component, Component.ITriggerListener
 
 	public void OnTriggerEnter( Collider other )
 	{
+		if ( !IsAuthoritativeInstance() )
+			return;
+
 		if ( TargetSpawner is null )
 			return;
 

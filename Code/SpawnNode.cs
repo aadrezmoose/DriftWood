@@ -20,8 +20,29 @@ public sealed class SpawnNode : Component
 	/// <summary>Base weight. Leave at 1 — the AIDirector adjusts dynamically.</summary>
 	[Property] public float Weight { get; set; } = 1f;
 
+	/// <summary>
+	/// Logical spawn region for event-based gating (e.g. Cargo, Beach, Yard).
+	/// "Global" means always allowed unless explicitly filtered out.
+	/// </summary>
+	[Property] public string SpawnRegion { get; set; } = "Global";
+
+	/// <summary>
+	/// Seconds after a spawn before this node can be used again.
+	/// Prevents enemies from clustering at the same entry point.
+	/// </summary>
+	[Property] public float UsageCooldown { get; set; } = 8f;
+
+	private float lastUsedTime = -999f;
+
+	public bool IsOnCooldown => (Time.Now - lastUsedTime) < UsageCooldown;
+
+	/// <summary>Mark this node as just used, starting its cooldown.</summary>
+	public void MarkUsed() => lastUsedTime = Time.Now;
+
 	protected override void OnStart()
 	{
+		// Remove any stale entries from previous editor play sessions before adding
+		All.RemoveAll( n => n is null || !n.IsValid() );
 		All.Add( this );
 	}
 
@@ -33,9 +54,11 @@ public sealed class SpawnNode : Component
 	/// <summary>
 	/// Returns true if this node is currently eligible for spawning.
 	/// </summary>
-	public bool IsEligible( GameObject player )
+	public bool IsEligible( GameObject player, bool ignoreCooldown = false )
 	{
-		if ( player == null ) return false;
+		if ( player == null || !IsValid ) return false;
+
+		if ( !ignoreCooldown && IsOnCooldown ) return false;
 
 		var playerPos = player.WorldPosition;
 		var nodePos   = WorldPosition;

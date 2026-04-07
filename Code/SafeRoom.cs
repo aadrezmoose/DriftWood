@@ -10,6 +10,8 @@ public sealed class SafeRoom : Component, Component.ITriggerListener
 	[Property] public bool IsStartRoom { get; set; } = true;
 	[Property] public bool IsEndRoom { get; set; } = false;
 	[Property] public float SafeRadius { get; set; } = 300f;
+	/// <summary>Optional end room door — win timer only starts after it is closed.</summary>
+	[Property] public SafeRoomDoor EndDoor { get; set; }
 
 	/// <summary>
 	/// Called when a player enters any safe room
@@ -21,43 +23,70 @@ public sealed class SafeRoom : Component, Component.ITriggerListener
 	/// </summary>
 	public static event Action<SafeRoom> OnPlayerExited;
 
-	private bool playerInside = false;
-	private bool hasPlayerLeft = false; // Start rooms become inactive once player leaves
-	private GameObject player;
+	private int _playersInside = 0;
+	private bool hasPlayerLeft = false; // Start rooms become inactive once all players have left
+	private float winTimer = -1f;
+	private const float WinDelay = 2.5f;
 
 	protected override void OnAwake()
 	{
-		player = Scene.GetAllComponents<PlayerMovement>().FirstOrDefault()?.GameObject;
 		Log.Info( $"SafeRoom initialized: IsStartRoom={IsStartRoom}, IsEndRoom={IsEndRoom}, Radius={SafeRadius}" );
 	}
 
 	public void OnTriggerEnter( Collider other ) { }
 	public void OnTriggerExit( Collider other ) { }
 
+	protected override void DrawGizmos()
+	{
+		DrawSafeRoomGizmo();
+	}
+
 	protected override void OnUpdate()
 	{
-		if ( Gizmo.Camera != null )
-			DrawSafeRoomGizmo();
+		// Count all active players inside the radius
+		var allPlayers = Scene.GetAllComponents<PlayerMovement>();
+		int totalActive = 0, insideCount = 0;
+		foreach ( var pm in allPlayers )
+		{
+			if ( pm?.GameObject == null || !pm.GameObject.Active ) continue;
+			totalActive++;
+			if ( (pm.WorldPosition - WorldPosition).Length <= SafeRadius )
+				insideCount++;
+		}
 
-		// Proximity-based detection — reliable with CharacterController
-		if ( player is null || !player.Active ) return;
-
-		float dist = (player.WorldPosition - WorldPosition).Length;
-		bool inside = dist <= SafeRadius;
-
-		// Start rooms are inactive once the player has left them
+		// Start rooms are inactive once all players have left them
 		if ( IsStartRoom && hasPlayerLeft ) return;
 
-		if ( inside && !playerInside )
+		int prevInside = _playersInside;
+		_playersInside = insideCount;
+
+		// End room win: all active players must be inside AND door must be closed
+		if ( IsEndRoom )
 		{
-			playerInside = true;
-			OnPlayerEntered?.Invoke( this );
-			if ( IsEndRoom ) PlayerStats.LevelComplete = true;
-			Log.Info( $"Player entered safe room (Start: {IsStartRoom}, End: {IsEndRoom})" );
+			bool doorClosed = EndDoor == null || !EndDoor.IsOpen;
+			bool allInside = totalActive > 0 && insideCount >= totalActive && doorClosed;
+			if ( allInside && winTimer < 0f )
+				winTimer = WinDelay;
+			else if ( !allInside )
+				winTimer = -1f;
+
+			if ( winTimer >= 0f )
+			{
+				winTimer -= Time.Delta;
+				if ( winTimer <= 0f ) { winTimer = -1f; PlayerStats.LevelComplete = true; }
+			}
 		}
-		else if ( !inside && playerInside )
+
+		// Fire OnPlayerEntered: on first entry (0→N) and on each count increase for end rooms
+		if ( insideCount > 0 && (prevInside == 0 || (IsEndRoom && insideCount > prevInside)) )
 		{
-			playerInside = false;
+			OnPlayerEntered?.Invoke( this );
+			Log.Info( $"Player entered safe room (Start: {IsStartRoom}, End: {IsEndRoom}, {insideCount}/{totalActive})" );
+		}
+
+		// Fire OnPlayerExited: when all leave
+		if ( insideCount == 0 && prevInside > 0 )
+		{
 			hasPlayerLeft = true;
 			OnPlayerExited?.Invoke( this );
 			Log.Info( $"Player exited safe room (Start: {IsStartRoom}, End: {IsEndRoom})" );
@@ -88,7 +117,7 @@ public sealed class SafeRoom : Component, Component.ITriggerListener
 		);
 
 		// Draw status
-		if ( playerInside )
+		if ( _playersInside > 0 )
 		{
 			Gizmo.Draw.Color = Color.Yellow;
 			Gizmo.Draw.WorldText(
@@ -101,7 +130,7 @@ public sealed class SafeRoom : Component, Component.ITriggerListener
 	}
 
 	/// <summary>
-	/// Check if player is currently inside this safe room
+	/// Check if any player is currently inside this safe room
 	/// </summary>
-	public bool IsPlayerInside => playerInside;
+	public bool IsPlayerInside => _playersInside > 0;
 }

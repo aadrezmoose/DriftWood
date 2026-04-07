@@ -12,7 +12,7 @@
   "Transmission": true,
   "OcclusionRadius": 64,
   "DistanceAttenuation": true,
-  "Distance": 15000,
+  "Distance": 6072,
   "Falloff": [
     {
       "x": 0,
@@ -44,8 +44,8 @@
     }
   ],
   "DefaultMixer": {
-    "Name": "unknown",
-    "Id": "00000000-0000-0000-0000-000000000000"
+    "Name": "game",
+    "Id": "fa561905-cb28-43df-bcfb-f89944ce8682"
   },
   "__references": [],
   "__version": 1

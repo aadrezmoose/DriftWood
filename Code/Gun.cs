@@ -1,4 +1,5 @@
 using Sandbox;
+using System.Linq;
 
 public enum WeaponCategory { Primary, Secondary }
 
@@ -12,21 +13,31 @@ public abstract class Gun : Component
 	[Property] public float ReloadTime { get; set; } = 2.0f;
 	[Property] public bool IsAutomatic { get; set; } = true;
 	[Property] public bool UnlimitedAmmo { get; set; } = false;
+	[Property] public float RecoilAmount { get; set; } = 1.0f;
+	[Property] public SoundEvent EmptySound { get; set; }
 
 	/// <summary>Particle prefab spawned at the "muzzle" attachment on the viewmodel skeleton each shot.</summary>
 	[Property] public PrefabFile MuzzleFlashParticle { get; set; }
 	/// <summary>Optional legacy PointLight child — kept for backwards compat, still works alongside the particle.</summary>
 	[Property] public GameObject MuzzleFlashEffect { get; set; }
 
+	/// <summary>Particle prefab spawned at bullet impact points on world geometry.</summary>
+	[Property] public PrefabFile ImpactParticlePrefab { get; set; }
+	/// <summary>Decal material projected onto surfaces at bullet impact points.</summary>
+	[Property] public Material ImpactDecalMaterial { get; set; }
+	[Property] public float ImpactDecalSize { get; set; } = 4f;
+
 	private int maxAmmoReserve;
 	protected int currentAmmo;
 	protected float fireRateRemaining = 0f;
+	private float emptySoundCooldown = 0f;
 	protected float reloadTimeRemaining = 0f;
 	protected bool isReloading = false;
 	protected GameObject playerHead;   // Reference to player's head for firing
 	protected GameObject playerCamera; // Camera child of head — used as fire origin so shots align with crosshair
 	protected GunViewModel viewModel; // Reference to the gun's visual model
 	protected GameObject owner; // Root owner (player), used to ignore self in traces
+	protected PlayerIdentity ownerIdentity; // Cached for per-player stat tracking
 
 	[Property] public Color MuzzleLightColor { get; set; } = new Color( 1f, 0.75f, 0.3f );
 	[Property] public float MuzzleLightRadius { get; set; } = 300f;
@@ -42,6 +53,62 @@ public abstract class Gun : Component
 	private const float ParticleFlashLifetime = 1.5f;
 	private PointLight muzzlePointLight;
 	private float muzzleLightTimer = 0f;
+	private bool IsLocallyOwnedGun()
+	{
+		if ( owner != null )
+			return PlayerIdentity.IsOwnedByLocal( owner );
+
+		var ownerPlayer = Components.GetInAncestorsOrSelf<PlayerMovement>();
+		if ( ownerPlayer != null )
+			return PlayerIdentity.IsOwnedByLocal( ownerPlayer.GameObject );
+
+		return !Networking.IsActive || !IsProxy;
+	}
+
+	private static GameObject FindChildByNameRecursive( GameObject parent, string name )
+	{
+		if ( parent == null ) return null;
+		foreach ( var child in parent.Children )
+		{
+			if ( child.Name == name ) return child;
+			var found = FindChildByNameRecursive( child, name );
+			if ( found != null ) return found;
+		}
+		return null;
+	}
+
+	private bool EnsureFireOrigin()
+	{
+		if ( playerHead != null && playerHead.IsValid )
+			return true;
+
+		var pm = owner?.Components.GetInDescendantsOrSelf<PlayerMovement>()
+			?? Components.GetInAncestorsOrSelf<PlayerMovement>();
+
+		var head = pm?.Head;
+		if ( head == null || !head.IsValid )
+			head = FindChildByNameRecursive( pm?.GameObject ?? owner ?? GameObject, "Head" );
+
+		if ( head != null && head.IsValid )
+		{
+			SetPlayerHead( head );
+			return true;
+		}
+
+		// Fallback: use whichever camera is currently rendering for this client.
+		var mainCam = Scene.GetAllComponents<CameraComponent>()
+			.FirstOrDefault( c => c != null && c.Enabled && c.IsMainCamera )
+			?? Scene.GetAllComponents<CameraComponent>().FirstOrDefault( c => c != null && c.Enabled );
+
+		if ( mainCam != null )
+		{
+			playerCamera = mainCam.GameObject;
+			playerHead = mainCam.GameObject;
+			return true;
+		}
+
+		return false;
+	}
 
 	/// <summary>
 	/// World-space positional offset applied during reload animation.
@@ -56,8 +123,8 @@ public abstract class Gun : Component
 		currentAmmo = AmmoClip;
 		maxAmmoReserve = AmmoReserve;
 
-		// Try to find or create viewmodel
-		viewModel = Components.Get<GunViewModel>();
+		// Use the shared GunViewModel instance from WeaponManager
+		viewModel = GunViewModel.Current;
 
 		// Load muzzle flash prefab if not set in inspector
 		if ( MuzzleFlashParticle == null )
@@ -67,6 +134,7 @@ public abstract class Gun : Component
 	protected override void OnUpdate()
 	{
 		if (fireRateRemaining > 0f) fireRateRemaining -= Time.Delta;
+		if (emptySoundCooldown > 0f) emptySoundCooldown -= Time.Delta;
 		if (reloadTimeRemaining > 0f) reloadTimeRemaining -= Time.Delta;
 
 		if (reloadTimeRemaining <= 0f && isReloading)
@@ -140,17 +208,54 @@ public abstract class Gun : Component
 
 	public virtual void Fire()
 	{
-		if ( isReloading ) { CancelReload(); return; } // cancel reload, fire next press
+		if ( Networking.IsActive && !IsLocallyOwnedGun() )
+			return;
+
+		EnsureFireOrigin();
+
+		if ( isReloading )
+		{
+			if ( currentAmmo > 0 ) CancelReload(); // only cancel if we have bullets to fire after
+			return;
+		}
+		if ( currentAmmo <= 0 )
+		{
+			// Already empty — just play a dry-fire click. Reload must be triggered manually (R)
+			// or fires automatically when the last bullet is spent (see bottom of this method).
+			if ( EmptySound is not null && emptySoundCooldown <= 0f )
+			{
+				Sound.Play( EmptySound );
+				emptySoundCooldown = 0.3f;
+			}
+			return;
+		}
 		if (fireRateRemaining > 0f) return;
-		if (currentAmmo <= 0) return;
 
 		currentAmmo--;
 		fireRateRemaining = FireRate;
 		PlayerStats.ShotsFired++;
+	if ( ownerIdentity != null ) ownerIdentity.ShotsFired++;
+		PlayerStats.PendingRecoil += RecoilAmount;
+		if ( ownerIdentity != null ) ownerIdentity.PendingRecoil += RecoilAmount;
 
-		GunViewModel.Current?.PlayAnim( "fire" );
+		viewModel?.PlayFireAnim();
 		OnFire();
 		SpawnMuzzleFlash();
+
+		if ( Networking.IsActive )
+		{
+			var source = playerCamera ?? playerHead ?? owner ?? GameObject;
+			Log.Info( $"[Gun] Broadcasting muzzle flash RPC from {source.Name}" );
+
+			var weaponManager = owner?.Components.GetInDescendantsOrSelf<WeaponManager>()
+				?? Components.GetInAncestorsOrSelf<WeaponManager>();
+			weaponManager?.BroadcastRemoteMuzzleFlashFromWeaponManager( source.WorldPosition, source.WorldRotation );
+		}
+
+		// Auto-reload when clip runs dry
+		if ( currentAmmo == 0 && (UnlimitedAmmo || AmmoReserve > 0) )
+			Reload();
+
 	}
 
 	private void SpawnMuzzleFlash()
@@ -160,9 +265,12 @@ public abstract class Gun : Component
 		{
 			activeFlashParticle?.Destroy();
 
-			var vm = GunViewModel.Current?.ModelRenderer;
+			var vm = viewModel?.ModelRenderer;
 			var attach = vm?.GetAttachment( "muzzle" );
-			var pos = attach?.Position ?? playerCamera?.WorldPosition ?? Vector3.Zero;
+			var fallbackPos = playerCamera != null
+				? playerCamera.WorldPosition + playerCamera.WorldRotation.Forward * 24f
+				: Vector3.Zero;
+			var pos = attach?.Position ?? fallbackPos;
 			var rot = attach?.Rotation ?? playerCamera?.WorldRotation ?? Rotation.Identity;
 
 			var prefabScene = SceneUtility.GetPrefabScene( MuzzleFlashParticle );
@@ -201,6 +309,86 @@ public abstract class Gun : Component
 		}
 	}
 
+	private void SpawnRemoteMuzzleFlash( Vector3 position, Rotation rotation )
+	{
+		if ( MuzzleFlashParticle is not null )
+		{
+			activeFlashParticle?.Destroy();
+			var prefabScene = SceneUtility.GetPrefabScene( MuzzleFlashParticle );
+			if ( prefabScene != null )
+			{
+				activeFlashParticle = prefabScene.Clone( position + rotation.Forward * 24f );
+				activeFlashParticle.WorldRotation = rotation;
+				muzzleFlashTimer = ParticleFlashLifetime;
+			}
+		}
+
+		if ( MuzzleLightBrightness > 0f )
+		{
+			if ( muzzlePointLight is null || !muzzlePointLight.IsValid() )
+			{
+				var lightGO = new GameObject( false, "MuzzlePointLight" );
+				lightGO.Parent = GameObject;
+				muzzlePointLight = lightGO.Components.Create<PointLight>();
+			}
+
+			muzzlePointLight.GameObject.WorldPosition = position + rotation.Forward * 24f;
+			muzzlePointLight.GameObject.WorldRotation = rotation;
+			muzzlePointLight.LightColor = MuzzleLightColor * MuzzleLightBrightness;
+			muzzlePointLight.Radius = MuzzleLightRadius;
+			muzzlePointLight.GameObject.Enabled = true;
+			muzzleLightTimer = MuzzleLightDuration;
+		}
+	}
+
+	public void SetViewModel( GunViewModel vm )
+	{
+		viewModel = vm;
+	}
+
+	/// <summary>
+	/// Call this from OnFire() after a successful trace hit on world geometry (not enemies).
+	/// Spawns an impact particle and projects a bullet hole decal onto the surface.
+	/// </summary>
+	protected void SpawnImpactEffects( SceneTraceResult hit )
+	{
+		if ( !hit.Hit ) return;
+
+		var pos    = hit.EndPosition + hit.Normal * 0.5f;
+		var rot    = Rotation.LookAt( -hit.Normal, Vector3.Up );
+
+		// Impact particle
+		if ( ImpactParticlePrefab != null )
+		{
+			var prefabScene = SceneUtility.GetPrefabScene( ImpactParticlePrefab );
+			if ( prefabScene != null )
+			{
+				var fx = prefabScene.Clone( pos );
+				fx.WorldRotation = rot;
+			}
+		}
+
+		// Bullet hole decal
+		if ( ImpactDecalMaterial != null )
+		{
+			var decalGO = new GameObject( true, "BulletHole" );
+			decalGO.WorldPosition = pos;
+			decalGO.WorldRotation = rot;
+			var decal = decalGO.Components.Create<DecalRenderer>();
+			decal.Material = ImpactDecalMaterial;
+			decal.Size = new Vector3( ImpactDecalSize, ImpactDecalSize, ImpactDecalSize * 4f );
+
+			// Auto-destroy after a while so we don't pile up thousands of decals
+			_ = DestroyAfter( decalGO, 30f );
+		}
+	}
+
+	private async System.Threading.Tasks.Task DestroyAfter( GameObject go, float seconds )
+	{
+		await Task.DelaySeconds( seconds );
+		if ( go.IsValid() ) go.Destroy();
+	}
+
 	protected abstract void OnFire();
 
 	public virtual void Reload()
@@ -212,8 +400,13 @@ public abstract class Gun : Component
 		isReloading = true;
 		reloadTimeRemaining = ReloadTime;
 
-		var animParam = currentAmmo == 0 ? "reload_empty" : "reload";
-		GunViewModel.Current?.PlayAnim( animParam );
+		if ( currentAmmo == 0 )
+		{
+			viewModel?.PlayReloadEmptyAnim(); // sets b_empty flag
+			viewModel?.PlayReloadAnim();       // triggers the actual reload state
+		}
+		else
+			viewModel?.PlayReloadAnim();
 	}
 
 	private void FinishReload()
@@ -233,6 +426,8 @@ public abstract class Gun : Component
 
 	public void SetPlayerHead(GameObject head)
 	{
+		if ( head == null || !head.IsValid ) return;
+
 		playerHead = head;
 
 		// Find camera child so shots originate from the exact eye position
@@ -265,6 +460,14 @@ public abstract class Gun : Component
 	public void SetOwner(GameObject ownerGameObject)
 	{
 		owner = ownerGameObject;
+		ownerIdentity = owner?.Components.GetInDescendantsOrSelf<PlayerIdentity>();
+	}
+
+	/// <summary>Increments ShotsHit on both PlayerStats and the owning PlayerIdentity.</summary>
+	protected void TrackShotHit()
+	{
+		PlayerStats.ShotsHit++;
+		if ( ownerIdentity != null ) ownerIdentity.ShotsHit++;
 	}
 
 	protected override void OnDestroy()

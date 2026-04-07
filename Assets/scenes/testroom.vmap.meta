@@ -11,16 +11,30 @@
       "Resources": null,
       "PackageReferences": [],
       "EditorReferences": [
+        "facepunch.concrete_damaged#116217",
+        "facepunch.floor_tile_01#28817",
         "facepunch.industrial_stair_step_a#38437",
         "facepunch.metal_beam_stairs_a_128#141947",
         "facepunch.railing_stairs_a_128#33758",
+        "facepunch.stairs_rect_tile_a_blend#47188",
         "fpopium.chainlink_fence_b#158034",
-        "subzerostudios.corrugatedsteel008c#149737"
+        "gbonn.sandfloorblend#49296",
+        "polyhaven.wide_street_01#30389",
+        "rustextended.road_b#43363",
+        "semxy.bowieboarding#24040",
+        "smallboxstudio.metalcladding01#132510",
+        "smallboxstudio.roundedbrick01#161309",
+        "subzerostudios.corrugatedsteel008c#149737",
+        "twothieves.blendmudsandgravel#121735",
+        "twothieves.blendsandgrassdead#121736",
+        "twothieves.mwoodwall028b#159420",
+        "twothieves.tmetalwall014a#159252"
       ],
       "Mounts": null,
       "IsStandaloneOnly": false,
       "Metadata": {
-        "SingleAssetSource": "scenes/testroom.vmap"
+        "SingleAssetSource": "scenes/testroom.vmap",
+        "ParentPackage": "whiffd.whiffddriftwood"
       }
     }
   }

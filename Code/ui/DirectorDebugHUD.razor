@@ -1,0 +1,108 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace Sandbox
+
+<root>
+	@if ( PlayerStats.ShowDirectorDebug && Director != null )
+	{
+		<div class="dir-panel">
+			<div class="dir-title">AI DIRECTOR</div>
+
+			<div class="dir-row"><label class="dir-lbl">Phase</label><label class="dir-val phase-@Director.DebugPhaseName.ToLower()">@Director.DebugPhaseName</label></div>
+			<div class="dir-row"><label class="dir-lbl">Timer</label><label class="dir-val">@Director.DebugPhaseTimer.ToString("F1")s / @Director.DebugPhaseDuration.ToString("F0")s</label></div>
+			<div class="dir-row"><label class="dir-lbl">Budget</label><label class="dir-val">@Director.DebugBudget.ToString("F1") / @Director.DebugBudgetCap.ToString("F1")  (+@Director.DebugIncomeRate.ToString("F1")/s)</label></div>
+			<div class="dir-row"><label class="dir-lbl">Interval</label><label class="dir-val">@Director.DebugSpawnInterval.ToString("F1")s  cap @Director.DebugMaxEnemies</label></div>
+			<div class="dir-row"><label class="dir-lbl">Alive</label><label class="dir-val">@AliveCommons spwn  @AliveStatic static  @AliveSpecials spec</label></div>
+
+			@if ( Director.DebugHordeActive )
+			{
+				<div class="dir-row dir-horde"><label class="dir-lbl">Horde</label><label class="dir-val">@Director.DebugHordeTimer.ToString("F1")s / @Director.HordeDuration</label></div>
+			}
+
+			<div class="dir-sep"></div>
+			<div class="dir-sub">ADAPTIVE</div>
+			<div class="dir-row"><label class="dir-lbl">Stress</label><label class="dir-val">@Director.DebugStressScore.ToString("F2")</label></div>
+			<div class="dir-row"><label class="dir-lbl">Momentum</label><label class="dir-val">@Director.DebugMomentumScore.ToString("F2")</label></div>
+			<div class="dir-row"><label class="dir-lbl">Damage/s</label><label class="dir-val">@Director.DebugDamageRate.ToString("F1")</label></div>
+			<div class="dir-row"><label class="dir-lbl">Kills/s</label><label class="dir-val">@Director.DebugKillRate.ToString("F2")</label></div>
+
+			<div class="dir-sep"></div>
+			<div class="dir-sub">SPAWNING</div>
+			<div class="dir-row"><label class="dir-lbl">Nodes</label><label class="dir-val">@NodeTotal / @NodeEligible / @NodeOnCooldown</label></div>
+			<div class="dir-row"><label class="dir-lbl">Last Spawn</label><label class="dir-val">@LastSpawnMode</label></div>
+			<div class="dir-row"><label class="dir-lbl">Recent</label><label class="dir-val">@SpawnSuccesses success / @SpawnFailures fail</label></div>
+
+			<div class="dir-sep"></div>
+			<div class="dir-sub">COOLDOWNS</div>
+			<div class="dir-row"><label class="dir-lbl">Tank</label><label class="dir-val @(Director.DebugTankCD < 1f ? "dir-ready" : "")">@CD( Director.DebugTankCD )</label></div>
+			<div class="dir-row"><label class="dir-lbl">Hunter</label><label class="dir-val @(Director.DebugHunterCD < 1f ? "dir-ready" : "")">@CD( Director.DebugHunterCD )</label></div>
+			<div class="dir-row"><label class="dir-lbl">Spitter</label><label class="dir-val @(Director.DebugSpitterCD < 1f ? "dir-ready" : "")">@CD( Director.DebugSpitterCD )</label></div>
+			<div class="dir-row"><label class="dir-lbl">Charger</label><label class="dir-val @(Director.DebugChargerCD < 1f ? "dir-ready" : "")">@CD( Director.DebugChargerCD )</label></div>
+		</div>
+	}
+</root>
+
+@code
+{
+	[Property] public AIDirector Director { get; set; }
+	EnemySpawner Spawner => Director?.EnemySpawner;
+
+	int AliveCommons  => Director?.EnemySpawner?.GetAliveEnemyCount() ?? 0;
+	int NodeTotal      => Spawner?.DebugNodeTotal ?? 0;
+	int NodeEligible   => Spawner?.DebugNodeEligible ?? 0;
+	int NodeOnCooldown => Spawner?.DebugNodeOnCooldown ?? 0;
+	int SpawnSuccesses => Spawner?.DebugSpawnSuccesses ?? 0;
+	int SpawnFailures  => Spawner?.DebugSpawnFailures ?? 0;
+	string LastSpawnMode => Spawner == null ? "-" : (Spawner.DebugLastSpawnWasRadial ? "RADIAL" : "NODE");
+	int AliveStatic
+	{
+		get
+		{
+			if ( Director?.Player == null ) return 0;
+			int n = 0;
+			foreach ( var g in StaticEnemyGroup.All )
+				if ( Vector3.DistanceBetween( g.WorldPosition, Director.Player.WorldPosition ) <= Director.SoftDespawnDistance )
+					n += g.AliveCount;
+			return n;
+		}
+	}
+	int AliveSpecials
+	{
+		get
+		{
+			int n = 0;
+			if ( Director?.HunterSpawner  != null ) n += Director.HunterSpawner.GetAliveHunterCount();
+			if ( Director?.SpitterSpawner != null ) n += Director.SpitterSpawner.GetAliveSpitterCount();
+			if ( Director?.ChargerSpawner != null ) n += Director.ChargerSpawner.GetAliveChargerCount();
+			if ( Director?.TankSpawner    != null && Director.TankSpawner.HasAliveTank() ) n++;
+			return n;
+		}
+	}
+
+	string CD( float t ) => t < 1f ? "READY" : $"{t:F0}s";
+
+	protected override int BuildHash()
+	{
+		var hash = new System.HashCode();
+		hash.Add( PlayerStats.ShowDirectorDebug );
+		hash.Add( Director?.DebugPhaseName );
+		hash.Add( (int)(Director?.DebugPhaseTimer ?? 0) );
+		hash.Add( (int)((Director?.DebugBudget ?? 0) * 10) );
+		hash.Add( (int)((Director?.DebugBudgetCap ?? 0) * 10) );
+		hash.Add( (int)((Director?.DebugStressScore ?? 0) * 100) );
+		hash.Add( (int)((Director?.DebugMomentumScore ?? 0) * 100) );
+		hash.Add( (int)((Director?.DebugDamageRate ?? 0) * 10) );
+		hash.Add( (int)((Director?.DebugKillRate ?? 0) * 100) );
+		hash.Add( Director?.DebugHordeActive );
+		hash.Add( AliveCommons );
+		hash.Add( AliveSpecials );
+		hash.Add( NodeTotal );
+		hash.Add( NodeEligible );
+		hash.Add( NodeOnCooldown );
+		hash.Add( SpawnSuccesses );
+		hash.Add( SpawnFailures );
+		hash.Add( LastSpawnMode );
+		return hash.ToHashCode();
+	}
+}

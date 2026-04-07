@@ -1,0 +1,642 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:modeldoc29:version{3cec427c-1b0e-4d48-a90a-0436f33a6041} -->
+{
+	rootNode = 
+	{
+		_class = "RootNode"
+		children = 
+		[
+			{
+				_class = "AnimConstraintList"
+				children = 
+				[
+					{
+						_class = "Prefab"
+						target_file = "models/citizen/prefabs/citizen_animconstraintlist.vmdl_prefab"
+					},
+				]
+			},
+			{
+				_class = "ModelModifierList"
+				children = 
+				[
+					{
+						_class = "ModelModifier_ScaleAndMirror"
+						note = "We\'re working in centimeters at the source (which makes more sense for us), and then letting the engine take care of the conversion to inches at this step. So if you want to create something for the Citizen (like clothing), you should also model it in centimeters (matching the provided source files), and use a ScaleAndMirror modifier at 0.3937."
+						scale = 0.3937
+						mirror_x = false
+						mirror_y = false
+						mirror_z = false
+						flip_bone_forward = false
+						swap_left_and_right_bones = false
+					},
+				]
+			},
+			{
+				_class = "MaterialGroupList"
+				children = 
+				[
+					{
+						_class = "DefaultMaterialGroup"
+						remaps = 
+						[
+							{
+								from = "citizen_eyes.vmat"
+								to = "shadowterry/eyes.vmat"
+							},
+							{
+								from = "citizen_skin.vmat"
+								to = "shadowterry/skin.vmat"
+							},
+						]
+						use_global_default = false
+						global_default_material = ""
+					},
+				]
+			},
+			{
+				_class = "RenderMeshList"
+				children = 
+				[
+					{
+						_class = "RenderMeshFile"
+						filename = "shadowterry/shadow_terry.fbx"
+						import_translation = [ 0.0, 0.0, 0.0 ]
+						import_rotation = [ 0.0, 0.0, 0.0 ]
+						import_scale = 1.0
+						align_origin_x_type = "None"
+						align_origin_y_type = "None"
+						align_origin_z_type = "None"
+						parent_bone = ""
+						import_filter = 
+						{
+							exclude_by_default = false
+							exception_list = 
+							[
+								"Citizen_UpperEyelidAO",
+								"Citizen_EyesAO",
+								"CitizenLegs_LOD3",
+								"CitizenLegs_LOD2",
+								"CitizenFeet_LOD3",
+								"CitizenFeet_LOD2",
+								"CitizenTorso_LOD3",
+								"CitizenLegs_LOD1",
+								"CitizenHead_LOD2",
+								"CitizenFeet_LOD1",
+								"CitizenTorso_LOD2",
+								"CitizenHead_LOD3",
+								"CitizenHands_LOD1",
+								"CitizenHead_LOD4",
+								"CitizenTorso_LOD1",
+								"CitizenHands_LOD2",
+								"CitizenHands_LOD3",
+								"Citizen_UpperTeeth",
+								"Citizen_LowerTeeth",
+								"Citizen_EyebrowsOld",
+							]
+						}
+					},
+				]
+			},
+			{
+				_class = "AnimationList"
+				children = 
+				[
+					{
+						_class = "Prefab"
+						target_file = "models/citizen/prefabs/citizen_animationlist.vmdl_prefab"
+					},
+					{
+						_class = "Prefab"
+						target_file = "models/citizen/prefabs/citizen_animationlist_unicycle.vmdl_prefab"
+					},
+					{
+						_class = "Prefab"
+						target_file = "models/citizen/prefabs/citizen_animationlist_debug.vmdl_prefab"
+					},
+					{
+						_class = "Prefab"
+						target_file = "models/citizen/prefabs/citizen_animationlist_visemes.vmdl_prefab"
+					},
+					{
+						_class = "Prefab"
+						target_file = "models/citizen/prefabs/citizen_animationlist_menu.vmdl_prefab"
+					},
+				]
+				default_root_bone_name = "pelvis"
+			},
+			{
+				_class = "BoneMarkupList"
+				children = 
+				[
+					{
+						_class = "Prefab"
+						target_file = "models/citizen/prefabs/citizen_bonemarkuplist.vmdl_prefab"
+					},
+				]
+				bone_cull_type = "None"
+			},
+			{
+				_class = "AttachmentList"
+				children = 
+				[
+					{
+						_class = "Prefab"
+						target_file = "models/citizen/prefabs/citizen_attachmentlist.vmdl_prefab"
+					},
+				]
+			},
+			{
+				_class = "PhysicsJointList"
+				children = 
+				[
+					{
+						_class = "Prefab"
+						target_file = "models/citizen/prefabs/citizen_physicsjointlist.vmdl_prefab"
+					},
+				]
+			},
+			{
+				_class = "PhysicsShapeList"
+				children = 
+				[
+					{
+						_class = "Folder"
+						name = "PhysicsBody"
+						children = 
+						[
+							{
+								_class = "PhysicsShapeCapsule"
+								parent_bone = "pelvis"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 10.0
+								point0 = [ 1.5, 0.0, -5.0 ]
+								point1 = [ 1.5, 0.0, 5.0 ]
+							},
+							{
+								_class = "PhysicsShapeCapsule"
+								parent_bone = "spine_0"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 14.0
+								point0 = [ 5.0, 0.0, -2.0 ]
+								point1 = [ 5.0, 0.0, 2.0 ]
+							},
+							{
+								_class = "PhysicsShapeCylinder"
+								parent_bone = "spine_2"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 15.0
+								point0 = [ 15.0, 1.0, 0.0 ]
+								point1 = [ -14.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "PhysicsShapeCapsule"
+								parent_bone = "head"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 14.0
+								point0 = [ 3.0, 2.0, 0.0 ]
+								point1 = [ 23.0, 1.0, 0.0 ]
+							},
+						]
+					},
+					{
+						_class = "Folder"
+						name = "PhysicsArms"
+						children = 
+						[
+							{
+								_class = "PhysicsShapeCapsule"
+								parent_bone = "arm_upper_R"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 5.0
+								point0 = [ 5.0, 0.0, 0.0 ]
+								point1 = [ 24.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "PhysicsShapeCapsule"
+								parent_bone = "arm_lower_R"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 4.8
+								point0 = [ 0.0, 0.0, 0.0 ]
+								point1 = [ 17.0, -0.4, -0.4 ]
+							},
+							{
+								_class = "PhysicsShapeCapsule"
+								parent_bone = "hand_R"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 5.0
+								point0 = [ 2.0, 0.0, -0.4 ]
+								point1 = [ 15.0, 0.0, -2.5 ]
+							},
+							{
+								_class = "PhysicsShapeCapsule"
+								parent_bone = "arm_upper_L"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 5.0
+								point0 = [ 5.0, 0.0, 0.0 ]
+								point1 = [ 24.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "PhysicsShapeCapsule"
+								parent_bone = "arm_lower_L"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 4.8
+								point0 = [ 0.0, 0.0, 0.0 ]
+								point1 = [ 17.0, -0.4, 0.4 ]
+							},
+							{
+								_class = "PhysicsShapeCapsule"
+								parent_bone = "hand_L"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 5.0
+								point0 = [ 2.0, 0.0, 0.4 ]
+								point1 = [ 15.0, 0.0, 2.5 ]
+							},
+						]
+					},
+					{
+						_class = "Folder"
+						name = "PhysicsLegs"
+						children = 
+						[
+							{
+								_class = "PhysicsShapeCapsule"
+								parent_bone = "leg_upper_R"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 7.0
+								point0 = [ 4.0, 0.0, 0.0 ]
+								point1 = [ 32.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "PhysicsShapeCapsule"
+								parent_bone = "leg_lower_R"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 5.5
+								point0 = [ 3.0, 0.0, 0.0 ]
+								point1 = [ 26.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "PhysicsShapeCapsule"
+								parent_bone = "ankle_R"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 4.5
+								point0 = [ 3.5, -3.5, 0.0 ]
+								point1 = [ 9.5, 2.5, 0.8 ]
+							},
+							{
+								_class = "PhysicsShapeCapsule"
+								parent_bone = "leg_upper_L"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 7.0
+								point0 = [ 4.0, 0.0, 0.0 ]
+								point1 = [ 32.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "PhysicsShapeCapsule"
+								parent_bone = "leg_lower_L"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 5.5
+								point0 = [ 3.0, 0.0, 0.0 ]
+								point1 = [ 26.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "PhysicsShapeCapsule"
+								parent_bone = "ankle_L"
+								surface_prop = "glass"
+								collision_tags = "solid"
+								radius = 4.5
+								point0 = [ 3.5, -3.5, 0.0 ]
+								point1 = [ 9.5, 2.5, -0.8 ]
+							},
+						]
+					},
+					{
+						_class = "PhysicsShapeCapsule"
+						disabled = true
+						parent_bone = "clavicle_L"
+						surface_prop = "glass"
+						collision_tags = "solid"
+						radius = 4.0
+						point0 = [ 0.0, 0.0, 0.0 ]
+						point1 = [ 10.0, 0.0, 0.0 ]
+					},
+					{
+						_class = "PhysicsShapeCapsule"
+						disabled = true
+						parent_bone = "clavicle_R"
+						surface_prop = "glass"
+						collision_tags = "solid"
+						radius = 4.0
+						point0 = [ 0.0, 0.0, 0.0 ]
+						point1 = [ 10.0, 0.0, 0.0 ]
+					},
+				]
+			},
+			{
+				_class = "HitboxSetList"
+				children = 
+				[
+					{
+						_class = "HitboxSet"
+						name = "Hitboxes"
+						children = 
+						[
+							{
+								_class = "HitboxCapsule"
+								name = "HB_pelvis"
+								parent_bone = "pelvis"
+								surface_property = "glass"
+								translation_only = false
+								tags = "stomach pelvis"
+								radius = 11.0
+								point0 = [ 1.2, 0.0, -6.0 ]
+								point1 = [ 1.2, 0.0, 6.0 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_spine_0"
+								parent_bone = "spine_0"
+								surface_property = "glass"
+								translation_only = false
+								tags = "spine chest"
+								radius = 18.0
+								point0 = [ 0.0, 0.0, 0.0 ]
+								point1 = [ 0.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_spine_1"
+								parent_bone = "spine_1"
+								surface_property = "glass"
+								translation_only = false
+								tags = "spine chest"
+								radius = 18.0
+								point0 = [ 0.0, 0.0, 0.0 ]
+								point1 = [ 0.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_spine_2"
+								parent_bone = "spine_2"
+								surface_property = "glass"
+								translation_only = false
+								tags = "spine chest"
+								radius = 18.0
+								point0 = [ -2.4, 0.0, 0.0 ]
+								point1 = [ 2.4, 0.0, 0.0 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_neck_0"
+								parent_bone = "neck_0"
+								surface_property = "glass"
+								translation_only = false
+								tags = "neck head"
+								radius = 14.0
+								point0 = [ -1.0, 1.5, -4.0 ]
+								point1 = [ -1.0, 1.5, 4.0 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_head"
+								parent_bone = "head"
+								surface_property = "glass"
+								translation_only = false
+								tags = "head"
+								radius = 16.0
+								point0 = [ 6.0, 2.0, 0.0 ]
+								point1 = [ 23.0, 1.0, 0.0 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_clavicle_R"
+								parent_bone = "clavicle_R"
+								surface_property = "glass"
+								translation_only = false
+								tags = "arm right clavicle"
+								radius = 7.0
+								point0 = [ 0.0, 0.0, 0.0 ]
+								point1 = [ 10.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_arm_upper_R"
+								parent_bone = "arm_upper_R"
+								surface_property = "glass"
+								translation_only = false
+								tags = "arm right upper"
+								radius = 6.0
+								point0 = [ 0.0, 0.0, 0.0 ]
+								point1 = [ 24.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_arm_lower_R"
+								parent_bone = "arm_lower_R"
+								surface_property = "glass"
+								translation_only = false
+								tags = "arm right lower"
+								radius = 5.3
+								point0 = [ 0.0, 0.0, 0.0 ]
+								point1 = [ 21.6, -1.2, -1.2 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_hand_R"
+								parent_bone = "hand_R"
+								surface_property = "glass"
+								translation_only = false
+								tags = "right hand"
+								radius = 5.0
+								point0 = [ 0.0, 0.0, 0.0 ]
+								point1 = [ 10.0, 0.0, -1.2 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_clavicle_L"
+								parent_bone = "clavicle_L"
+								surface_property = "glass"
+								translation_only = false
+								tags = "arm left clavicle"
+								radius = 7.0
+								point0 = [ 0.0, 0.0, 0.0 ]
+								point1 = [ 10.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_arm_upper_L"
+								parent_bone = "arm_upper_L"
+								surface_property = "glass"
+								translation_only = false
+								tags = "arm left upper"
+								radius = 6.0
+								point0 = [ 0.0, 0.0, 0.0 ]
+								point1 = [ 24.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_arm_lower_L"
+								parent_bone = "arm_lower_L"
+								surface_property = "glass"
+								translation_only = false
+								tags = "arm left lower"
+								radius = 5.3
+								point0 = [ 0.0, 0.0, 0.0 ]
+								point1 = [ 21.6, -1.2, 1.2 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_hand_L"
+								parent_bone = "hand_L"
+								surface_property = "glass"
+								translation_only = false
+								tags = "left hand"
+								radius = 5.0
+								point0 = [ 0.0, 0.0, 0.0 ]
+								point1 = [ 10.0, 0.0, 1.2 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_leg_upper_R"
+								parent_bone = "leg_upper_R"
+								surface_property = "glass"
+								translation_only = false
+								tags = "leg right upper"
+								radius = 7.5
+								point0 = [ 2.0, 0.0, 0.0 ]
+								point1 = [ 32.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_leg_lower_R"
+								parent_bone = "leg_lower_R"
+								surface_property = "glass"
+								translation_only = false
+								tags = "leg right lower"
+								radius = 5.8
+								point0 = [ 0.0, 0.0, 0.0 ]
+								point1 = [ 32.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_ankle_R"
+								parent_bone = "ankle_R"
+								surface_property = "glass"
+								translation_only = false
+								tags = "leg right ankle"
+								radius = 6.0
+								point0 = [ 4.8, -3.9, 0.0 ]
+								point1 = [ 11.0, 2.1, 0.0 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_leg_upper_L"
+								parent_bone = "leg_upper_L"
+								surface_property = "glass"
+								translation_only = false
+								tags = "leg left upper"
+								radius = 7.5
+								point0 = [ 2.0, 0.0, 0.0 ]
+								point1 = [ 32.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_leg_lower_L"
+								parent_bone = "leg_lower_L"
+								surface_property = "glass"
+								translation_only = false
+								tags = "leg left lower"
+								radius = 5.8
+								point0 = [ 0.0, 0.0, 0.0 ]
+								point1 = [ 32.0, 0.0, 0.0 ]
+							},
+							{
+								_class = "HitboxCapsule"
+								name = "HB_ankle_L"
+								parent_bone = "ankle_L"
+								surface_property = "glass"
+								translation_only = false
+								tags = "leg left ankle"
+								radius = 6.0
+								point0 = [ 4.8, -3.9, 0.0 ]
+								point1 = [ 11.0, 2.1, 0.0 ]
+							},
+						]
+					},
+				]
+			},
+			{
+				_class = "IKData"
+				children = 
+				[
+					{
+						_class = "Prefab"
+						target_file = "models/citizen/prefabs/citizen_ikdata.vmdl_prefab"
+					},
+				]
+			},
+			{
+				_class = "PoseParamList"
+				children = 
+				[
+					{
+						_class = "Prefab"
+						target_file = "models/citizen/prefabs/citizen_poseparamlist.vmdl_prefab"
+					},
+				]
+			},
+			{
+				_class = "WeightListList"
+				children = 
+				[
+					{
+						_class = "Prefab"
+						target_file = "models/citizen/prefabs/citizen_weightlistlist.vmdl_prefab"
+					},
+				]
+			},
+			{
+				_class = "GameDataList"
+				children = 
+				[
+					{
+						_class = "Prefab"
+						target_file = "models/citizen/prefabs/citizen_gamedatalist.vmdl_prefab"
+					},
+				]
+			},
+			{
+				_class = "ClothShapeList"
+				children = 
+				[
+					{
+						_class = "Prefab"
+						target_file = "models/citizen/prefabs/citizen_clothshapelist_lower.vmdl_prefab"
+					},
+					{
+						_class = "Prefab"
+						target_file = "models/citizen/prefabs/citizen_clothshapelist_upper.vmdl_prefab"
+					},
+				]
+			},
+		]
+		model_archetype = ""
+		primary_associated_entity = ""
+		anim_graph_name = "models/citizen/citizen.vanmgrph"
+		base_model_name = ""
+	}
+}

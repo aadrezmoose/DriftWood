@@ -1,0 +1,1000 @@
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:52   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:52   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:52   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:52   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:53   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:53   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:53   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:53   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:54   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:54   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:54   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:54   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=0
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=False
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=False
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose(76561198036942833)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] Spawning player for new connection: Moose (2)(90071996842377217)
+ 02:53:55   Generic [GameManager] PlayerPrefab is not set or is invalid — cannot spawn player.
+ 02:53:55   Generic [GameManager] OnUpdate: Connected=2 Tracked=2
+ 02:53:55   Generic [GameManager]   Conn: Moose(76561198036942833) Already=True
+ 02:53:55   Generic [GameManager]   Conn: Moose (2)(90071996842377217) Already=True
+ 02:53:56   Generic Exception when calling 'OnDestroy' on Sandbox.CameraComponent

@@ -8,6 +8,8 @@ using System.Linq;
 /// </summary>
 public sealed class SpitterSpawner : Component
 {
+	private bool IsAuthoritativeInstance() => !Networking.IsActive || Connection.Local?.IsHost == true;
+
 	[Property] public float SpawnCooldown { get; set; } = 45f;
 	[Property] public int MaxSpitters { get; set; } = 2;
 	[Property] public float SpawnRadius { get; set; } = 500f;
@@ -53,6 +55,9 @@ public sealed class SpitterSpawner : Component
 
 	protected override void OnUpdate()
 	{
+		if ( !IsAuthoritativeInstance() )
+			return;
+
 		if ( !Enabled || player is null || SpitterPrefab is null ) return;
 
 		// Cleanup dead / invalid spitters
@@ -97,6 +102,7 @@ public sealed class SpitterSpawner : Component
 	/// </summary>
 	public bool TrySpawnSpitter()
 	{
+		if ( !IsAuthoritativeInstance() ) return false;
 		if ( IsSafeZoneActive ) return false;
 		if ( spawnedSpitters.Count >= MaxSpitters ) return false;
 		if ( player is null || SpitterPrefab is null ) return false;
@@ -195,6 +201,9 @@ public sealed class SpitterSpawner : Component
 			spitterComp.Enabled = true;
 
 		spitterComp.PlayerReference = player;
+
+		if ( Networking.IsActive )
+			spawned.NetworkSpawn();
 
 		spawnedSpitters.Add( spawned );
 		Log.Info( $"SpitterSpawner: Spawned Spitter at distance {distance:F0}. Total: {spawnedSpitters.Count}/{MaxSpitters}" );

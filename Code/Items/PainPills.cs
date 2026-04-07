@@ -14,9 +14,13 @@ public sealed class PainPills : BaseItem
 	{
 		// Pills can be carried, not auto-used
 		ItemName = "Pain Pills";
+		PickupSound = "sounds/coin1.sound";
+	}
+
+	protected override void OnAwake()
+	{
 		CanCarry = true;
 		AutoUse = false;
-		PickupSound = "sounds/coin1.sound";
 		SlotType = ItemSlotType.SecondaryHeal;
 	}
 

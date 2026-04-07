@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Editor": {
+      "commandName": "Executable",
+      "executablePath": "E:/SteamLibrary/steamapps/common/sbox/sbox-dev.exe",
+      "commandLineArgs": "-project \u0022C:\\Users\\austi\\Documents\\s\u0026box projects\\DriftWood\\Libraries\\ozmium.oz_mcp\\sbox_mcp.sbproj\u0022"
+    }
+  }
+}

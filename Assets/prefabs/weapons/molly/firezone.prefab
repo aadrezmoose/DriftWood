@@ -22,13 +22,19 @@
         "Flags": 0,
         "BurnSound": "sounds/weapons/74899__benboncan__molotov.sound",
         "DamagePerSecond": 8,
-        "Duration": 6,
+        "Duration": 16,
+        "FireParticlePrefab": "effects/fire_fast.prefab",
         "OnComponentDestroy": null,
         "OnComponentDisabled": null,
         "OnComponentEnabled": null,
         "OnComponentFixedUpdate": null,
         "OnComponentStart": null,
-        "OnComponentUpdate": null
+        "OnComponentUpdate": null,
+        "SpreadCount": 12,
+        "SpreadDelay": 1,
+        "SpreadDuration": 14,
+        "SpreadRadius": 200,
+        "TriggerRadius": 80
       }
     ],
     "Children": [],
@@ -58,6 +64,8 @@
   "MenuPath": null,
   "MenuIcon": null,
   "DontBreakAsTemplate": false,
-  "__references": [],
+  "__references": [
+    "facepunch.fire_particle_fast#60123"
+  ],
   "__version": 2
 }

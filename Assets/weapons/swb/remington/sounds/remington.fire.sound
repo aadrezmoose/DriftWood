@@ -1,8 +1,8 @@
 {
   "UI": false,
-  "Volume": "1",
+  "Volume": "0.5",
   "Pitch": "0.95 1.05",
-  "Decibels": 70,
+  "Decibels": 60,
   "SelectionMode": "Random",
   "Sounds": [
     "weapons/swb/remington/sounds/remington.fire.vsnd"
@@ -43,6 +43,10 @@
       "mode": "Mirrored"
     }
   ],
+  "DefaultMixer": {
+    "Name": "game",
+    "Id": "fa561905-cb28-43df-bcfb-f89944ce8682"
+  },
   "__references": [],
   "__version": 1
 }

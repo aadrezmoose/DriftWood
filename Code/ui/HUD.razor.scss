@@ -3,6 +3,7 @@ HUD
 	font-family: Poppins, sans-serif;
 	font-weight: bold;
 	pointer-events: none;
+	z-index: 0;
 
 	// ── Left: Inventory column ─────────────────────────────────────────
 	.inv-column
@@ -82,6 +83,71 @@ HUD
 	}
 
 	// ── Bottom-left: health / stamina / bleed ──────────────────────────
+	.objective-panel
+	{
+		position: absolute;
+		top: 24px;
+		left: 50%;
+		transform: translateX(-50%);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
+		min-width: 360px;
+		padding: 10px 14px;
+		background: rgba(0, 0, 0, 0.62);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 6px;
+	}
+
+	.objective-label
+	{
+		font-size: 10px;
+		letter-spacing: 2px;
+		color: rgba(255, 255, 255, 0.6);
+	}
+
+	.objective-text
+	{
+		font-size: 15px;
+		color: #ffffff;
+		letter-spacing: 1px;
+	}
+
+	.objective-track
+	{
+		width: 100%;
+		height: 8px;
+		background: rgba(0, 0, 0, 0.5);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 4px;
+		overflow: hidden;
+	}
+
+	.objective-fill
+	{
+		height: 100%;
+		background: linear-gradient(90deg, #ffaa00, #ffc832);
+		box-shadow: 0 0 6px rgba(255, 200, 50, 0.55);
+		transition: width 0.1s linear;
+	}
+
+	.objective-urgent
+	{
+		border-color: rgba(255, 68, 68, 0.55);
+
+		.objective-text
+		{
+			color: #ff4444;
+		}
+
+		.objective-fill
+		{
+			background: linear-gradient(90deg, #cc0000, #ff4444);
+			box-shadow: 0 0 8px rgba(255, 68, 68, 0.75);
+		}
+	}
+
 	.bottom-left
 	{
 		position: absolute;
@@ -142,6 +208,46 @@ HUD
 	.incap-label { color: #ff4444; }
 	.incap-value { color: #ff4444; }
 
+	.heal-progress-container
+	{
+		position: absolute;
+		left: 50%;
+		top: 58%;
+		transform: translateX(-50%);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
+		width: 260px;
+		pointer-events: none;
+	}
+
+	.heal-progress-label
+	{
+		font-size: 11px;
+		letter-spacing: 3px;
+		color: #44dd88;
+		text-transform: uppercase;
+	}
+
+	.heal-progress-track
+	{
+		width: 100%;
+		height: 8px;
+		background: rgba(0, 0, 0, 0.55);
+		border: 1px solid rgba(68, 221, 136, 0.3);
+		border-radius: 4px;
+		overflow: hidden;
+	}
+
+	.heal-progress-fill
+	{
+		height: 100%;
+		background: linear-gradient(90deg, #007744, #44dd88);
+		box-shadow: 0 0 6px rgba(68, 221, 136, 0.7);
+		border-radius: 4px;
+	}
+
 	// ── Bottom-right: ammo ─────────────────────────────────────────────
 	.bottom-right
 	{
@@ -168,29 +274,57 @@ HUD
 	{
 		display: flex;
 		flex-direction: row;
-		align-items: baseline;
-		gap: 2px;
+		align-items: flex-end;
+		gap: 4px;
+		overflow: visible;
 	}
 
 	.ammo-current
 	{
-		font-size: 32px;
+		font-size: 28px;
 		color: #ffffff;
-		line-height: 1;
-		min-width: 40px;
+		min-width: 56px;
 		text-align: right;
+		padding: 6px 0 2px 0;
 	}
 
 	.ammo-sep
 	{
-		font-size: 20px;
+		font-size: 18px;
 		color: rgba(255,255,255,0.4);
+		padding-bottom: 4px;
 	}
 
 	.ammo-reserve
 	{
-		font-size: 20px;
+		font-size: 18px;
 		color: rgba(255,255,255,0.6);
+		padding-bottom: 4px;
+	}
+
+	.ammo-low   { color: #ffaa00; }
+	.ammo-empty { color: #ff4444; }
+
+	.ammo-warning
+	{
+		font-size: 11px;
+		letter-spacing: 2px;
+		text-transform: uppercase;
+		color: #ff4444;
+		text-align: right;
+		animation: ammo-pulse 0.6s ease-in-out infinite alternate;
+	}
+
+	.ammo-warning-low
+	{
+		color: #ffaa00;
+		animation-duration: 1.2s;
+	}
+
+	@keyframes ammo-pulse
+	{
+		from { opacity: 1.0; }
+		to   { opacity: 0.4; }
 	}
 
 	.carried-item
@@ -370,6 +504,13 @@ HUD
 		text-shadow: 0 0 40px rgba(100, 220, 80, 0.9), 0 4px 8px rgba(0,0,0,0.9);
 	}
 
+	.win-time
+	{
+		font-size: 28px;
+		color: rgba(255, 255, 255, 0.7);
+		letter-spacing: 6px;
+	}
+
 	// ── Stats panel (end-of-level screen) ──────────────────────────────
 	.stats-panel
 	{
@@ -398,4 +539,361 @@ HUD
 	{
 		font-weight: bold;
 	}
+
+	// ── Settings panel ──────────────────────────────────────────────────
+	.settings-overlay
+	{
+		position: absolute;
+		top: 0; left: 0; right: 0; bottom: 0;
+		background: rgba(0, 0, 0, 0.55);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: all;
+	}
+
+	.settings-panel
+	{
+		background: rgba(15, 15, 20, 0.95);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 8px;
+		padding: 32px 40px;
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+		min-width: 320px;
+	}
+
+	.settings-title
+	{
+		font-size: 22px;
+		color: #ffffff;
+		letter-spacing: 4px;
+		text-transform: uppercase;
+		text-align: center;
+		margin-bottom: 4px;
+	}
+
+	.settings-row
+	{
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+	}
+
+	.settings-label
+	{
+		font-size: 13px;
+		color: rgba(255, 255, 255, 0.6);
+		letter-spacing: 2px;
+		text-transform: uppercase;
+	}
+
+	.settings-controls
+	{
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.settings-btn
+	{
+		font-size: 20px;
+		color: #ffffff;
+		width: 32px;
+		height: 32px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 4px;
+		cursor: pointer;
+		pointer-events: all;
+
+		&:hover { background: rgba(255, 255, 255, 0.25); }
+	}
+
+	.settings-value
+	{
+		font-size: 18px;
+		color: #ffffff;
+		min-width: 48px;
+		text-align: center;
+	}
+
+	.settings-close
+	{
+		font-size: 13px;
+		color: rgba(255, 255, 255, 0.5);
+		letter-spacing: 2px;
+		text-transform: uppercase;
+		text-align: center;
+		padding: 10px;
+		cursor: pointer;
+		pointer-events: all;
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 4px;
+		margin-top: 4px;
+
+		&:hover { color: #ffffff; background: rgba(255, 255, 255, 0.08); }
+	}
+
+	.settings-restart
+	{
+		color: rgba(255, 100, 100, 0.7);
+		border-color: rgba(255, 100, 100, 0.3);
+
+		&:hover { color: #ff6464; background: rgba(255, 80, 80, 0.15); }
+	}
+
+	.settings-quit
+	{
+		font-size: 12px;
+		color: rgba(255, 80, 80, 0.6);
+		letter-spacing: 2px;
+		text-transform: uppercase;
+		text-align: center;
+		padding: 8px;
+		cursor: pointer;
+		pointer-events: all;
+
+		&:hover { color: rgba(255, 80, 80, 1.0); }
+	}
+
+	// ── Pause Menu ──────────────────────────────────────────────────────
+	.pause-root
+	{
+		position: absolute;
+		top: 0; left: 0; right: 0; bottom: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.65);
+		pointer-events: all;
+	}
+
+	.pause-panel
+	{
+		background: rgba(10, 10, 15, 0.97);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 8px;
+		padding: 40px 56px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 14px;
+		min-width: 280px;
+	}
+
+	.pause-title
+	{
+		font-size: 22px;
+		color: #ffffff;
+		letter-spacing: 6px;
+		text-transform: uppercase;
+		margin-bottom: 10px;
+	}
+
+	.pause-btn
+	{
+		font-size: 14px;
+		color: #ffffff;
+		letter-spacing: 3px;
+		text-transform: uppercase;
+		padding: 11px 0;
+		width: 100%;
+		text-align: center;
+		cursor: pointer;
+		pointer-events: all;
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 4px;
+		background: rgba(255, 255, 255, 0.05);
+
+		&:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255,255,255,0.35); }
+	}
+
+	.pause-btn-leave
+	{
+		color: rgba(255, 100, 100, 0.8);
+		border-color: rgba(255, 80, 80, 0.2);
+		margin-top: 6px;
+
+		&:hover { background: rgba(180, 0, 0, 0.3); border-color: rgba(255,80,80,0.5); color: #ff6464; }
+	}
+
+	// ── Teammate status panel ─────────────────────────────────────────
+	.teammates-panel
+	{
+		position: absolute;
+		top: 24px;
+		right: 16px;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		min-width: 180px;
+		max-width: 220px;
+	}
+
+	.teammate-row
+	{
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+		padding: 6px 8px;
+		background: rgba(0, 0, 0, 0.52);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 5px;
+	}
+
+	.teammate-dead { opacity: 0.40; }
+
+	.teammate-name
+	{
+		font-size: 11px;
+		color: #ccc;
+		letter-spacing: 1px;
+		text-transform: uppercase;
+	}
+
+	.teammate-health-track
+	{
+		width: 100%;
+		height: 4px;
+		background: rgba(255, 255, 255, 0.1);
+		border-radius: 2px;
+		overflow: hidden;
+	}
+
+	.teammate-health-fill
+	{
+		height: 100%;
+		border-radius: 2px;
+	}
+
+	.tm-bar-ok     { background: #44cc66; }
+	.tm-bar-yellow { background: #ffd54a; }
+	.tm-bar-orange { background: #ff8c00; }
+	.tm-bar-red    { background: #cc4444; }
+	.tm-bar-incap  { background: #ff8c00; }
+	.tm-bar-dead   { background: #555555; width: 0%; }
+
+	.teammate-status
+	{
+		font-size: 9px;
+		color: #ff8c00;
+		letter-spacing: 2px;
+		text-transform: uppercase;
+	}
+
+	// ── Multi-player stats grid (win screen) ──────────────────────────
+	.stats-grid
+	{
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		margin: 12px 0;
+		min-width: 440px;
+	}
+
+	.stats-grid-row
+	{
+		display: flex;
+		flex-direction: row;
+		font-size: 15px;
+		color: white;
+		font-family: Poppins;
+	}
+
+	.stats-header-row
+	{
+		font-size: 11px;
+		color: rgba(255, 255, 255, 0.5);
+		letter-spacing: 2px;
+		text-transform: uppercase;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+		padding-bottom: 6px;
+		margin-bottom: 4px;
+	}
+
+	.stats-totals-row
+	{
+		border-top: 1px solid rgba(255, 255, 255, 0.15);
+		padding-top: 6px;
+		margin-top: 4px;
+		font-weight: bold;
+		color: #ffe040;
+	}
+
+	.stats-mine-row { color: #88ffbb; }
+
+	.sgcol
+	{
+		flex: 1;
+		text-align: center;
+		padding: 5px 0;
+	}
+
+	.sgcol-name
+	{
+		flex: 2;
+		text-align: left;
+		padding-left: 4px;
+	}
+
+	.pause-setting-row
+	{
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		gap: 16px;
+	}
+
+	.pause-setting-label
+	{
+		font-size: 12px;
+		color: rgba(255, 255, 255, 0.55);
+		letter-spacing: 2px;
+		text-transform: uppercase;
+	}
+
+	.pause-setting-controls
+	{
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.pause-setting-btn
+	{
+		font-size: 18px;
+		color: #ffffff;
+		width: 30px;
+		height: 30px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 4px;
+		cursor: pointer;
+		pointer-events: all;
+
+		&:hover { background: rgba(255, 255, 255, 0.25); }
+	}
+
+	.pause-setting-val
+	{
+		font-size: 16px;
+		color: #ffffff;
+		min-width: 44px;
+		text-align: center;
+	}
+
 }

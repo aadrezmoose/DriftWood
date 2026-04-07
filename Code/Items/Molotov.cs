@@ -33,6 +33,7 @@ public sealed class Molotov : ThrowableBase
 
 		var projectileGO = prefabScene.Clone( position );
 		projectileGO.WorldPosition = position;
+		projectileGO.LocalScale = Vector3.One * ProjectileScale;
 
 		// Wire up owner so the projectile ignores the thrower on its first trace
 		var proj = projectileGO.Components.GetInDescendantsOrSelf<MolotovProjectile>();
@@ -49,8 +50,7 @@ public sealed class Molotov : ThrowableBase
 		var rb = projectileGO.Components.GetInDescendantsOrSelf<Rigidbody>();
 		if ( rb != null )
 		{
-			Vector3 flatDir = direction.WithZ( 0 ).Normal;
-			rb.Velocity = flatDir * ThrowSpeed + Vector3.Up * ArcForce;
+			rb.Velocity = direction * ThrowSpeed + Vector3.Up * ArcForce;
 		}
 		else
 		{

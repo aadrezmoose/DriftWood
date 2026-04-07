@@ -7,6 +7,11 @@ public sealed class Pistol : Gun
 {
 	[Property] public float Range { get; set; } = 5000f;
 	[Property] public float HeadshotMultiplier { get; set; } = 2.0f;
+	[Property] public float HeadshotAssistRadius { get; set; } = 24f;
+	[Property] public float FalloffStartDistance { get; set; } = 500f;
+	[Property] public float FalloffEndDistance { get; set; } = 2500f;
+	[Property] public float MinDamage { get; set; } = 10f;
+	[Property] public bool VerboseHitLogging { get; set; } = false;
 	[Property] public SoundEvent FireSound { get; set; }
 	[Property] public SoundEvent ReloadClipOutSound { get; set; }
 	[Property] public SoundEvent ReloadClipInSound { get; set; }
@@ -16,13 +21,14 @@ public sealed class Pistol : Gun
 	{
 		// Set default pistol stats
 		Category = WeaponCategory.Secondary;
-		Damage = 25f;
+		Damage = 35f;
 		FireRate = 0.2f;
 		AmmoClip = 15;
 		AmmoReserve = 75;
 		ReloadTime = 1.5f;
 		IsAutomatic = false;
 		UnlimitedAmmo = true;
+		RecoilAmount = 2.5f;
 
 		base.OnAwake();
 	}
@@ -35,11 +41,9 @@ public sealed class Pistol : Gun
 			return;
 		}
 
-		// Play fire sound
+		// Play fire sound at player head so spatialized SoundEvents don't fall back to world origin
 		if ( FireSound != null )
-		{
-			Sound.Play( FireSound );
-		}
+			Sound.Play( FireSound, playerHead?.WorldPosition ?? WorldPosition );
 
 		// Get firing direction from player head
 		var fireOrigin = playerCamera ?? playerHead;
@@ -54,10 +58,12 @@ public sealed class Pistol : Gun
 
 		if ( trace.Hit )
 		{
-			Log.Info( $"Pistol hit: {trace.GameObject?.Name ?? "Unknown"} at distance {trace.Distance:F1}" );
+			if ( VerboseHitLogging )
+				Log.Info( $"Pistol hit: {trace.GameObject?.Name ?? "Unknown"} at distance {trace.Distance:F1}" );
 
-			// Check if we hit a headshot zone
-			var headshotZone = trace.GameObject?.Components.Get<HeadshotZone>();
+			// Check if we hit a headshot zone directly (or on ancestor chain)
+			var headshotZone = trace.GameObject?.Components.GetInAncestorsOrSelf<HeadshotZone>();
+			headshotZone ??= trace.GameObject?.Components.Get<HeadshotZone>();
 			if ( headshotZone != null )
 			{
 				// Headshot!
@@ -67,10 +73,12 @@ public sealed class Pistol : Gun
 					var health = targetEntity.Components.Get<HealthComponent>();
 					if ( health != null )
 					{
-						float headshotDamage = Damage * HeadshotMultiplier * headshotZone.DamageMultiplier;
+						float baseDamage = Damage * HeadshotMultiplier * headshotZone.DamageMultiplier;
+						float headshotDamage = ApplyFalloff( baseDamage, trace.Distance );
 						health.TakeDamage( headshotDamage, owner );
-						PlayerStats.ShotsHit++;
-						Log.Info( $"HEADSHOT! Dealt {headshotDamage} damage to {targetEntity.Name}" );
+						TrackShotHit();
+						if ( VerboseHitLogging )
+							Log.Info( $"HEADSHOT! Dealt {headshotDamage} damage to {targetEntity.Name} at distance {trace.Distance:F0}" );
 
 						// Notify enemy of headshot for extra stagger
 						var enemy = targetEntity.Components.Get<Enemy>();
@@ -90,14 +98,38 @@ public sealed class Pistol : Gun
 
 				if ( health != null )
 				{
+					// Fallback headshot assist: if body collider was hit first but impact point is near head zone,
+					// count it as headshot so side/front shots register more naturally.
+					var fallbackHead = health.GameObject?.Components.GetInDescendantsOrSelf<HeadshotZone>();
+					if ( fallbackHead != null )
+					{
+						float headDist = Vector3.DistanceBetween( trace.EndPosition, fallbackHead.GameObject.WorldPosition );
+						if ( headDist <= HeadshotAssistRadius )
+						{
+							float baseDamage = Damage * HeadshotMultiplier * fallbackHead.DamageMultiplier;
+							float headshotDamage = ApplyFalloff( baseDamage, trace.Distance );
+							health.TakeDamage( headshotDamage, owner );
+							TrackShotHit();
+							if ( VerboseHitLogging )
+								Log.Info( $"HEADSHOT(assist)! Dealt {headshotDamage} damage to {health.GameObject?.Name} at distance {trace.Distance:F0}" );
+
+							var enemy = health.GameObject?.Components.Get<Enemy>();
+							enemy?.OnHeadshotDamage( headshotDamage, owner );
+							return;
+						}
+					}
+
 					if ( !health.IsPlayer )
-						PlayerStats.ShotsHit++;
-					health.TakeDamage( Damage, owner );
-					Log.Info( $"Hit {trace.GameObject?.Name}: {Damage} dmg, HP left: {health.CurrentHealth}" );
+						TrackShotHit();
+					float bodyDamage = ApplyFalloff( Damage, trace.Distance );
+					health.TakeDamage( bodyDamage, owner );
+					if ( VerboseHitLogging )
+						Log.Info( $"Hit {trace.GameObject?.Name}: {bodyDamage:F1} dmg (base {Damage}) at distance {trace.Distance:F0}, HP left: {health.CurrentHealth}" );
 				}
 				else
 				{
-					Log.Info( $"Hit {trace.GameObject?.Name} - no HealthComponent found" );
+					if ( VerboseHitLogging )
+						Log.Info( $"Hit {trace.GameObject?.Name} - no HealthComponent found" );
 				}
 			}
 
@@ -116,23 +148,53 @@ public sealed class Pistol : Gun
 
 	public override void Reload()
 	{
+		bool wasAlreadyReloading = isReloading;
 		base.Reload();
 
-		if ( !isReloading ) return;
+		// Only play sounds if this call actually started a NEW reload
+		if ( !isReloading || wasAlreadyReloading ) return;
+
+		reloadGeneration++;
+		int myGeneration = reloadGeneration;
 
 		// Stagger the three reload sounds across the reload duration
+		var headPos = playerHead?.WorldPosition ?? WorldPosition;
 		if ( ReloadClipOutSound != null )
-			Sound.Play( ReloadClipOutSound );
+			Sound.Play( ReloadClipOutSound, headPos );
 		if ( ReloadClipInSound != null )
-			_ = PlayDelayed( ReloadClipInSound, ReloadTime * 0.4f );
+			_ = PlayDelayed( ReloadClipInSound, ReloadTime * 0.4f, myGeneration );
 		if ( ReloadSlideSound != null )
-			_ = PlayDelayed( ReloadSlideSound, ReloadTime * 0.75f );
+			_ = PlayDelayed( ReloadSlideSound, ReloadTime * 0.75f, myGeneration );
 	}
 
-	private async System.Threading.Tasks.Task PlayDelayed( SoundEvent sound, float delay )
+	private int reloadGeneration = 0;
+
+	public override void CancelReload()
 	{
-		await System.Threading.Tasks.Task.Delay( (int)(delay * 1000) );
-		if ( IsValid )
-			Sound.Play( sound, WorldPosition );
+		reloadGeneration++; // invalidate any pending async sound tasks
+		base.CancelReload();
+	}
+
+	private async System.Threading.Tasks.Task PlayDelayed( SoundEvent sound, float delay, int generation )
+	{
+		await Task.DelaySeconds( delay );
+		if ( IsValid && reloadGeneration == generation )
+			Sound.Play( sound, playerHead?.WorldPosition ?? WorldPosition );
+	}
+
+	/// <summary>Apply distance-based falloff to damage. No falloff before FalloffStartDistance, then scales linearly to MinDamage at FalloffEndDistance.</summary>
+	private float ApplyFalloff( float baseDamage, float distance )
+	{
+		if ( distance <= FalloffStartDistance )
+			return baseDamage;
+
+		if ( distance >= FalloffEndDistance )
+			return MinDamage;
+
+		float falloffRange = FalloffEndDistance - FalloffStartDistance;
+		float distanceIntoFalloff = distance - FalloffStartDistance;
+		float falloffT = System.Math.Clamp( distanceIntoFalloff / falloffRange, 0f, 1f );
+
+		return baseDamage + (MinDamage - baseDamage) * falloffT;
 	}
 }

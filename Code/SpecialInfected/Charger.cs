@@ -51,6 +51,7 @@ public sealed class Charger : Component
 	private Vector3 moveDirection = Vector3.Zero;
 	private Vector3 chargeDirection = Vector3.Zero;
 	private bool hasHitPlayer = false;  // only hit once per charge
+	private bool deathHandled = false;
 
 	// ── Lifecycle ───────────────────────────────────────────────────────
 
@@ -82,16 +83,26 @@ public sealed class Charger : Component
 			health.MaxHealth     = MaxHealth;
 			health.CurrentHealth = MaxHealth;
 			health.OnDeath += OnChargerDeath;
-			health.OnDamageTakenWithAttacker += OnChargerDamaged;
+			health.OnDamageTakenWithPosition += OnChargerDamaged;
 		}
 
 		if ( player is null ) Log.Warning( "Charger: Could not find player" );
 		Log.Info( "Charger: Spawned successfully" );
+		deathHandled = false;
 	}
 
 	protected override void OnUpdate()
 	{
-		if ( !Enabled || player is null || characterController is null ) return;
+		if ( !Enabled ) return;
+
+		// Dead check
+		if ( health is not null && health.IsDead )
+		{
+			OnChargerDeath();
+			return;
+		}
+
+		if ( player is null || characterController is null ) return;
 
 		// Flash timer
 		if ( flashTimer > 0f )
@@ -99,14 +110,6 @@ public sealed class Charger : Component
 			flashTimer -= Time.Delta;
 			if ( flashTimer <= 0f && modelRenderer is not null )
 				modelRenderer.Tint = originalColor;
-		}
-
-		// Dead check
-		if ( health is not null && health.IsDead )
-		{
-			currentState = ChargerState.Idle;
-			characterController.Velocity = Vector3.Zero;
-			return;
 		}
 
 		// Stagger blocks AI
@@ -277,9 +280,15 @@ public sealed class Charger : Component
 
 	// ── Damage handlers ─────────────────────────────────────────────────
 
-	void OnChargerDamaged( float damageAmount, GameObject attacker )
+	void OnChargerDamaged( float damageAmount, Vector3 attackerPosition )
 	{
-		if ( characterController is null || attacker is null ) return;
+		if ( characterController is null ) return;
+
+		if ( attackerPosition.IsNearZeroLength && player is not null )
+			attackerPosition = player.WorldPosition;
+
+		if ( attackerPosition.IsNearZeroLength )
+			return;
 
 		if ( modelRenderer is not null )
 		{
@@ -293,12 +302,18 @@ public sealed class Charger : Component
 		float addStagger = 0.35f + damageAmount * 0.005f; // harder to stagger than normal enemies
 		staggerTimer = System.Math.Min( System.Math.Max( staggerTimer, addStagger ), 0.8f );
 
-		Vector3 dir = (WorldPosition - attacker.WorldPosition).Normal;
+		Vector3 dir = (WorldPosition - attackerPosition).Normal;
+		if ( dir.IsNearZeroLength )
+			dir = -WorldRotation.Forward;
 		characterController.Punch( dir * 150f + Vector3.Up * 80f );
 	}
 
 	void OnChargerDeath()
 	{
+		if ( deathHandled )
+			return;
+
+		deathHandled = true;
 		Log.Info( "Charger: Died" );
 		currentState = ChargerState.Idle;
 		moveDirection = Vector3.Zero;
@@ -327,9 +342,18 @@ public sealed class Charger : Component
 			var modelPhysics = Components.GetOrCreate<ModelPhysics>();
 			modelPhysics.Renderer = skinnedRenderer;
 			modelPhysics.Model = skinnedRenderer.Model;
+			modelPhysics.Enabled = true;
 		}
 
-		Enabled = false;
+		// Let ragdoll physics run before disabling
+		_ = DisableAfterDelay();
+	}
+
+	async Task DisableAfterDelay()
+	{
+		await Task.DelaySeconds( 4f );
+		if ( GameObject.IsValid() )
+			Enabled = false;
 	}
 
 	void UpdateGrowl()
@@ -404,7 +428,7 @@ public sealed class Charger : Component
 		if ( health is not null )
 		{
 			health.OnDeath -= OnChargerDeath;
-			health.OnDamageTakenWithAttacker -= OnChargerDamaged;
+			health.OnDamageTakenWithPosition -= OnChargerDamaged;
 		}
 	}
 }

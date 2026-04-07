@@ -1,0 +1,800 @@
+@using Sandbox;
+@using Sandbox.UI;
+@using Sandbox.Network;
+@using System.Collections.Generic;
+@using System.Linq;
+@using System.Threading.Tasks;
+@inherits PanelComponent
+@namespace Sandbox
+
+<root>
+<div class="menu-bg">
+	<img src="menu.png" class="menu-bg-img" />
+	<div class="menu-tint"></div>
+	@if ( _screen == Screen.Main )
+	{
+		<div class="menu-panel">
+			<div class="menu-title">DRIFTWOOD</div>
+			<div class="menu-subtitle">Stay Together. Stay Alive.</div>
+			<div class="menu-buttons">
+				<div class="menu-btn" onclick=@OnHostClicked>HOST GAME</div>
+				<div class="menu-btn" onclick=@OnJoinClicked>JOIN GAME</div>
+				<div class="menu-btn menu-btn-secondary" onclick=@OnSettingsClicked>SETTINGS</div>
+			</div>
+		</div>
+	}
+
+	@if ( _screen == Screen.Lobbies )
+	{
+		<div class="menu-panel">
+			<div class="menu-title">JOIN GAME</div>
+			@if ( _querying )
+			{
+				<div class="lobby-status">Searching for lobbies...</div>
+			}
+			else if ( _lobbies.Count == 0 )
+			{
+				<div class="lobby-status">No open lobbies found.</div>
+			}
+			else
+			{
+				<div class="lobby-list">
+					@foreach ( var lobby in _lobbies )
+					{
+						var l = lobby;
+						<div class="lobby-row" onclick=@(() => OnLobbySelected( l ))>
+							<span class="lobby-name">@lobby.Name</span>
+							<span class="lobby-players">@lobby.Members / @lobby.MaxMembers</span>
+						</div>
+					}
+				</div>
+			}
+			<div class="menu-row">
+				<div class="menu-btn" onclick=@OnRefreshClicked>REFRESH</div>
+				<div class="menu-btn menu-btn-secondary" onclick=@OnBackClicked>BACK</div>
+			</div>
+		</div>
+	}
+
+	@if ( _screen == Screen.Connecting )
+	{
+		<div class="menu-panel">
+			<div class="menu-title">CONNECTING</div>
+			<div class="lobby-status">@(_statusMessage.Length > 0 ? _statusMessage : "Joining lobby...")</div>
+			<div class="menu-row">
+				<div class="menu-btn menu-btn-secondary" onclick=@OnBackClicked>CANCEL</div>
+			</div>
+		</div>
+	}
+
+	@if ( _screen == Screen.LobbyRoom )
+	{
+		<div class="menu-panel">
+			<div class="menu-title">LOBBY</div>
+			<div class="lobby-room-meta">@LobbyMetaLabel</div>
+
+			@if ( _creatingLobby )
+			{
+				<div class="lobby-status">Creating lobby...</div>
+			}
+			else
+			{
+				<div class="lobby-status">@_statusMessage</div>
+			}
+
+			<div class="lobby-config">
+				<div class="settings-row">
+					<div class="settings-label">MAP</div>
+					@if ( Connection.Local?.IsHost == true )
+					{
+						<div class="settings-controls">
+							<div class="settings-btn" onclick=@(() => CycleMap( -1 ))>&lt;</div>
+							<div class="lobby-value">@CurrentMapLabel</div>
+							<div class="settings-btn" onclick=@(() => CycleMap( 1 ))>&gt;</div>
+						</div>
+					}
+					else
+					{
+						<div class="lobby-value">@CurrentMapLabel</div>
+					}
+				</div>
+
+				<div class="settings-row">
+					<div class="settings-label">DIFFICULTY</div>
+					@if ( Connection.Local?.IsHost == true )
+					{
+						<div class="settings-controls">
+							<div class="settings-btn" onclick=@(() => CycleDifficulty( -1 ))>&lt;</div>
+							<div class="lobby-value">@_selectedDifficulty</div>
+							<div class="settings-btn" onclick=@(() => CycleDifficulty( 1 ))>&gt;</div>
+						</div>
+					}
+					else
+					{
+						<div class="lobby-value">@_selectedDifficulty</div>
+					}
+				</div>
+
+				<div class="settings-row">
+					<div class="settings-label">CHARACTER</div>
+					<div class="settings-controls">
+						<div class="settings-btn" onclick=@(() => CycleCharacter( -1 ))>&lt;</div>
+						<div class="lobby-value">@GameSettings.SelectedCharacter?.Name</div>
+						<div class="settings-btn" onclick=@(() => CycleCharacter( 1 ))>&gt;</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="lobby-list">
+				@foreach ( var member in _lobbyMembers )
+				{
+					<div class="lobby-row">
+						<span class="lobby-name">@member.DisplayName</span>
+						<span class="lobby-host">@(member.IsHost ? (IsMemberReady( member ) ? "HOST READY" : "HOST") : (IsMemberReady( member ) ? "READY" : "NOT READY"))</span>
+					</div>
+				}
+			</div>
+
+			<div class="menu-row">
+				<div class="menu-btn" onclick=@OnToggleReadyClicked>@(_localReady ? "UNREADY" : "READY UP")</div>
+				@if ( Connection.Local?.IsHost == true )
+				{
+					<div class="menu-btn @(CanStartMatch() ? string.Empty : "disabled")" onclick=@OnStartMatchClicked>@(_startingMatch ? "STARTING..." : "START MATCH")</div>
+				}
+				<div class="menu-btn menu-btn-secondary" onclick=@OnBackClicked>LEAVE LOBBY</div>
+			</div>
+		</div>
+	}
+
+	@if ( _screen == Screen.Settings )
+	{
+		<div class="menu-panel">
+			<div class="menu-title">SETTINGS</div>
+			<div class="settings-row">
+				<div class="settings-label">SENSITIVITY</div>
+				<div class="settings-controls">
+					<div class="settings-btn" onclick=@(() => { GameSettings.Sensitivity -= 0.1f; StateHasChanged(); })>-</div>
+					<div class="settings-value">@GameSettings.Sensitivity.ToString( "F1" )</div>
+					<div class="settings-btn" onclick=@(() => { GameSettings.Sensitivity += 0.1f; StateHasChanged(); })>+</div>
+				</div>
+			</div>
+			<div class="settings-row">
+				<div class="settings-label">FOV</div>
+				<div class="settings-controls">
+					<div class="settings-btn" onclick=@(() => { GameSettings.FOV -= 5f; StateHasChanged(); })>-</div>
+					<div class="settings-value">@((int)GameSettings.FOV)</div>
+					<div class="settings-btn" onclick=@(() => { GameSettings.FOV += 5f; StateHasChanged(); })>+</div>
+				</div>
+			</div>
+			<div class="menu-buttons">
+				<div class="menu-btn menu-btn-secondary" onclick=@OnBackClicked>BACK</div>
+			</div>
+		</div>
+	}
+
+	@if ( _screen == Screen.HostConfig )
+	{
+		<div class="menu-panel">
+			<div class="menu-title">HOST GAME</div>
+			<div class="privacy-section">
+				<div class="privacy-label">PRIVACY</div>
+				<div class="privacy-buttons">
+					<div class="privacy-btn @(_selectedPrivacy == LobbyPrivacy.Public ? "active" : "")" onclick=@(() => { _selectedPrivacy = LobbyPrivacy.Public; StateHasChanged(); })>
+						PUBLIC
+					</div>
+					<div class="privacy-btn @(_selectedPrivacy == LobbyPrivacy.FriendsOnly ? "active" : "")" onclick=@(() => { _selectedPrivacy = LobbyPrivacy.FriendsOnly; StateHasChanged(); })>
+						FRIENDS
+					</div>
+					<div class="privacy-btn @(_selectedPrivacy == LobbyPrivacy.Private ? "active" : "")" onclick=@(() => { _selectedPrivacy = LobbyPrivacy.Private; StateHasChanged(); })>
+						PRIVATE
+					</div>
+				</div>
+			</div>
+			<div class="menu-buttons">
+				<div class="menu-btn" onclick=@OnConfirmHostClicked>START GAME</div>
+				<div class="menu-btn menu-btn-secondary" onclick=@OnBackClicked>BACK</div>
+			</div>
+		</div>
+	}
+
+</div>
+</root>
+
+@code
+{
+	private enum Screen { Main, Lobbies, Connecting, LobbyRoom, Settings, HostConfig }
+	private Screen _screen = Screen.Main;
+	private LobbyPrivacy _selectedPrivacy = LobbyPrivacy.Public;
+
+	/// <summary>
+	/// Directly-referenced scene files set in the editor inspector (drag scenes from Asset Browser).
+	/// Used as a guaranteed fallback when ResourceLibrary.Get path resolution fails.
+	/// </summary>
+	[Property] public List<SceneFile> GameScenes { get; set; } = new();
+
+	private bool _querying = false;
+	private List<LobbyInformation> _lobbies = new();
+	private List<Connection> _lobbyMembers = new();
+	private readonly List<LobbyMapOption> _mapOptions = new()
+	{
+		new( "Port Escape", "scenes/firsttest.scene" ),
+		new( "Minimal", "scenes/minimal.scene" ),
+		new( "Test 2", "scenes/test2.scene" ),
+		new("Tutorial", "scenes/tut.scene")
+	};
+	private readonly List<string> _difficultyOptions = new() { "Casual", "Normal", "Expert" };
+	private ulong _activeLobbyId = 0;
+	private bool _creatingLobby = false;
+	private bool _startingMatch = false;
+	private int _lastLobbyHash = 0;
+	private bool _localReady = false;
+	private string _selectedMapPath = "scenes/firsttest.scene";
+	private string _selectedDifficulty = "Normal";
+	private string _statusMessage = string.Empty;
+	private string _observedMatchStartToken = string.Empty;
+	private float _networkActionStartedAt = -1f;
+	private readonly Dictionary<long, bool> _readyStates = new();
+	private int _lastAnnouncedMemberCount = -1;
+	private bool _sceneLoadQueued = false;
+	private string _queuedScenePath = null;
+	private bool _startTokenInitialized = false;
+
+	private const string LobbyMapKey = "dw_map";
+	private const string LobbyDifficultyKey = "dw_diff";
+	private const string LobbyStartKey = "dw_start";
+
+	private sealed class LobbyMapOption
+	{
+		public LobbyMapOption( string label, string path )
+		{
+			Label = label;
+			Path = path;
+		}
+
+		public string Label { get; }
+		public string Path { get; }
+	}
+
+	private string CurrentMapLabel => _mapOptions.FirstOrDefault( x => x.Path == _selectedMapPath )?.Label ?? _selectedMapPath;
+	private string LobbyMetaLabel => _activeLobbyId != 0 ? $"Session: {_activeLobbyId}" : "Session: Hosted Lobby";
+
+	protected override void OnStart()
+	{
+		GameSettings.Load();
+	}
+
+	protected override void OnUpdate()
+	{
+		Mouse.Visible = true;
+		Input.AnalogLook = default;
+		RecoverMenuScreenFromNetworkState();
+		UpdateLobbyRoomState();
+	}
+
+	private void RecoverMenuScreenFromNetworkState()
+	{
+		if ( Networking.IsConnecting )
+		{
+			if ( _screen != Screen.Connecting && _screen != Screen.LobbyRoom )
+			{
+				_screen = Screen.Connecting;
+				if ( string.IsNullOrWhiteSpace( _statusMessage ) )
+					_statusMessage = "Joining lobby...";
+				StateHasChanged();
+			}
+
+			return;
+		}
+
+		if ( Networking.IsActive )
+		{
+			if ( _screen != Screen.LobbyRoom )
+			{
+				_screen = Screen.LobbyRoom;
+				StateHasChanged();
+			}
+
+			return;
+		}
+
+		if ( _screen == Screen.Connecting )
+		{
+			_screen = Screen.Main;
+			StateHasChanged();
+		}
+	}
+
+	// ── Button handlers ────────────────────────────────────────────────
+
+	private void OnSoloClicked() => LoadGameScene();
+
+	private void OnHostClicked()
+	{
+		_screen = Screen.HostConfig;
+		StateHasChanged();
+	}
+
+	private void OnConfirmHostClicked()
+	{
+		_creatingLobby = true;
+		_startingMatch = false;
+		_localReady = false;
+		_activeLobbyId = 0;
+		_lobbyMembers.Clear();
+		_readyStates.Clear();
+		_lastAnnouncedMemberCount = -1;
+		_observedMatchStartToken = string.Empty;
+		_sceneLoadQueued = false;
+		_queuedScenePath = null;
+		_startTokenInitialized = false;
+		_statusMessage = "Creating lobby...";
+		_networkActionStartedAt = Time.Now;
+
+		Networking.CreateLobby( new LobbyConfig
+		{
+			MaxPlayers = 4,
+			Privacy    = _selectedPrivacy,
+			Name       = "DriftWood"
+		} );
+
+		_screen = Screen.LobbyRoom;
+		StateHasChanged();
+	}
+
+	private async void OnJoinClicked()
+	{
+		_screen = Screen.Lobbies;
+		StateHasChanged();
+		await RefreshLobbies();
+	}
+
+	private async void OnRefreshClicked()
+	{
+		await RefreshLobbies();
+	}
+
+	private async Task RefreshLobbies()
+	{
+		_querying = true;
+		StateHasChanged();
+
+		try
+		{
+			var results = await Networking.QueryLobbies();
+			_lobbies = results != null
+				? results
+					.Where( lobby => !lobby.IsHidden )
+					.OrderBy( lobby => lobby.Name )
+					.ToList()
+				: new List<LobbyInformation>();
+		}
+		catch ( System.Exception e )
+		{
+			Log.Warning( $"[MainMenu] Lobby query failed: {e.Message}" );
+			_lobbies = new List<LobbyInformation>();
+		}
+
+		_querying = false;
+		StateHasChanged();
+	}
+
+	private void OnLobbySelected( LobbyInformation lobby )
+	{
+		_activeLobbyId = lobby.LobbyId;
+		_creatingLobby = false;
+		_startingMatch = false;
+		_localReady = false;
+		_readyStates.Clear();
+		_lastAnnouncedMemberCount = -1;
+		_observedMatchStartToken = string.Empty;
+		_sceneLoadQueued = false;
+		_queuedScenePath = null;
+		_startTokenInitialized = false;
+		_statusMessage = "Joining lobby...";
+		_networkActionStartedAt = Time.Now;
+		_screen = Screen.Connecting;
+		StateHasChanged();
+		Networking.Connect( lobby.LobbyId );
+	}
+
+	private void OnSettingsClicked()
+	{
+		_screen = Screen.Settings;
+		StateHasChanged();
+	}
+
+	private void OnBackClicked()
+	{
+		if ( _screen == Screen.LobbyRoom || _screen == Screen.Connecting )
+		{
+			TryLeaveLobby();
+		}
+
+		_screen = Screen.Main;
+		StateHasChanged();
+	}
+
+	private void OnStartMatchClicked()
+	{
+		if ( !CanStartMatch() )
+			return;
+
+		var startToken = $"{Time.Now:F3}";
+		Networking.SetData( LobbyStartKey, startToken );
+		_observedMatchStartToken = startToken;
+		_startingMatch = true;
+		_statusMessage = "Starting match...";
+		StateHasChanged();
+        Log.Info($"[MainMenu] OnStartMatchClicked: Starting match with map '{_selectedMapPath}' and token '{startToken}'.");
+		QueueSceneLoad( _selectedMapPath, 0.35f );
+	}
+
+	private void OnToggleReadyClicked()
+	{
+		SetLocalReady( !_localReady );
+	}
+
+	private void TryLeaveLobby()
+	{
+		if ( Networking.IsActive )
+			BroadcastLocalReadyState( false );
+
+		_activeLobbyId = 0;
+		_creatingLobby = false;
+		_startingMatch = false;
+		_localReady = false;
+		_lobbyMembers.Clear();
+		_readyStates.Clear();
+		_lastAnnouncedMemberCount = -1;
+		_sceneLoadQueued = false;
+		_queuedScenePath = null;
+		_startTokenInitialized = false;
+		_statusMessage = string.Empty;
+		_networkActionStartedAt = -1f;
+
+		try
+		{
+			Networking.Disconnect();
+		}
+		catch ( System.Exception e )
+		{
+			Log.Warning( $"[MainMenu] Lobby leave fallback (disconnect unavailable): {e.Message}" );
+		}
+	}
+
+	private void UpdateLobbyRoomState()
+	{
+		if ( _screen != Screen.Connecting && _screen != Screen.LobbyRoom )
+			return;
+
+		if ( !Networking.IsActive )
+		{
+			if ( _networkActionStartedAt > 0f && (Time.Now - _networkActionStartedAt) > 6f )
+			{
+				_statusMessage = "Connection failed. Returning to menu.";
+				_screen = Screen.Main;
+				_networkActionStartedAt = -1f;
+				StateHasChanged();
+			}
+			return;
+		}
+
+		if ( _screen == Screen.Connecting )
+			_screen = Screen.LobbyRoom;
+
+		if ( _creatingLobby )
+		{
+			_creatingLobby = false;
+			PublishLobbySettings();
+			Networking.SetData( LobbyStartKey, string.Empty );
+			_observedMatchStartToken = string.Empty;
+			_startTokenInitialized = true;
+			SetLocalReady( false );
+		}
+
+		string lobbyMap = Networking.GetData( LobbyMapKey, _selectedMapPath );
+		if ( !string.IsNullOrWhiteSpace( lobbyMap ) )
+			_selectedMapPath = lobbyMap;
+
+		string lobbyDifficulty = Networking.GetData( LobbyDifficultyKey, _selectedDifficulty );
+		if ( !string.IsNullOrWhiteSpace( lobbyDifficulty ) )
+			_selectedDifficulty = lobbyDifficulty;
+
+		var members = GetLobbyMembersSnapshot();
+		int hash = members.Count;
+		foreach ( var m in members )
+			hash = System.HashCode.Combine( hash, m.SteamId, m.DisplayName, IsMemberReady( m ) );
+
+		hash = System.HashCode.Combine( hash, _selectedMapPath, _selectedDifficulty );
+
+		if ( hash != _lastLobbyHash )
+		{
+			_lastLobbyHash = hash;
+			_lobbyMembers = members;
+			StateHasChanged();
+		}
+
+		if ( _lobbyMembers.Count != _lastAnnouncedMemberCount )
+		{
+			_lastAnnouncedMemberCount = _lobbyMembers.Count;
+			BroadcastLocalReadyState( _localReady );
+		}
+
+		string startToken = Networking.GetData( LobbyStartKey, string.Empty );
+		if ( !_startTokenInitialized )
+		{
+			_observedMatchStartToken = startToken;
+			_startTokenInitialized = true;
+		}
+
+		if ( !string.IsNullOrWhiteSpace( startToken ) && startToken != _observedMatchStartToken )
+		{
+			_observedMatchStartToken = startToken;
+			_startingMatch = true;
+			_statusMessage = Connection.Local?.IsHost == true
+				? "Starting match..."
+				: "Host started the match. Joining game...";
+			StateHasChanged();
+			QueueSceneLoad( _selectedMapPath, Connection.Local?.IsHost == true ? 0.35f : 0.8f );
+			return;
+		}
+
+		_statusMessage = BuildLobbyStatusMessage();
+		_networkActionStartedAt = -1f;
+	}
+
+	private string BuildLobbyStatusMessage()
+	{
+		if ( _creatingLobby )
+			return "Creating lobby...";
+
+		if ( Connection.Local?.IsHost == true )
+			return CanStartMatch()
+				? $"Players ready: {_lobbyMembers.Count}/{_lobbyMembers.Count}. Start when ready."
+				: $"Players in lobby: {_lobbyMembers.Count} / 4. Waiting for ready-up.";
+
+		return _localReady
+			? $"Players in lobby: {_lobbyMembers.Count} / 4. Waiting for host to start."
+			: $"Players in lobby: {_lobbyMembers.Count} / 4. Ready up when prepared.";
+	}
+
+	private void SetLocalReady( bool ready )
+	{
+		_localReady = ready;
+		BroadcastLocalReadyState( ready );
+
+		_statusMessage = BuildLobbyStatusMessage();
+		StateHasChanged();
+	}
+
+	private void BroadcastLocalReadyState( bool ready )
+	{
+		var localSteamId = Connection.Local?.SteamId ?? 0;
+		if ( localSteamId != 0 )
+			_readyStates[localSteamId] = ready;
+
+		if ( Networking.IsActive )
+			RpcBroadcastReadyState( ready );
+	}
+
+	private void PublishLobbySettings()
+	{
+		if ( !Networking.IsActive || Connection.Local?.IsHost != true )
+			return;
+
+		Networking.SetData( LobbyMapKey, _selectedMapPath );
+		Networking.SetData( LobbyDifficultyKey, _selectedDifficulty );
+	}
+
+	private void CycleMap( int delta )
+	{
+		if ( Connection.Local?.IsHost != true )
+			return;
+
+		int index = _mapOptions.FindIndex( x => x.Path == _selectedMapPath );
+		if ( index < 0 ) index = 0;
+		index = (index + delta + _mapOptions.Count) % _mapOptions.Count;
+		_selectedMapPath = _mapOptions[index].Path;
+		PublishLobbySettings();
+		StateHasChanged();
+	}
+
+	private void CycleDifficulty( int delta )
+	{
+		if ( Connection.Local?.IsHost != true )
+			return;
+
+		int index = _difficultyOptions.IndexOf( _selectedDifficulty );
+		if ( index < 0 ) index = 0;
+		index = (index + delta + _difficultyOptions.Count) % _difficultyOptions.Count;
+		_selectedDifficulty = _difficultyOptions[index];
+		PublishLobbySettings();
+		StateHasChanged();
+	}
+
+	private void CycleCharacter( int delta )
+	{
+		int count = CharacterDefinition.All.Count;
+		GameSettings.SelectedCharacterIndex = (GameSettings.SelectedCharacterIndex + delta + count) % count;
+		StateHasChanged();
+	}
+
+	private bool IsMemberReady( Connection member )
+	{
+		if ( member == null ) return false;
+		return _readyStates.TryGetValue( member.SteamId, out var ready ) && ready;
+	}
+
+	private List<Connection> GetLobbyMembersSnapshot()
+	{
+		var members = new List<Connection>();
+
+		if ( Connection.All != null )
+			members.AddRange( Connection.All.Where( c => c != null ) );
+
+		if ( Networking.Connections != null )
+			members.AddRange( Networking.Connections.Where( c => c != null ) );
+
+		if ( Connection.Local != null )
+			members.Add( Connection.Local );
+
+		if ( Connection.Host != null )
+			members.Add( Connection.Host );
+
+		return members
+			.Where( c => c != null )
+			.GroupBy( c => c.SteamId != 0 ? c.SteamId.ToString() : c.Id.ToString() )
+			.Select( group => group.First() )
+			.OrderBy( c => c.DisplayName )
+			.ToList();
+	}
+
+	[Rpc.Broadcast]
+	private void RpcBroadcastReadyState( bool ready )
+	{
+		long senderSteamId = Rpc.Caller?.SteamId ?? Connection.Local?.SteamId ?? 0;
+		if ( senderSteamId == 0 )
+			return;
+
+		_readyStates[senderSteamId] = ready;
+		_statusMessage = BuildLobbyStatusMessage();
+		StateHasChanged();
+	}
+
+	private bool CanStartMatch()
+	{
+		if ( !Networking.IsActive || Connection.Local?.IsHost != true )
+			return false;
+
+		if ( _lobbyMembers.Count == 0 )
+			return false;
+
+		return _lobbyMembers.All( IsMemberReady );
+	}
+
+	private async void QueueSceneLoad( string scenePath, float delaySeconds )
+	{
+		if ( _sceneLoadQueued && _queuedScenePath == scenePath )
+			return;
+
+		_queuedScenePath = scenePath;
+
+		if ( delaySeconds > 0f )
+			await GameTask.DelaySeconds( delaySeconds );
+
+        Log.Info($"[MainMenu] QueueSceneLoad: Loading scene '{scenePath}' after {delaySeconds} seconds.");
+        LoadGameScene( scenePath );
+	}
+
+	private SceneFile ResolveSceneFile( string scenePath )
+	{
+		scenePath = string.IsNullOrWhiteSpace( scenePath ) ? "scenes/firsttest.scene" : scenePath.Trim();
+
+		// Extract the bare filename (e.g. "firsttest.scene") and name without extension ("firsttest")
+		string fileName = scenePath;
+		int lastSlash = fileName.LastIndexOf( '/' );
+		if ( lastSlash >= 0 && lastSlash < fileName.Length - 1 )
+			fileName = fileName[(lastSlash + 1)..];
+
+		string fileNameNoExt = fileName;
+		int extDot = fileNameNoExt.LastIndexOf( '.' );
+		if ( extDot > 0 )
+			fileNameNoExt = fileNameNoExt[..extDot];
+
+		// 0. Check directly referenced scenes wired via the GameScenes [Property] inspector list.
+		//    This is the most reliable path — not subject to any runtime path resolution.
+		foreach ( var wired in GameScenes ?? System.Linq.Enumerable.Empty<SceneFile>() )
+		{
+			if ( wired == null ) continue;
+			var wrp = wired.ResourcePath ?? string.Empty;
+			if ( wrp.EndsWith( scenePath, System.StringComparison.OrdinalIgnoreCase ) ) return wired;
+			int wSlash = wrp.LastIndexOf( '/' );
+			string wFile = wSlash >= 0 ? wrp[(wSlash + 1)..] : wrp;
+			if ( wFile.Equals( fileName, System.StringComparison.OrdinalIgnoreCase ) ) return wired;
+			int wExt = wFile.LastIndexOf( '.' );
+			string wFileNoExt = wExt > 0 ? wFile[..wExt] : wFile;
+			if ( wFileNoExt.Equals( fileNameNoExt, System.StringComparison.OrdinalIgnoreCase ) ) return wired;
+		}
+
+		// 1. Try direct ResourceLibrary.Get with common path variants (fast path).
+		string scenePathNoExt = scenePath;
+		extDot = scenePathNoExt.LastIndexOf( '.' );
+		if ( extDot > 0 )
+			scenePathNoExt = scenePathNoExt[..extDot];
+
+		string lower = scenePath.ToLowerInvariant();
+		var candidates = new List<string>
+		{
+			scenePath,
+			scenePathNoExt,
+			$"scenes/{fileName}",
+			$"scenes/{fileNameNoExt}",
+			$"Scenes/{fileName}",
+			$"assets/scenes/{fileName}",
+			$"Assets/scenes/{fileName}",
+			// Compiled .scene_c variants (fileNameNoExt avoids double extension)
+			$"scenes/{fileNameNoExt}.scene_c",
+			$"assets/scenes/{fileNameNoExt}.scene_c",
+			$"Assets/scenes/{fileNameNoExt}.scene_c",
+			fileName,
+			fileNameNoExt,
+		};
+		if ( !lower.StartsWith( "scenes/" ) && !lower.StartsWith( "assets/scenes/" ) )
+			candidates.Insert( 1, $"scenes/{scenePath}" );
+
+        Log.Info($"[MainMenu] ResolveSceneFile: Resolving scenePath '{scenePath}'. Candidates: [{string.Join(", ", candidates)}]");
+		foreach ( var candidate in candidates.Distinct() )
+		{
+			var s = ResourceLibrary.Get<SceneFile>( candidate );
+			if ( s != null ) return s;
+		}
+
+		// 2. Scan all registered SceneFiles — handles any path format ResourceLibrary.Get misses.
+		foreach ( var sf in ResourceLibrary.GetAll<SceneFile>() )
+		{
+			if ( sf == null ) continue;
+			var rp = sf.ResourcePath ?? string.Empty;
+			if ( rp.EndsWith( scenePath, System.StringComparison.OrdinalIgnoreCase ) ) return sf;
+			int rSlash = rp.LastIndexOf( '/' );
+			string rpFileName = rSlash >= 0 ? rp[(rSlash + 1)..] : rp;
+			if ( rpFileName.Equals( fileName, System.StringComparison.OrdinalIgnoreCase ) ) return sf;
+			// Also match against compiled name e.g. "firsttest.scene_c" → "firsttest"
+			int rpExt = rpFileName.LastIndexOf( '.' );
+			string rpFileNoExt = rpExt > 0 ? rpFileName[..rpExt] : rpFileName;
+			if ( rpFileNoExt.Equals( fileNameNoExt, System.StringComparison.OrdinalIgnoreCase ) ) return sf;
+		}
+
+		// 3. Diagnostics — log all known scenes so we can see what paths s&box uses.
+		var allPaths = string.Join( ", ", ResourceLibrary.GetAll<SceneFile>()
+			.Where( s => s != null )
+			.Select( s => s.ResourcePath ?? "<null>" ) );
+		Log.Warning( $"[MainMenu] ResolveSceneFile failed for '{scenePath}'. Wired={GameScenes?.Count ?? 0}. Known=[{allPaths}]" );
+		return null;
+	}
+
+	private void LoadGameScene( string scenePath = null )
+	{
+		scenePath ??= "scenes/firsttest.scene";
+		var scene = ResolveSceneFile( scenePath );
+
+		bool requestedFirstTest = scenePath.Contains( "firsttest", System.StringComparison.OrdinalIgnoreCase );
+		if ( scene == null && !requestedFirstTest )
+			scene = ResolveSceneFile( "scenes/firsttest.scene" );
+
+		if ( scene != null )
+		{
+			// PanelComponent UI persists across scene loads — destroy it before switching.
+			Panel?.Delete( true );
+			Game.ActiveScene.Load( scene );
+		}
+		else
+            Log.Error( $"[MainMenu] Could not find scene. Requested='{scenePath ?? "<null>"}'. Add scenes to the GameScenes [Property] list on the MainMenu component in mainmenu.scene." );
+	}
+
+	protected override int BuildHash() =>
+		System.HashCode.Combine(
+			System.HashCode.Combine( (int)_screen, _querying, _lobbies.Count, _lobbyMembers.Count ),
+			System.HashCode.Combine( _activeLobbyId, _creatingLobby, _startingMatch, _localReady ),
+			System.HashCode.Combine( _selectedMapPath, _selectedDifficulty, _statusMessage, (int)_selectedPrivacy ),
+			System.HashCode.Combine( GameSettings.SelectedCharacterIndex ) );
+}

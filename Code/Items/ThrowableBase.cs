@@ -7,10 +7,14 @@ using Sandbox;
 public abstract class ThrowableBase : BaseItem
 {
 	[Property] public float ThrowSpeed { get; set; } = 400f;
-	[Property] public float ArcForce { get; set; } = 80f;
+	[Property] public float ArcForce { get; set; } = 40f;
+	[Property] public float ProjectileScale { get; set; } = 1f;
 
 	/// <summary>Prefab cloned into the world when this throwable is used.</summary>
 	[Property] public PrefabFile ProjectilePrefab { get; set; }
+
+	/// <summary>Model shown in the first-person viewmodel when this throwable is held.</summary>
+	[Property] public Model ViewModelOverlayModel { get; set; }
 
 	public ThrowableBase()
 	{
