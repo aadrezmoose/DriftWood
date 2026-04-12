@@ -7,6 +7,7 @@ using Sandbox;
 public sealed class HealthKit : BaseItem
 {
 	[Property] public float HealAmount { get; set; } = 100f;
+	[Property] public float UseDuration { get; set; } = 3.5f;
 
 	/// <summary>Model shown in the first-person viewmodel when this kit is held.</summary>
 	[Property] public Model ViewModelOverlayModel { get; set; }
@@ -79,51 +80,76 @@ public sealed class HealthKit : BaseItem
 	/// </summary>
 	public override void OnUse(GameObject player)
 	{
-		if (player == null)
+		TryApplyToTarget( player, player );
+	}
+
+	public bool CanApplyToTarget( GameObject target )
+	{
+		if ( target == null ) return false;
+
+		var incap = target.Components.GetInDescendantsOrSelf<IncapacitationComponent>()
+			?? target.Root.Components.GetInDescendantsOrSelf<IncapacitationComponent>();
+		if ( incap != null && incap.IsIncapacitated )
+			return true;
+
+		var health = target.Components.GetInDescendantsOrSelf<HealthComponent>()
+			?? target.Root.Components.GetInDescendantsOrSelf<HealthComponent>();
+		return health != null && health.CurrentHealth < health.MaxHealth;
+	}
+
+	public bool TryApplyToTarget( GameObject user, GameObject target )
+	{
+		if ( target == null )
 		{
-			Log.Warning("HealthKit.OnUse: player is null");
-			return;
+			Log.Warning( "HealthKit.TryApplyToTarget: target is null" );
+			return false;
 		}
 
-		Log.Info($"HealthKit.OnUse called for {player.Name}");
+		if ( user == null )
+			user = target;
 
-		// Find the player's health component
-		var health = player.Components.GetInDescendantsOrSelf<HealthComponent>();
+		Log.Info( $"HealthKit.TryApplyToTarget user={user.Name} target={target.Name}" );
+
+		var health = target.Components.GetInDescendantsOrSelf<HealthComponent>();
 		if (health == null)
 		{
-			// Try to find on root
-			health = player.Root.Components.GetInDescendantsOrSelf<HealthComponent>();
+			health = target.Root.Components.GetInDescendantsOrSelf<HealthComponent>();
 		}
 
 		if (health != null)
 		{
-			// If downed, revive instead of heal
-			var incap = player.Components.GetInDescendantsOrSelf<IncapacitationComponent>();
+			var incap = target.Components.GetInDescendantsOrSelf<IncapacitationComponent>()
+				?? target.Root.Components.GetInDescendantsOrSelf<IncapacitationComponent>();
 			if ( incap != null && incap.IsIncapacitated )
 			{
-				incap.Revive();
-				Sound.Play( "sounds/coin1.sound", player.WorldPosition );
+				if ( target == user ) incap.Revive();
+				else incap.RequestReviveFromTeammate();
+
+				Sound.Play( "sounds/coin1.sound", user.WorldPosition );
 				PlayerStats.CarriedItem = "";
 				WasConsumed = true;
 				GameObject.Destroy();
-				return;
+				return true;
 			}
 
 			if (health.CurrentHealth >= health.MaxHealth)
 			{
 				Log.Info("Player already at full health, Health Kit not used");
-				return;
+				return false;
 			}
 
-			health.Heal( (health.MaxHealth - health.CurrentHealth) * 0.8f );
-			Sound.Play("sounds/coin1.sound", player.WorldPosition);
+			var healAmount = (health.MaxHealth - health.CurrentHealth) * 0.8f;
+			if ( target == user ) health.Heal( healAmount );
+			else health.RequestHealFromTeammate( healAmount );
+
+			Sound.Play("sounds/coin1.sound", user.WorldPosition);
 			PlayerStats.CarriedItem = "";
 			WasConsumed = true;
 			GameObject.Destroy();
+			return true;
 		}
-		else
-		{
-			Log.Warning("HealthKit.OnUse: Could not find HealthComponent on player");
-		}
+
+		Log.Warning("HealthKit.TryApplyToTarget: Could not find HealthComponent on target");
+		return false;
 	}
 }

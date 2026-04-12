@@ -152,7 +152,7 @@
         "__guid": "f799caa5-e9ac-4bb2-860e-842392a9cd0f",
         "__enabled": true,
         "Flags": 0,
-        "EnableDiagnostics": false,
+        "EnableDiagnostics": true,
         "OnComponentDestroy": null,
         "OnComponentDisabled": null,
         "OnComponentEnabled": null,
@@ -457,48 +457,6 @@
                 "Radius": 2000,
                 "Shadows": true,
                 "StartOn": false
-              },
-              {
-                "__type": "GunViewModel",
-                "__guid": "ecce5fac-00a6-4ed4-86eb-05151272210c",
-                "__enabled": true,
-                "Flags": 0,
-                "AnimFireParam": "b_attack",
-                "AnimGraph": null,
-                "AnimReloadEmptyParam": "reload_empty",
-                "AnimReloadParam": "b_reload",
-                "HandsModel": null,
-                "OnComponentDestroy": null,
-                "OnComponentDisabled": null,
-                "OnComponentEnabled": null,
-                "OnComponentFixedUpdate": null,
-                "OnComponentStart": null,
-                "OnComponentUpdate": null,
-                "OverlayModel": null,
-                "PositionOffset": "25,6,-10",
-                "RotationOffset": "0,0,0,1",
-                "WeaponModel": "models/first_person/v_first_person_arms_human.vmdl"
-              },
-              {
-                "__type": "GunViewModel",
-                "__guid": "4d86e9c7-60b5-446d-b793-66bb62d8a550",
-                "__enabled": true,
-                "Flags": 0,
-                "AnimFireParam": "fire",
-                "AnimGraph": null,
-                "AnimReloadEmptyParam": "reload_empty",
-                "AnimReloadParam": "reload",
-                "HandsModel": null,
-                "OnComponentDestroy": null,
-                "OnComponentDisabled": null,
-                "OnComponentEnabled": null,
-                "OnComponentFixedUpdate": null,
-                "OnComponentStart": null,
-                "OnComponentUpdate": null,
-                "OverlayModel": null,
-                "PositionOffset": "25,6,-10",
-                "RotationOffset": "0,0,0,1",
-                "WeaponModel": "models/first_person/v_first_person_arms_human.vmdl"
               }
             ],
             "Children": []
@@ -533,7 +491,6 @@
   "MenuIcon": null,
   "DontBreakAsTemplate": false,
   "__references": [
-    "facepunch.v_first_person_arms_human#142949",
     "publicdomainmats.footsteps-carpet#17674"
   ],
   "__version": 2

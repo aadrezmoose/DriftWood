@@ -44,6 +44,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="E:/SteamLibrary/steamapps/common/sbox/editor/ActionGraph/Code/actiongraph.csproj" />
+		<ProjectReference Include="E:/SteamLibrary/steamapps/common/sbox/editor/DooEditor/Code/dooeditor.csproj" />
 		<ProjectReference Include="E:/SteamLibrary/steamapps/common/sbox/editor/Hammer/Code/hammer.csproj" />
 		<ProjectReference Include="E:/SteamLibrary/steamapps/common/sbox/addons/tools/Code/Base Editor Library.csproj" />
 		<ProjectReference Include="E:/SteamLibrary/steamapps/common/sbox/editor/MovieMaker/Code/moviemaker.csproj" />

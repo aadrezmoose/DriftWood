@@ -61,11 +61,8 @@ public sealed class SMG : Gun
 					if ( health != null )
 					{
 						float headshotDamage = Damage * HeadshotMultiplier * headshotZone.DamageMultiplier;
-						health.TakeDamage( headshotDamage, owner );
+						ApplyEnemyHit( health, headshotDamage, isHeadshot: true );
 						TrackShotHit();
-
-						var enemy = targetEntity.Components.Get<Enemy>();
-						enemy?.OnHeadshotDamage( headshotDamage, owner );
 					}
 				}
 			}
@@ -77,7 +74,8 @@ public sealed class SMG : Gun
 
 				if ( health != null && !health.IsPlayer )
 					TrackShotHit();
-				health?.TakeDamage( Damage, owner );
+				if ( health != null )
+					ApplyEnemyHit( health, Damage );
 			}
 
 			// Impact effects on world geometry (not enemies)

@@ -75,17 +75,10 @@ public sealed class Pistol : Gun
 					{
 						float baseDamage = Damage * HeadshotMultiplier * headshotZone.DamageMultiplier;
 						float headshotDamage = ApplyFalloff( baseDamage, trace.Distance );
-						health.TakeDamage( headshotDamage, owner );
+						ApplyEnemyHit( health, headshotDamage, isHeadshot: true );
 						TrackShotHit();
 						if ( VerboseHitLogging )
 							Log.Info( $"HEADSHOT! Dealt {headshotDamage} damage to {targetEntity.Name} at distance {trace.Distance:F0}" );
-
-						// Notify enemy of headshot for extra stagger
-						var enemy = targetEntity.Components.Get<Enemy>();
-						if ( enemy != null )
-						{
-							enemy.OnHeadshotDamage( headshotDamage, owner );
-						}
 					}
 				}
 			}
@@ -108,13 +101,10 @@ public sealed class Pistol : Gun
 						{
 							float baseDamage = Damage * HeadshotMultiplier * fallbackHead.DamageMultiplier;
 							float headshotDamage = ApplyFalloff( baseDamage, trace.Distance );
-							health.TakeDamage( headshotDamage, owner );
+							ApplyEnemyHit( health, headshotDamage, isHeadshot: true );
 							TrackShotHit();
 							if ( VerboseHitLogging )
 								Log.Info( $"HEADSHOT(assist)! Dealt {headshotDamage} damage to {health.GameObject?.Name} at distance {trace.Distance:F0}" );
-
-							var enemy = health.GameObject?.Components.Get<Enemy>();
-							enemy?.OnHeadshotDamage( headshotDamage, owner );
 							return;
 						}
 					}
@@ -122,7 +112,7 @@ public sealed class Pistol : Gun
 					if ( !health.IsPlayer )
 						TrackShotHit();
 					float bodyDamage = ApplyFalloff( Damage, trace.Distance );
-					health.TakeDamage( bodyDamage, owner );
+					ApplyEnemyHit( health, bodyDamage );
 					if ( VerboseHitLogging )
 						Log.Info( $"Hit {trace.GameObject?.Name}: {bodyDamage:F1} dmg (base {Damage}) at distance {trace.Distance:F0}, HP left: {health.CurrentHealth}" );
 				}

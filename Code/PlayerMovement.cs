@@ -42,6 +42,7 @@ public sealed class PlayerMovement : Component
 	[Sync] public Angles NetworkLookAngles { get; set; }
 	[Sync] public bool NetworkFlashlightOn { get; set; } = false;
 	public bool IsPinned { get; set; } = false; // Set by Hunter when player is pinned
+	public bool IsHealingLocked { get; set; } = false;
 
 	public Vector3 Velocity => characterController?.Velocity ?? Vector3.Zero;
 	public bool IsOnGround => characterController?.IsOnGround ?? false;
@@ -538,8 +539,8 @@ public sealed class PlayerMovement : Component
 				_localCameraComponent.Enabled = true;
 			ForceLocalCameraFallback();
 
-			// If pinned by Hunter, disable movement entirely
-			if ( IsPinned )
+			// Pinned or healing players cannot move.
+			if ( IsPinned || IsHealingLocked )
 			{
 				WishVelocity = Vector3.Zero;
 			}

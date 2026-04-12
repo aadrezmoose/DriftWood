@@ -124,7 +124,7 @@ public abstract class Gun : Component
 		maxAmmoReserve = AmmoReserve;
 
 		// Use the shared GunViewModel instance from WeaponManager
-		viewModel = GunViewModel.Current;
+		viewModel = ResolveViewModel();
 
 		// Load muzzle flash prefab if not set in inspector
 		if ( MuzzleFlashParticle == null )
@@ -211,6 +211,8 @@ public abstract class Gun : Component
 		if ( Networking.IsActive && !IsLocallyOwnedGun() )
 			return;
 
+		viewModel = ResolveViewModel();
+
 		EnsureFireOrigin();
 
 		if ( isReloading )
@@ -265,7 +267,7 @@ public abstract class Gun : Component
 		{
 			activeFlashParticle?.Destroy();
 
-			var vm = viewModel?.ModelRenderer;
+			var vm = ResolveViewModel()?.ModelRenderer;
 			var attach = vm?.GetAttachment( "muzzle" );
 			var fallbackPos = playerCamera != null
 				? playerCamera.WorldPosition + playerCamera.WorldRotation.Forward * 24f
@@ -346,6 +348,18 @@ public abstract class Gun : Component
 		viewModel = vm;
 	}
 
+	private GunViewModel ResolveViewModel()
+	{
+		if ( viewModel != null && viewModel.IsValid && viewModel.HasLocalVisuals )
+			return viewModel;
+
+		var current = GunViewModel.Current;
+		if ( current != null && current.IsValid && current.HasLocalVisuals )
+			return current;
+
+		return null;
+	}
+
 	/// <summary>
 	/// Call this from OnFire() after a successful trace hit on world geometry (not enemies).
 	/// Spawns an impact particle and projects a bullet hole decal onto the surface.
@@ -393,6 +407,8 @@ public abstract class Gun : Component
 
 	public virtual void Reload()
 	{
+		viewModel = ResolveViewModel();
+
 		if (isReloading) return;
 		if (currentAmmo == AmmoClip) return;
 		if (!UnlimitedAmmo && AmmoReserve <= 0) return;
@@ -461,6 +477,24 @@ public abstract class Gun : Component
 	{
 		owner = ownerGameObject;
 		ownerIdentity = owner?.Components.GetInDescendantsOrSelf<PlayerIdentity>();
+	}
+
+	protected bool ApplyEnemyHit( HealthComponent health, float damage, bool isHeadshot = false, bool applyShotgunKnockback = false )
+	{
+		if ( health == null )
+			return false;
+
+		if ( Networking.IsActive && Connection.Local?.IsHost != true && !health.IsPlayer )
+		{
+			var weaponManager = owner?.Components.GetInDescendantsOrSelf<WeaponManager>()
+				?? Components.GetInAncestorsOrSelf<WeaponManager>();
+
+			weaponManager?.RequestEnemyHitOnHost( health.GameObject, damage, isHeadshot, applyShotgunKnockback );
+			return true;
+		}
+
+		health.TakeDamage( damage, owner );
+		return true;
 	}
 
 	/// <summary>Increments ShotsHit on both PlayerStats and the owning PlayerIdentity.</summary>

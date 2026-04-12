@@ -18581,6 +18581,22 @@
           {
             "Target": {
               "Type": "Component",
+              "IdValue": "64cae54b-3abb-4628-87ca-6bbc8325dee5"
+            },
+            "Property": "ProjectileScale",
+            "Value": 1
+          },
+          {
+            "Target": {
+              "Type": "Component",
+              "IdValue": "64cae54b-3abb-4628-87ca-6bbc8325dee5"
+            },
+            "Property": "ViewModelOverlayModel",
+            "Value": null
+          },
+          {
+            "Target": {
+              "Type": "Component",
               "IdValue": "2b589718-119e-4184-8652-e46cb58a11d6"
             },
             "Property": "Radius",
@@ -18623,6 +18639,22 @@
           {
             "Target": {
               "Type": "Component",
+              "IdValue": "64cae54b-3abb-4628-87ca-6bbc8325dee5"
+            },
+            "Property": "ProjectileScale",
+            "Value": 1
+          },
+          {
+            "Target": {
+              "Type": "Component",
+              "IdValue": "64cae54b-3abb-4628-87ca-6bbc8325dee5"
+            },
+            "Property": "ViewModelOverlayModel",
+            "Value": null
+          },
+          {
+            "Target": {
+              "Type": "Component",
               "IdValue": "2b589718-119e-4184-8652-e46cb58a11d6"
             },
             "Property": "Radius",
@@ -18661,6 +18693,22 @@
             },
             "Property": "Position",
             "Value": "30.81657,165.9479,32"
+          },
+          {
+            "Target": {
+              "Type": "Component",
+              "IdValue": "64cae54b-3abb-4628-87ca-6bbc8325dee5"
+            },
+            "Property": "ProjectileScale",
+            "Value": 1
+          },
+          {
+            "Target": {
+              "Type": "Component",
+              "IdValue": "64cae54b-3abb-4628-87ca-6bbc8325dee5"
+            },
+            "Property": "ViewModelOverlayModel",
+            "Value": null
           },
           {
             "Target": {
@@ -18716,12 +18764,11 @@
         "4f057f82-70c5-43ec-96b0-edb86168b204": "2bdcf585-712a-4854-98b5-b3a6bd7c7122",
         "de0909d2-a549-47ad-8433-d87bc7ee283e": "c8e93b9c-e5bf-4b03-924e-df091f950404",
         "597026b9-d226-40b6-9cd6-f320da6b1290": "bf24c86e-f180-4021-8aec-9be11b8395bb",
-        "2f173cf8-f7fe-41d4-a01a-f6d65172f6b1": "8c132961-ad29-49d9-81a2-0b57d2950848",
         "86a0b5bc-c9ef-4ab8-9d20-2e3e31335d60": "8dcc139c-dff2-4a5f-8d1d-6f2dd4e3d7ea",
         "5d0dcb3d-2ae6-4981-a463-7473647c9e8e": "c3246b04-b593-4287-8aa2-5749f80d0ca9",
         "0f88609b-6974-4e1d-8054-358e7adbab06": "d830e108-6f56-482d-b940-7d88c5c72d45",
-        "ecce5fac-00a6-4ed4-86eb-05151272210c": "b6ed966e-4481-4b70-93af-76e19276a719",
-        "4d86e9c7-60b5-446d-b793-66bb62d8a550": "62122a3a-b4e1-43c6-8899-caa870519618"
+        "ecce5fac-00a6-4ed4-86eb-05151272210c": "0bcf4f0d-8c3a-4273-bfab-a653d1e52e7a",
+        "4d86e9c7-60b5-446d-b793-66bb62d8a550": "6674cdfa-c7b4-4f0c-8206-fedcc3b722b3"
       }
     }
   ],
@@ -18748,7 +18795,7 @@
     "GameObjectSystems": {
       "Sandbox.Clutter.ClutterGridSystem": {
         "Storage": {
-          "$blob": "eef174aa-cce5-401d-8e35-25d658af2119"
+          "$blob": "ef159bb1-a792-48e7-8805-1ed484b93eef"
         }
       }
     }

@@ -12,10 +12,14 @@ public sealed class LocalPresentationController : Component
 	public static LocalPresentationController Instance { get; private set; }
 
 	private CameraComponent renderCamera;
+	private GameObject viewModelAnchor;
 	private float yaw;
 	private float pitch;
 	private bool initializedAngles;
 	private Vector3 currentOffset = Vector3.Zero;
+	private float nextDuplicateCleanupLogTime;
+
+	public CameraComponent RenderCamera => renderCamera;
 
 	public static bool Exists => Instance != null && Instance.IsValid;
 
@@ -73,6 +77,9 @@ public sealed class LocalPresentationController : Component
 
 	protected override void OnDestroy()
 	{
+		if ( viewModelAnchor != null && viewModelAnchor.IsValid )
+			viewModelAnchor.Destroy();
+
 		if ( ReferenceEquals( Instance, this ) )
 			Instance = null;
 	}
@@ -81,9 +88,11 @@ public sealed class LocalPresentationController : Component
 	{
 		EnsureRenderCamera();
 		if ( renderCamera == null ) return;
+		EnsureViewModelAnchor();
 
 		var player = FindLocalPlayer();
 		if ( player == null || player.GameObject == null ) return;
+		CleanupDuplicateViewModels( player );
 
 		var identity = player.Components.GetInDescendantsOrSelf<PlayerIdentity>();
 		bool isPaused = identity?.IsPaused ?? PlayerStats.IsPaused;
@@ -167,6 +176,73 @@ public sealed class LocalPresentationController : Component
 
 		var cameraObject = new GameObject( true, "RuntimeMainCamera" );
 		renderCamera = cameraObject.Components.Create<CameraComponent>();
+	}
+
+	public GameObject GetOrCreateViewModelAnchor( PlayerMovement player = null )
+	{
+		if ( player != null && !PlayerIdentity.IsOwnedByLocal( player.GameObject ) )
+			return null;
+
+		EnsureRenderCamera();
+		return EnsureViewModelAnchor();
+	}
+
+	private GameObject EnsureViewModelAnchor()
+	{
+		if ( renderCamera == null || !renderCamera.IsValid )
+			return null;
+
+		if ( viewModelAnchor == null || !viewModelAnchor.IsValid )
+			viewModelAnchor = new GameObject( true, "ViewModelAnchor" );
+
+		var cameraObject = renderCamera.GameObject;
+		if ( viewModelAnchor.Parent != cameraObject )
+			viewModelAnchor.Parent = cameraObject;
+
+		viewModelAnchor.LocalPosition = Vector3.Zero;
+		viewModelAnchor.LocalRotation = Rotation.Identity;
+		viewModelAnchor.Enabled = true;
+		return viewModelAnchor;
+	}
+
+	private void CleanupDuplicateViewModels( PlayerMovement player )
+	{
+		var localViewModel = player.Components.GetInDescendantsOrSelf<GunViewModel>();
+		var allowedModelObject = localViewModel?.ModelObject;
+
+		if ( renderCamera?.GameObject != null )
+			DestroyDuplicateGunModelsRecursive( renderCamera.GameObject, allowedModelObject );
+
+		var head = player.Head ?? FindChildByNameRecursive( player.GameObject, "Head" );
+		if ( head != null && head.IsValid )
+			DestroyDuplicateGunModelsRecursive( head, allowedModelObject );
+	}
+
+	private void DestroyDuplicateGunModelsRecursive( GameObject parent, GameObject allowedModelObject )
+	{
+		if ( parent == null || !parent.IsValid )
+			return;
+
+		foreach ( var child in parent.Children.ToArray() )
+		{
+			if ( child == null || !child.IsValid )
+				continue;
+
+			if ( child.Name == "GunModel" && child != allowedModelObject )
+			{
+				if ( EnableDiagnostics && Time.Now >= nextDuplicateCleanupLogTime )
+				{
+					nextDuplicateCleanupLogTime = Time.Now + 1f;
+					var modelPath = child.Components.Get<SkinnedModelRenderer>()?.Model?.ResourcePath ?? "null";
+					Log.Warning( $"[LocalPresentationController] Destroying duplicate GunModel '{child.Name}' model='{modelPath}' parent='{child.Parent?.Name ?? "null"}'" );
+				}
+
+				child.Destroy();
+				continue;
+			}
+
+			DestroyDuplicateGunModelsRecursive( child, allowedModelObject );
+		}
 	}
 
 	private PlayerMovement FindLocalPlayer()

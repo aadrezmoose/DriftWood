@@ -156,15 +156,8 @@ base.OnUpdate();
 						if ( health != null )
 						{
 							float headshotDamage = PelletDamage * HeadshotMultiplier * headshotZone.DamageMultiplier;
-							health.TakeDamage( headshotDamage, owner );
+							ApplyEnemyHit( health, headshotDamage, isHeadshot: true );
 							TrackShotHit();
-
-							// Only trigger headshot stagger once per shot, not per pellet
-							if ( i == 0 )
-							{
-								var enemy = targetEntity.Components.Get<Enemy>();
-								enemy?.OnHeadshotDamage( headshotDamage, owner );
-							}
 						}
 					}
 				}
@@ -177,13 +170,14 @@ base.OnUpdate();
 					if ( health != null && !health.IsPlayer )
 						TrackShotHit();
 
-					health?.TakeDamage( PelletDamage, owner );
-
-					// Shotgun body knockback — once per enemy, not per pellet
+					bool applyKnockback = false;
 					var enemy = trace.GameObject?.Components.GetInAncestorsOrSelf<Enemy>()
 						?? trace.GameObject?.Components.GetInDescendantsOrSelf<Enemy>();
 					if ( enemy != null && knockedBack.Add( enemy ) )
-						enemy.ApplyShotgunKnockback( owner );
+						applyKnockback = true;
+
+					if ( health != null )
+						ApplyEnemyHit( health, PelletDamage, applyShotgunKnockback: applyKnockback );
 				}
 
 				// Impact effects on world geometry (not enemies)

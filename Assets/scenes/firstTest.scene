@@ -79,8 +79,13 @@
           "OnComponentFixedUpdate": null,
           "OnComponentStart": null,
           "OnComponentUpdate": null,
+          "ShadowBias": 0.0005,
+          "ShadowCascadeCount": 4,
+          "ShadowCascadeSplitRatio": 0.91,
+          "ShadowHardness": 0,
           "Shadows": true,
-          "SkyColor": "0.85581,0,0,0"
+          "SkyColor": "0.85581,0,0,0",
+          "Visualizer": {}
         },
         {
           "__type": "DayNightCycle",
@@ -695,6 +700,7 @@
               "OnComponentUpdate": null,
               "PickupSound": "sounds/coin1.sound",
               "SlotType": "MainHeal",
+              "UseDuration": 3.5,
               "ViewModelOverlayModel": "models/medkit/models/medkit.vmdl"
             },
             {
@@ -785,6 +791,7 @@
               "OnComponentUpdate": null,
               "PickupSound": "sounds/coin1.sound",
               "SlotType": "MainHeal",
+              "UseDuration": 3.5,
               "ViewModelOverlayModel": "models/medkit/models/medkit.vmdl"
             },
             {
@@ -875,6 +882,7 @@
               "OnComponentUpdate": null,
               "PickupSound": "sounds/coin1.sound",
               "SlotType": "MainHeal",
+              "UseDuration": 3.5,
               "ViewModelOverlayModel": "models/medkit/models/medkit.vmdl"
             },
             {
@@ -3047,7 +3055,7 @@
       ]
     },
     {
-      "__guid": "2c0f190f-44a9-4be8-88e2-fda302c3d68a",
+      "__guid": "01e615a5-c43f-4387-99df-1b4cfda101b3",
       "__version": 2,
       "__Prefab": "prefabs/tank.prefab",
       "__PrefabInstancePatch": {
@@ -3056,7 +3064,9 @@
         "PropertyOverrides": [],
         "MovedObjects": []
       },
-      "__PrefabIdToInstanceId": {}
+      "__PrefabIdToInstanceId": {
+        "9ff39f10-3def-45c1-b945-d6c6f1b59be1": "93f829c3-65a7-43f5-8c67-7d118aa142a4"
+      }
     },
     {
       "__guid": "79fa15b2-a5b6-481a-a4d6-5a775d9dcd87",
@@ -3180,6 +3190,8 @@
           "OnComponentStart": null,
           "OnComponentUpdate": null,
           "Radius": 499.37976,
+          "ShadowBias": 0.0005,
+          "ShadowHardness": 0,
           "Shadows": true
         }
       ],
@@ -3301,6 +3313,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 494.4299,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -3341,6 +3355,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 500,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -3381,6 +3397,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 500,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -3440,6 +3458,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 1000,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -3480,6 +3500,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 1000,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -3520,6 +3542,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 1000,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -3560,6 +3584,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 1000,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -3600,6 +3626,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 1000,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -3640,6 +3668,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 1000,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -3926,6 +3956,8 @@
           "OnComponentStart": null,
           "OnComponentUpdate": null,
           "Radius": 800,
+          "ShadowBias": 0.0005,
+          "ShadowHardness": 0,
           "Shadows": true
         }
       ],
@@ -3966,6 +3998,8 @@
           "OnComponentStart": null,
           "OnComponentUpdate": null,
           "Radius": 800,
+          "ShadowBias": 0.0005,
+          "ShadowHardness": 0,
           "Shadows": true
         }
       ],
@@ -4006,6 +4040,8 @@
           "OnComponentStart": null,
           "OnComponentUpdate": null,
           "Radius": 800,
+          "ShadowBias": 0.0005,
+          "ShadowHardness": 0,
           "Shadows": true
         }
       ],
@@ -4625,6 +4661,8 @@
           "OnComponentStart": null,
           "OnComponentUpdate": null,
           "Radius": 400,
+          "ShadowBias": 0.0005,
+          "ShadowHardness": 0,
           "Shadows": true
         }
       ],
@@ -4679,6 +4717,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -4716,6 +4756,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -4753,6 +4795,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -4790,6 +4834,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -4827,6 +4873,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -4864,6 +4912,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -4901,6 +4951,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -4938,6 +4990,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -4975,6 +5029,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -5012,6 +5068,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -5049,6 +5107,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -5086,6 +5146,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -5123,6 +5185,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -5160,6 +5224,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -5197,6 +5263,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -5234,6 +5302,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -5271,6 +5341,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -5308,6 +5380,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -5345,6 +5419,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -5382,6 +5458,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -5419,6 +5497,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -5456,6 +5536,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -5493,6 +5575,8 @@
               "OnComponentStart": null,
               "OnComponentUpdate": null,
               "Radius": 400,
+              "ShadowBias": 0.0005,
+              "ShadowHardness": 0,
               "Shadows": true
             }
           ],
@@ -6222,10 +6306,7 @@
             "_type": "gameobject",
             "prefab": "prefabs/player.prefab"
           },
-          "PrePlacedPlayer": {
-            "_type": "gameobject",
-            "prefab": "prefabs/player.prefab"
-          },
+          "PrePlacedPlayer": null,
           "SpawnPoints": [
             {
               "_type": "gameobject",
@@ -6625,9 +6706,12 @@
       }
     },
     "GameObjectSystems": {
+      "Sandbox.MovieMaker.MovieRecorderSystem": {
+        "DisableClientRecording": false
+      },
       "Sandbox.Clutter.ClutterGridSystem": {
         "Storage": {
-          "$blob": "3ac5f71c-97c7-4e2c-893f-a08deebb328a"
+          "$blob": "5c767145-e65d-4119-9075-f3ae820893f2"
         }
       }
     }

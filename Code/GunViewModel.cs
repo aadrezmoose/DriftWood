@@ -18,9 +18,17 @@ public sealed class GunViewModel : Component
 	/// <summary>The active viewmodel instance — kept for backwards compat, set by WeaponManager.</summary>
 	public static GunViewModel Current { get; set; }
 
+	/// <summary>The intended base position for the viewmodel — set by UpdateWeapon(), read by ViewModelHandler.</summary>
+	public Vector3 RestPosition { get; private set; }
+
+	/// <summary>The intended base rotation for the viewmodel — set by UpdateWeapon(), read by ViewModelHandler.</summary>
+	public Rotation RestRotation { get; private set; }
+
 	private GameObject modelObject;
 	public GameObject ModelObject => modelObject;
 	public SkinnedModelRenderer ModelRenderer { get; private set; }
+	public bool HasLocalVisuals => modelObject != null && modelObject.IsValid;
+	public PlayerMovement OwnerMovement => Components.GetInAncestorsOrSelf<PlayerMovement>();
 
 	private GameObject overlayGO;
 	private SkinnedModelRenderer overlayRenderer;
@@ -30,46 +38,21 @@ public sealed class GunViewModel : Component
 
 	protected override void OnStart()
 	{
-		modelObject = new GameObject( false, "GunModel" );  // Start disabled
-		modelObject.Parent = GameObject;
-		modelObject.LocalPosition = PositionOffset;
-		modelObject.LocalRotation = RotationOffset;
+		RestPosition = PositionOffset;
+		RestRotation = RotationOffset;
+		TryEnsureVisuals();
+	}
 
-		ModelRenderer = modelObject.AddComponent<SkinnedModelRenderer>();
-		ModelRenderer.Model = WeaponModel ?? Model.Load( "models/dev/box.vmdl" );
-		if ( AnimGraph is not null )
-			ModelRenderer.AnimationGraph = AnimGraph;
-
-		// Optional hands model — bone-merges onto the weapon skeleton so hands grip the gun
-		if ( HandsModel is not null )
+	protected override void OnUpdate()
+	{
+		if ( !ShouldCreateLocalVisuals() )
 		{
-			var handsGO = new GameObject( true, "HandsModel" );
-			handsGO.Parent = modelObject;
-			var handsRenderer = handsGO.AddComponent<SkinnedModelRenderer>();
-			handsRenderer.Model = HandsModel;
-			handsRenderer.BoneMergeTarget = ModelRenderer;
+			DestroyVisuals();
+			return;
 		}
 
-		// Always create overlay GO (hidden initially) — model assigned at runtime via UpdateOverlayModel()
-		overlayGO = new GameObject( false, "OverlayModel" );
-		overlayGO.Parent = modelObject;
-		overlayGO.LocalPosition = new Vector3( 5, -8, 15 );
-		overlayRenderer = overlayGO.AddComponent<SkinnedModelRenderer>();
-		// Bone-merge the overlay onto the weapon skeleton
-		if ( overlayRenderer is SkinnedModelRenderer skinned )
-		{
-			skinned.BoneMergeTarget = ModelRenderer;
-		}
-		if ( OverlayModel != null )
-		{
-			overlayRenderer.Model = OverlayModel;
-			overlayGO.Enabled = true;
-		}
-
-		// Always start disabled - WeaponManager will enable when needed
-		modelObject.Enabled = false;
-
-		Log.Info( $"[GunViewModel] OnStart: WeaponModel={WeaponModel?.ResourcePath ?? "null"}, HandsModel={HandsModel?.ResourcePath ?? "null"}" );
+		TryEnsureVisuals();
+		EnsureVisualParent();
 	}
 
 	/// <summary>Show or hide the viewmodel based on whether the current slot has content.</summary>
@@ -105,6 +88,7 @@ public sealed class GunViewModel : Component
 	/// <summary>Swap the overlay model (used for throwable/item meshes layered on top of arms).</summary>
 	public void UpdateOverlayModel( Model model )
 	{
+		OverlayModel = model;
 		if ( overlayRenderer == null ) return;
 		if ( model != null )
 		{
@@ -129,27 +113,31 @@ public sealed class GunViewModel : Component
 	public void UpdateWeapon( Model model, AnimationGraph animGraph, Model handsModel, Vector3 positionOffset,
 		string animFireParam, string animReloadParam, string animReloadEmptyParam )
 	{
-		if ( ModelRenderer == null ) return;
-
-		ModelRenderer.Model = model ?? Model.Load( "models/dev/box.vmdl" );
-		if ( animGraph != null ) ModelRenderer.AnimationGraph = animGraph;
-		Log.Info($"[GunViewModel] Applying LocalPosition offset: {positionOffset}");
-		modelObject.LocalPosition = positionOffset;
-		modelObject.LocalRotation = RotationOffset;  // Reset rotation to the inspector value
+		WeaponModel = model;
+		HandsModel = handsModel;
+		AnimGraph = animGraph;
+		PositionOffset = positionOffset;
+		RestPosition = positionOffset;
+		RestRotation = RotationOffset;
 		if ( !string.IsNullOrEmpty( animFireParam ) ) AnimFireParam = animFireParam;
 		if ( !string.IsNullOrEmpty( animReloadParam ) ) AnimReloadParam = animReloadParam;
 		if ( !string.IsNullOrEmpty( animReloadEmptyParam ) ) AnimReloadEmptyParam = animReloadEmptyParam;
+
+		if ( ModelRenderer == null ) return;
+
+		ModelRenderer.Model = WeaponModel ?? Model.Load( "models/dev/box.vmdl" );
+		if ( AnimGraph != null ) ModelRenderer.AnimationGraph = AnimGraph;
 
 		// Rebuild hands — destroy old HandsModel child then recreate if needed
 		foreach ( var child in modelObject.Children )
 			if ( child.Name == "HandsModel" ) { child.Destroy(); break; }
 
-		if ( handsModel != null )
+		if ( HandsModel != null )
 		{
 			var handsGO = new GameObject( true, "HandsModel" );
 			handsGO.Parent = modelObject;
 			var handsRenderer = handsGO.AddComponent<SkinnedModelRenderer>();
-			handsRenderer.Model = handsModel;
+			handsRenderer.Model = HandsModel;
 			handsRenderer.BoneMergeTarget = ModelRenderer;
 		}
 	}
@@ -157,6 +145,124 @@ public sealed class GunViewModel : Component
 	protected override void OnDestroy()
 	{
 		if ( Current == this ) Current = null;
-		modelObject?.Destroy();
+		DestroyVisuals();
+	}
+
+	public bool BelongsTo( PlayerMovement player ) => player != null && player == OwnerMovement;
+
+	public bool IsOwnedByLocalPlayer()
+	{
+		if ( !Networking.IsActive )
+			return true;
+
+		var ownerMovement = OwnerMovement;
+		var localMovement = PlayerIdentity.Local?.Movement;
+
+		if ( ownerMovement != null && localMovement != null )
+			return ownerMovement == localMovement;
+
+		var owner = ownerMovement?.GameObject?.Network?.Owner;
+		var localConn = Connection.Local;
+		if ( owner != null && localConn != null )
+			return owner.SteamId == localConn.SteamId;
+
+		return false;
+	}
+
+	private bool ShouldCreateLocalVisuals() => !Networking.IsActive || IsOwnedByLocalPlayer();
+
+	private void TryEnsureVisuals()
+	{
+		if ( HasLocalVisuals || !ShouldCreateLocalVisuals() )
+			return;
+
+		var visualParent = ResolveVisualParent();
+		if ( visualParent == null || !visualParent.IsValid )
+			return;
+
+		CreateVisuals( visualParent );
+	}
+
+	private void EnsureVisualParent()
+	{
+		if ( modelObject == null || !modelObject.IsValid )
+			return;
+
+		var visualParent = ResolveVisualParent();
+		if ( visualParent == null || !visualParent.IsValid )
+			return;
+
+		if ( modelObject.Parent != visualParent )
+			modelObject.Parent = visualParent;
+	}
+
+	private GameObject ResolveVisualParent()
+	{
+		var ownerMovement = OwnerMovement;
+		if ( Networking.IsActive )
+		{
+			var localMovement = PlayerIdentity.Local?.Movement;
+			if ( ownerMovement == null || localMovement == null || ownerMovement != localMovement )
+				return null;
+		}
+
+		if ( ownerMovement != null && LocalPresentationController.ShouldHandleLocalPresentation( ownerMovement ) )
+		{
+			var controller = LocalPresentationController.EnsureForScene( Scene );
+			var anchor = controller?.GetOrCreateViewModelAnchor( ownerMovement );
+			if ( anchor != null )
+				return anchor;
+
+			if ( Networking.IsActive )
+				return null;
+		}
+
+		return GameObject;
+	}
+
+	private void CreateVisuals( GameObject visualParent )
+	{
+		modelObject = new GameObject( false, "GunModel" );
+		modelObject.Parent = visualParent;
+		modelObject.LocalPosition = RestPosition;
+		modelObject.LocalRotation = RestRotation;
+
+		ModelRenderer = modelObject.AddComponent<SkinnedModelRenderer>();
+		ModelRenderer.Model = WeaponModel ?? Model.Load( "models/dev/box.vmdl" );
+		if ( AnimGraph is not null )
+			ModelRenderer.AnimationGraph = AnimGraph;
+
+		if ( HandsModel is not null )
+		{
+			var handsGO = new GameObject( true, "HandsModel" );
+			handsGO.Parent = modelObject;
+			var handsRenderer = handsGO.AddComponent<SkinnedModelRenderer>();
+			handsRenderer.Model = HandsModel;
+			handsRenderer.BoneMergeTarget = ModelRenderer;
+		}
+
+		overlayGO = new GameObject( false, "OverlayModel" );
+		overlayGO.Parent = modelObject;
+		overlayGO.LocalPosition = new Vector3( 5, -8, 15 );
+		overlayRenderer = overlayGO.AddComponent<SkinnedModelRenderer>();
+		overlayRenderer.BoneMergeTarget = ModelRenderer;
+		if ( OverlayModel != null )
+		{
+			overlayRenderer.Model = OverlayModel;
+			overlayGO.Enabled = true;
+		}
+
+		modelObject.Enabled = false;
+	}
+
+	private void DestroyVisuals()
+	{
+		if ( modelObject != null && modelObject.IsValid )
+			modelObject.Destroy();
+
+		modelObject = null;
+		ModelRenderer = null;
+		overlayGO = null;
+		overlayRenderer = null;
 	}
 }

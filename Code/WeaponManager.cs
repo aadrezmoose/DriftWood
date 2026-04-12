@@ -1,6 +1,7 @@
 using Sandbox;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 public sealed class WeaponManager : Component
 {
@@ -77,6 +78,7 @@ public sealed class WeaponManager : Component
 	private PlayerMovement _movement;
 	private CameraMovement _cameraCache;
 	private bool _cameraFound = false;
+	private float _slotSanitizeTimeRemaining = 0.5f;
 
 	// Single GunViewModel — found lazily since it may not exist yet on clients at OnStart() time
 	// No longer stored as direct field — accessed through ViewModel property
@@ -87,8 +89,18 @@ public sealed class WeaponManager : Component
 	{
 		get
 		{
+			if ( ViewModelCache != null && !ViewModelCache.IsValid )
+			{
+				ViewModelCache = null;
+				ViewModelFound = false;
+			}
+
 			// If we already found it once, use the cache
-			if ( ViewModelFound ) return ViewModelCache;
+			if ( ViewModelFound )
+			{
+				RefreshCurrentViewModel();
+				return ViewModelCache;
+			}
 
 			// Try to find it (might fail on client's first frame)
 			ViewModelCache = Components.GetInDescendantsOrSelf<GunViewModel>();
@@ -97,7 +109,7 @@ public sealed class WeaponManager : Component
 			if ( ViewModelCache != null )
 			{
 				ViewModelFound = true;
-				GunViewModel.Current = ViewModelCache;
+				RefreshCurrentViewModel();
 				if ( EnableDiagnostics )
 					Log.Info( "[WeaponManager] Found GunViewModel via lazy-load property" );
 			}
@@ -108,6 +120,21 @@ public sealed class WeaponManager : Component
 
 			return ViewModelCache;
 		}
+	}
+
+	private void RefreshCurrentViewModel()
+	{
+		if ( ViewModelCache == null )
+		{
+			if ( GunViewModel.Current != null && GunViewModel.Current.BelongsTo( _movement ) )
+				GunViewModel.Current = null;
+			return;
+		}
+
+		if ( IsLocallyControlled() && ViewModelCache.IsOwnedByLocalPlayer() )
+			GunViewModel.Current = ViewModelCache;
+		else if ( GunViewModel.Current == ViewModelCache )
+			GunViewModel.Current = null;
 	}
 
 	private CameraMovement Camera
@@ -133,6 +160,7 @@ public sealed class WeaponManager : Component
 	private WeaponPickup _hoverWeapon;
 	private BaseItem _hoverItem;
 	private bool _hoverItemIsStationary;
+	private PlayerIdentity _hoverTeammate;
 	private SafeRoomDoor _hoverDoor;
 	private CraneEventButton _hoverButton;
 
@@ -140,6 +168,12 @@ public sealed class WeaponManager : Component
 	[Property] public float ShoveCooldown { get; set; } = 1.2f;
 	[Property] public float ShoveRange { get; set; } = 120f;
 	[Property] public float ShoveRadius { get; set; } = 55f;
+
+	private HealthKit _activeTimedHealKit;
+	private float _activeTimedHealElapsed = 0f;
+	private PlayerIdentity _activeTimedHealTarget;
+	private bool _activeTimedHealIsRevive = false;
+	private bool _activeTimedHealUsesAltFire = false;
 
 	private GameObject ActiveWeaponObject =>
 		currentSlot == 0 ? PrimarySlot : currentSlot == 1 ? SecondarySlot : null;
@@ -151,9 +185,78 @@ public sealed class WeaponManager : Component
 		: currentSlot == 3 ? secondaryHealItem
 		: currentSlot == 4 ? utilityItem : null;
 
+	private bool BelongsToThisPlayerHierarchy( GameObject slotObject )
+	{
+		if ( slotObject == null || !slotObject.IsValid() )
+			return false;
+
+		for ( var current = slotObject; current != null && current.IsValid(); current = current.Parent )
+		{
+			if ( current == GameObject )
+				return true;
+		}
+
+		return false;
+	}
+
+	private bool IsForeignSlotObject( GameObject slotObject )
+	{
+		if ( slotObject == null || !slotObject.IsValid() )
+			return false;
+
+		if ( BelongsToThisPlayerHierarchy( slotObject ) )
+			return false;
+
+		var slotPlayer = slotObject.Components.GetInAncestorsOrSelf<PlayerMovement>()
+			?? slotObject.Components.GetInDescendantsOrSelf<PlayerMovement>();
+		if ( slotPlayer != null && _movement != null )
+			return slotPlayer != _movement;
+
+		var slotOwner = slotObject.Network?.Owner;
+		var localOwner = GameObject?.Network?.Owner;
+		if ( slotOwner != null && localOwner != null )
+			return slotOwner.SteamId != localOwner.SteamId;
+
+		return false;
+	}
+
+	private void ClearWeaponSlot( int slotIndex )
+	{
+		_slotData[slotIndex] = default;
+
+		if ( slotIndex == 0 )
+		{
+			PrimarySlot = null;
+			primaryEquippedPickup = null;
+		}
+		else if ( slotIndex == 1 )
+		{
+			SecondarySlot = null;
+			secondaryEquippedPickup = null;
+		}
+	}
+
+	private void SanitizeSlotReferences()
+	{
+		if ( PrimarySlot != null && IsForeignSlotObject( PrimarySlot ) )
+		{
+			if ( EnableDiagnostics )
+				Log.Warning( $"[WeaponManager] Clearing foreign PrimarySlot reference '{PrimarySlot.Name}' on '{GameObject?.Name}'" );
+			ClearWeaponSlot( 0 );
+		}
+
+		if ( SecondarySlot != null && IsForeignSlotObject( SecondarySlot ) )
+		{
+			if ( EnableDiagnostics )
+				Log.Warning( $"[WeaponManager] Clearing foreign SecondarySlot reference '{SecondarySlot.Name}' on '{GameObject?.Name}'" );
+			ClearWeaponSlot( 1 );
+		}
+	}
+
 	protected override void OnAwake()
 	{
 		_movement = Components.Get<PlayerMovement>();
+		SanitizeSlotReferences();
 		// Camera is now lazy-loaded via the Camera property to handle multiplayer timing
 		var playerMovement = _movement;
 		if ( playerMovement?.Head != null )
@@ -172,13 +275,6 @@ public sealed class WeaponManager : Component
 
 	protected override void OnStart()
 	{
-		// Initialize slot positions - all moved further back from camera
-		_slotData[0].PositionOffset = new Vector3( 5, -8, -15 );   // Primary (Shotgun/SMG) - moved back
-		_slotData[1].PositionOffset = new Vector3( 8, -8, -14 );   // Secondary (Pistol) - moved back
-		_slotData[2].PositionOffset = new Vector3( 0, -5, -18 );   // MainHeal - moved back
-		_slotData[3].PositionOffset = new Vector3( 0, -5, -18 );   // SubHeal - moved back
-		_slotData[4].PositionOffset = new Vector3( 0, -5, -18 );   // Utility - moved back
-
 		// GunViewModel lookup is now deferred until it's actually needed via the ViewModel property
 		// This allows clients time to spawn the Camera child with GunViewModel before we try to use it
 	}
@@ -189,15 +285,27 @@ public sealed class WeaponManager : Component
 
 		if ( !isLocal ) return;
 
+		if ( _slotSanitizeTimeRemaining > 0f )
+		{
+			_slotSanitizeTimeRemaining -= Time.Delta;
+			SanitizeSlotReferences();
+		}
+
 		if ( shoveCooldown > 0f ) shoveCooldown -= Time.Delta;
 
 		SyncAllSlots();
 		UpdateViewModelVisibility(currentSlot);
 
-		if ( PlayerStats.IsDead ) return;
+		if ( PlayerStats.IsDead )
+		{
+			CancelTimedMainHeal();
+			return;
+		}
 
 		if ( PlayerStats.IsIncapacitated )
 		{
+			CancelTimedMainHeal();
+
 			// Auto-switch to secondary (pistol) slot when downed
 			if ( currentSlot != 1 ) { currentSlot = 1; SyncAllSlots(); }
 
@@ -210,6 +318,7 @@ public sealed class WeaponManager : Component
 		UpdateInteractTarget();
 		HandleSlotSwitching();
 		HandleInput();
+		UpdateTimedMainHeal();
 		UpdateHUD();
 		UpdatePickupHint();
 	}
@@ -226,6 +335,8 @@ public sealed class WeaponManager : Component
 
 	private void HandleSlotSwitching()
 	{
+		if ( _activeTimedHealKit != null ) return;
+
 		var scroll = Input.MouseWheel.y;
 		if ( scroll > 0f ) CycleSlot( -1 );
 		else if ( scroll < 0f ) CycleSlot( 1 );
@@ -252,6 +363,13 @@ public sealed class WeaponManager : Component
 
 	private void HandleInput()
 	{
+		if ( _activeTimedHealKit != null )
+		{
+			if ( Input.Pressed( "Use" ) )
+				CancelTimedMainHeal();
+			return;
+		}
+
 		if ( Input.Down( "Attack1" ) )
 		{
 			if ( CurrentGun != null && CurrentGun.IsAutomatic ) CurrentGun.Fire();
@@ -260,20 +378,159 @@ public sealed class WeaponManager : Component
 
 		if ( Input.Pressed( "Attack1" ) )
 		{
+			if ( !IsWeaponSlot && ActiveItem != null )
+			{
+				if ( TryStartTimedMainHeal( false ) )
+					return;
+
+				UseCurrentItem();
+				return;
+			}
+
 			if ( CurrentGun != null && !CurrentGun.IsAutomatic ) CurrentGun.Fire();
 		}
 
 		if ( Input.Pressed( "Reload" ) ) CurrentGun?.Reload();
 
-		if ( Input.Pressed( "Attack2" ) ) TryShove();
+		if ( Input.Pressed( "Attack2" ) )
+		{
+			if ( TryStartTimedMainHeal( true ) )
+				return;
+
+			TryShove();
+		}
 
 		if ( Input.Pressed( "Use" ) )
 		{
-			if ( !ActOnInteractTarget() )
-			{
-				if ( !IsWeaponSlot ) UseCurrentItem();
-			}
+			ActOnInteractTarget();
 		}
+	}
+
+	private bool TryStartTimedMainHeal( bool useAltFire )
+	{
+		if ( currentSlot != 2 ) return false;
+
+		var kit = ActiveItem as HealthKit;
+		if ( kit == null ) return false;
+
+		GameObject healTargetObject = GameObject;
+		PlayerIdentity healTargetIdentity = Identity;
+		bool isRevive = false;
+
+		if ( useAltFire )
+		{
+			healTargetIdentity = _hoverTeammate;
+			healTargetObject = healTargetIdentity?.GameObject;
+			if ( healTargetObject == null || healTargetObject == GameObject )
+				return false;
+		}
+
+		if ( _activeTimedHealKit == kit && _activeTimedHealTarget == healTargetIdentity && _activeTimedHealUsesAltFire == useAltFire )
+			return true;
+
+		if ( !kit.CanApplyToTarget( healTargetObject ) )
+			return true;
+
+		var targetIncap = healTargetObject.Components.GetInDescendantsOrSelf<IncapacitationComponent>();
+		isRevive = targetIncap?.IsIncapacitated ?? false;
+
+		_activeTimedHealKit = kit;
+		_activeTimedHealElapsed = 0f;
+		_activeTimedHealTarget = healTargetIdentity;
+		_activeTimedHealIsRevive = isRevive;
+		_activeTimedHealUsesAltFire = useAltFire;
+		if ( _movement != null ) _movement.IsHealingLocked = true;
+		SetHealProgress( 0f, healTargetIdentity, isRevive );
+		return true;
+	}
+
+	private void UpdateTimedMainHeal()
+	{
+		if ( _activeTimedHealKit == null )
+		{
+			SetHealProgress( -1f, null, false );
+			return;
+		}
+
+		bool inputHeld = _activeTimedHealUsesAltFire ? Input.Down( "Attack2" ) : Input.Down( "Attack1" );
+		if ( currentSlot != 2 || ActiveItem != _activeTimedHealKit || !inputHeld )
+		{
+			CancelTimedMainHeal();
+			return;
+		}
+
+		var healTargetObject = _activeTimedHealTarget?.GameObject ?? GameObject;
+		if ( healTargetObject == null || !healTargetObject.IsValid() )
+		{
+			CancelTimedMainHeal();
+			return;
+		}
+
+		if ( _activeTimedHealUsesAltFire && _hoverTeammate != _activeTimedHealTarget )
+		{
+			CancelTimedMainHeal();
+			return;
+		}
+
+		if ( !_activeTimedHealKit.CanApplyToTarget( healTargetObject ) )
+		{
+			CancelTimedMainHeal();
+			return;
+		}
+
+		var duration = Math.Max( 0.05f, _activeTimedHealKit.UseDuration );
+		_activeTimedHealElapsed += Time.Delta;
+		var progress = Math.Clamp( _activeTimedHealElapsed / duration, 0f, 1f );
+		SetHealProgress( progress, _activeTimedHealTarget, _activeTimedHealIsRevive );
+
+		if ( progress < 1f ) return;
+
+		var kit = _activeTimedHealKit;
+		var targetObject = healTargetObject;
+		_activeTimedHealKit = null;
+		_activeTimedHealElapsed = 0f;
+		_activeTimedHealTarget = null;
+		_activeTimedHealIsRevive = false;
+		_activeTimedHealUsesAltFire = false;
+		if ( _movement != null ) _movement.IsHealingLocked = false;
+		SetHealProgress( -1f, null, false );
+
+		if ( kit.TryApplyToTarget( GameObject, targetObject ) )
+		{
+			if ( currentSlot == 2 ) mainHealItem = null;
+			SyncAllSlots();
+		}
+	}
+
+	private void CancelTimedMainHeal()
+	{
+		if ( _activeTimedHealKit == null )
+		{
+			SetHealProgress( -1f, null, false );
+			return;
+		}
+
+		_activeTimedHealKit = null;
+		_activeTimedHealElapsed = 0f;
+		_activeTimedHealTarget = null;
+		_activeTimedHealIsRevive = false;
+		_activeTimedHealUsesAltFire = false;
+		if ( _movement != null ) _movement.IsHealingLocked = false;
+		SetHealProgress( -1f, null, false );
+	}
+
+	private void SetHealProgress( float progress, PlayerIdentity targetIdentity, bool isRevive )
+	{
+		PlayerStats.HealProgress = progress;
+		PlayerStats.HealTargetName = targetIdentity != null && targetIdentity != Identity ? (targetIdentity.PlayerName ?? string.Empty) : string.Empty;
+		PlayerStats.HealIsRevive = isRevive;
+
+		var id = Identity;
+		if ( id == null ) return;
+
+		id.HealProgress = progress;
+		id.HealTargetName = PlayerStats.HealTargetName;
+		id.HealIsRevive = isRevive;
 	}
 
 	private void TryShove()
@@ -322,6 +579,7 @@ public sealed class WeaponManager : Component
 	}
 
 	private const float InteractRange = 200f;
+	private const float TeammateHealAssistRadius = 38f;
 
 	/// <summary>
 	/// Casts a ray from the player's head each frame and caches what's being looked at.
@@ -332,6 +590,7 @@ public sealed class WeaponManager : Component
 		_hoverWeapon = null;
 		_hoverItem   = null;
 		_hoverItemIsStationary = false;
+		_hoverTeammate = null;
 		_hoverDoor   = null;
 		_hoverButton = null;
 		_hoverHint   = string.Empty;
@@ -362,10 +621,31 @@ public sealed class WeaponManager : Component
 			.WithoutTags( "trigger", "headzone" )
 			.Run();
 
+		var assistedTeammate = FindBestTeammateHealTarget( ray );
+		if ( assistedTeammate != null )
+		{
+			_hoverTeammate = assistedTeammate;
+			var isRevive = assistedTeammate.Incap?.IsIncapacitated ?? assistedTeammate.IsIncapacitated;
+			var teammateName = string.IsNullOrEmpty( assistedTeammate.PlayerName ) ? "Player" : assistedTeammate.PlayerName;
+			_hoverHint = $"[RMB] Hold to {(isRevive ? "revive" : "heal")} {teammateName}";
+			return;
+		}
+
 		if ( !tr.Hit )
 			return;
 
 		var go = tr.GameObject;
+
+		var teammate = go.Components.GetInAncestorsOrSelf<PlayerIdentity>()
+			?? go.Components.GetInDescendantsOrSelf<PlayerIdentity>();
+		if ( CanTargetTeammateForMedkitHeal( teammate ) )
+		{
+			_hoverTeammate = teammate;
+			var isRevive = teammate.Incap?.IsIncapacitated ?? teammate.IsIncapacitated;
+			var teammateName = string.IsNullOrEmpty( teammate.PlayerName ) ? "Player" : teammate.PlayerName;
+			_hoverHint = $"[RMB] Hold to {(isRevive ? "revive" : "heal")} {teammateName}";
+			return;
+		}
 
 		// WeaponPickup
 		var weapon = go.Components.GetInAncestorsOrSelf<WeaponPickup>()
@@ -461,6 +741,58 @@ public sealed class WeaponManager : Component
 		return false;
 	}
 
+	private bool CanTargetTeammateForMedkitHeal( PlayerIdentity teammate )
+	{
+		if ( teammate == null || teammate == Identity ) return false;
+		if ( teammate.GameObject == null || !teammate.GameObject.IsValid() ) return false;
+		if ( teammate.IsDead ) return false;
+
+		var kit = currentSlot == 2 ? ActiveItem as HealthKit : null;
+		if ( kit == null ) return false;
+
+		return kit.CanApplyToTarget( teammate.GameObject );
+	}
+
+	private PlayerIdentity FindBestTeammateHealTarget( Ray aimRay )
+	{
+		var kit = currentSlot == 2 ? ActiveItem as HealthKit : null;
+		if ( kit == null )
+			return null;
+
+		PlayerIdentity bestTarget = null;
+		float bestScore = float.MaxValue;
+
+		foreach ( var teammate in PlayerIdentity.All )
+		{
+			if ( !CanTargetTeammateForMedkitHeal( teammate ) )
+				continue;
+
+			var targetObject = teammate.GameObject;
+			if ( targetObject == null || !targetObject.IsValid() )
+				continue;
+
+			Vector3 targetPos = targetObject.WorldPosition + Vector3.Up * 36f;
+			Vector3 toTarget = targetPos - aimRay.Position;
+			float forwardDistance = Vector3.Dot( toTarget, aimRay.Forward );
+			if ( forwardDistance <= 0f || forwardDistance > InteractRange )
+				continue;
+
+			Vector3 closestPoint = aimRay.Position + aimRay.Forward * forwardDistance;
+			float lateralDistance = Vector3.DistanceBetween( closestPoint, targetPos );
+			if ( lateralDistance > TeammateHealAssistRadius )
+				continue;
+
+			float score = lateralDistance + forwardDistance * 0.05f;
+			if ( score < bestScore )
+			{
+				bestScore = score;
+				bestTarget = teammate;
+			}
+		}
+
+		return bestTarget;
+	}
+
 	public void EquipWeaponPickup( WeaponPickup pickup )
 	{
 		Log.Info( $"[WeaponManager] EquipWeaponPickup called: {pickup.WeaponDisplayName}" );
@@ -499,6 +831,7 @@ public sealed class WeaponManager : Component
 		}
 
 		// Cache the slot data for viewmodel
+		// Cache the slot data for viewmodel
 		_slotData[slotIndex].WeaponModel = pickup.ViewModelModel;
 		_slotData[slotIndex].AnimGraph = pickup.ViewModelAnimGraph;
 		_slotData[slotIndex].HandsModel = pickup.ViewModelHandsModel;
@@ -524,6 +857,8 @@ public sealed class WeaponManager : Component
 		pickup.Pickup( GameObject );
 		currentSlot = slotIndex;
 		Log.Info( $"Equipped {pickup.WeaponDisplayName} in slot {slotIndex}" );
+		SyncAllSlots();
+
 		SyncAllSlots();
 	}
 
@@ -715,6 +1050,42 @@ public sealed class WeaponManager : Component
 		}
 	}
 
+	[Rpc.Broadcast]
+	public void RequestEnemyHitOnHost( GameObject targetObject, float damage, bool isHeadshot, bool applyShotgunKnockback )
+	{
+		if ( !Networking.IsActive || Connection.Local?.IsHost != true )
+			return;
+
+		if ( targetObject == null || !targetObject.IsValid() )
+			return;
+
+		var health = targetObject.Components.Get<HealthComponent>()
+			?? targetObject.Components.GetInAncestorsOrSelf<HealthComponent>()
+			?? targetObject.Components.GetInDescendantsOrSelf<HealthComponent>();
+
+		if ( health == null || health.IsPlayer || health.IsDead )
+			return;
+
+		health.TakeDamage( damage, GameObject );
+
+		var enemy = targetObject.Components.Get<Enemy>()
+			?? targetObject.Components.GetInAncestorsOrSelf<Enemy>()
+			?? targetObject.Components.GetInDescendantsOrSelf<Enemy>();
+
+		if ( applyShotgunKnockback )
+			enemy?.ApplyShotgunKnockback( GameObject );
+
+		if ( isHeadshot )
+		{
+			enemy?.OnHeadshotDamage( damage, GameObject );
+
+			var tank = targetObject.Components.Get<Tank>()
+				?? targetObject.Components.GetInAncestorsOrSelf<Tank>()
+				?? targetObject.Components.GetInDescendantsOrSelf<Tank>();
+			tank?.OnHeadshotDamage( damage, GameObject );
+		}
+	}
+
 	public void BroadcastRemoteMuzzleFlashFromWeaponManager( Vector3 position, Rotation rotation )
 	{
 		// Broadcast muzzle flash visuals to other players
@@ -751,4 +1122,5 @@ public sealed class WeaponManager : Component
 		if ( item is ThrowableBase throwable ) return throwable.ViewModelOverlayModel?.ResourcePath ?? string.Empty;
 		return string.Empty;
 	}
+
 }

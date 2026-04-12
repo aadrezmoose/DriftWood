@@ -32,7 +32,7 @@
 				<div class="inv-name">@SlotDisplayName( slotName )</div>
 				@if ( isActive && !isEmpty )
 				{
-					<div class="inv-hint">@(isWeapon || i == 4 ? "[LMB]" : "[E]")</div>
+					<div class="inv-hint">[LMB]</div>
 				}
 			</div>
 		}
@@ -144,7 +144,10 @@
 		<div class="teammates-panel">
 			@foreach ( var tm in _teammates )
 			{
-				var _tmStatus   = tm.IsDead ? "DEAD" : (tm.IsIncapacitated ? "DOWN" : string.Empty);
+				var _tmIsHealing = tm.HealProgress >= 0f;
+				var _tmAction = tm.HealIsRevive ? "REVIVING" : "HEALING";
+				var _tmActionTarget = string.IsNullOrEmpty( tm.HealTargetName ) ? string.Empty : $" {tm.HealTargetName.ToUpper()}";
+				var _tmStatus   = tm.IsDead ? "DEAD" : (tm.IsIncapacitated ? "DOWN" : (_tmIsHealing ? $"{_tmAction}{_tmActionTarget}" : string.Empty));
 				var _tmHealthPct = tm.HealthMax > 0f ? tm.CurrentHealth / tm.HealthMax : 1f;
 				var _tmBarClass = tm.IsDead ? "tm-bar-dead"
 					: (tm.IsIncapacitated ? "tm-bar-incap"
@@ -157,6 +160,12 @@
 					<div class="teammate-health-track">
 						<div class="teammate-health-fill @_tmBarClass" style="width:@($"{_tmFill:F0}%")"></div>
 					</div>
+					@if ( _tmIsHealing )
+					{
+						<div class="teammate-action-track">
+							<div class="teammate-action-fill @(tm.HealIsRevive ? "teammate-action-revive" : "teammate-action-heal")" style="width:@($"{tm.HealProgress * 100f:F0}%")"></div>
+						</div>
+					}
 					@if ( !string.IsNullOrEmpty( _tmStatus ) )
 					{
 						<div class="teammate-status">@_tmStatus</div>

@@ -14,6 +14,15 @@ public sealed class PlayerIdentity : Component
 {
 	[Property] public bool EnableNetworkDiagnostics { get; set; } = false;
 
+	private static bool HasLocalNetworkOwnership( GameObject targetObject )
+	{
+		if ( !Networking.IsActive ) return true;
+
+		var owner = targetObject?.Network?.Owner;
+		var localConn = Connection.Local;
+		return owner != null && localConn != null && owner.SteamId == localConn.SteamId;
+	}
+
 	private bool IsOwnedByLocalConnection()
 	{
 		if ( !Networking.IsActive ) return true;
@@ -21,15 +30,22 @@ public sealed class PlayerIdentity : Component
 		var movement = Movement ?? Components.GetInDescendantsOrSelf<PlayerMovement>();
 		var targetObject = movement?.GameObject ?? GameObject;
 
-		var owner = targetObject?.Network?.Owner;
-		var localConn = Connection.Local;
-		if ( owner != null && localConn != null )
-			return owner.SteamId == localConn.SteamId;
+		if ( HasLocalNetworkOwnership( targetObject ) )
+			return true;
 
-		if ( movement != null )
-			return !movement.IsProxy;
+		var knownLocal = All.LastOrDefault( player =>
+			player != null
+			&& player.IsValid
+			&& player.GameObject != null
+			&& player.GameObject.IsValid
+			&& HasLocalNetworkOwnership( player.GameObject ) );
 
-		return !IsProxy;
+		if ( knownLocal == null )
+			return false;
+
+		return ReferenceEquals( knownLocal, this )
+			|| knownLocal.GameObject == targetObject
+			|| (movement != null && knownLocal.Movement == movement);
 	}
 
 	public static bool IsOwnedByLocal( GameObject gameObject )
@@ -44,13 +60,20 @@ public sealed class PlayerIdentity : Component
 
 		var targetObject = movement?.GameObject ?? identity?.GameObject ?? gameObject;
 
-		var owner = targetObject.Network?.Owner;
-		var localConn = Connection.Local;
-		if ( owner != null && localConn != null )
-			return owner.SteamId == localConn.SteamId;
+		if ( HasLocalNetworkOwnership( targetObject ) )
+			return true;
 
-		if ( movement != null )
-			return !movement.IsProxy;
+		var knownLocal = All.LastOrDefault( player =>
+			player != null
+			&& player.IsValid
+			&& player.GameObject != null
+			&& player.GameObject.IsValid
+			&& HasLocalNetworkOwnership( player.GameObject ) );
+
+		if ( knownLocal != null )
+			return targetObject == knownLocal.GameObject
+				|| movement == knownLocal.Movement
+				|| identity == knownLocal;
 
 		if ( identity != null )
 			return identity.IsOwnedByLocalConnection();
@@ -123,10 +146,10 @@ public sealed class PlayerIdentity : Component
 	public float AccuracyPercent => ShotsFired > 0
 		? System.Math.Min( (float)ShotsHit / ShotsFired * 100f, 100f ) : 0f;
 
-	// ── Heal progress (owner-only, not synced — local HUD only) ──────
-	public float HealProgress { get; set; } = -1f;
-	public string HealTargetName { get; set; } = string.Empty;
-	public bool HealIsRevive { get; set; } = false;
+	// ── Heal progress (synced so other clients can see active heal/revive channels) ──
+	[Sync] public float HealProgress { get; set; } = -1f;
+	[Sync] public string HealTargetName { get; set; } = string.Empty;
+	[Sync] public bool HealIsRevive { get; set; } = false;
 
 	// ── Directional damage indicators (owner-only, not synced) ────────
 	private readonly System.Collections.Generic.Queue<DamageIndicator> _pendingIndicators = new();
@@ -168,19 +191,14 @@ public sealed class PlayerIdentity : Component
 			if ( !Networking.IsActive )
 				return All.Count > 0 ? All[0] : null;
 
-			var localByOwner = All
-				.Where( p => p != null && p.IsValid && p.GameObject != null && p.GameObject.IsValid && p.GameObject.Active && p.IsOwnedByLocalConnection() )
+			return All
+				.Where( p => p != null
+					&& p.IsValid
+					&& p.GameObject != null
+					&& p.GameObject.IsValid
+					&& p.GameObject.Active
+					&& HasLocalNetworkOwnership( p.GameObject ) )
 				.LastOrDefault();
-			if ( localByOwner != null )
-				return localByOwner;
-
-			var localByProxy = All
-				.Where( p => p != null && p.IsValid && p.GameObject != null && p.GameObject.IsValid && p.GameObject.Active && !p.IsProxy )
-				.LastOrDefault();
-			if ( localByProxy != null )
-				return localByProxy;
-
-			return null;
 		}
 	}
 	public static PlayerIdentity Nearest( Vector3 worldPos )

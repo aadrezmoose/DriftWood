@@ -33,7 +33,7 @@ public sealed class CameraMovement : Component
 	private float shakeMagnitude = 0f;
 	private float recoilOffset = 0f;
 
-	// Cached list of all player body renderers found at start
+	// Cached list of all local-owned renderers that should hide in first-person.
 	private readonly List<ModelRenderer> bodyRenderers = new();
 
 	private PlayerIdentity _identity;
@@ -216,12 +216,31 @@ public sealed class CameraMovement : Component
 	private void CollectBodyRenderers()
 	{
 		bodyRenderers.Clear();
-		// Fallback list is no longer the primary path — BodyModelRenderer is auto-assigned in OnStart.
-		// Keep this for safety in case BodyModelRenderer is still null at runtime.
 		if ( Player?.GameObject is not null )
 		{
-			foreach ( var smr in Player.GameObject.Components.GetAll<SkinnedModelRenderer>( FindMode.EverythingInSelfAndDescendants ) )
-				bodyRenderers.Add( smr );
+			foreach ( var renderer in Player.GameObject.Components.GetAll<ModelRenderer>( FindMode.EverythingInSelfAndDescendants ) )
+			{
+				if ( renderer != null )
+					bodyRenderers.Add( renderer );
+			}
+		}
+	}
+
+	private void UpdateOwnedRendererVisibility( bool hideOwnedRenderers )
+	{
+		var renderType = hideOwnedRenderers
+			? ModelRenderer.ShadowRenderType.ShadowsOnly
+			: ModelRenderer.ShadowRenderType.On;
+
+		if ( BodyModelRenderer != null )
+			BodyModelRenderer.RenderType = renderType;
+
+		foreach ( var renderer in bodyRenderers )
+		{
+			if ( renderer == null || renderer == BodyModelRenderer )
+				continue;
+
+			renderer.RenderType = renderType;
 		}
 	}
 
@@ -243,9 +262,6 @@ public sealed class CameraMovement : Component
 
 	protected override void OnUpdate()
 	{
-		if ( _eyeRayDebugFrameCount % 60 == 0 )
-			Log.Warning( $"[CM] OnUpdate running" );
-
 		// Compute EyeRay early so it's always available, even if Player is null
 		var tempEyeWorldPos = Head?.WorldPosition ?? (Player?.WorldPosition + Vector3.Up * 64f) ?? WorldPosition;
 		var tempEyeAngles = (Head?.WorldRotation ?? Player?.GameObject.WorldRotation ?? WorldRotation).Angles();
@@ -253,7 +269,13 @@ public sealed class CameraMovement : Component
 		EyeRay = new Ray( tempCamPos, tempEyeAngles.ToRotation().Forward );
 
 		if ( camera == null ) camera = Components.Get<CameraComponent>();
-		var hierarchyPlayer = Player ?? Components.GetInAncestorsOrSelf<PlayerMovement>();
+		var hierarchyPlayer = Components.GetInAncestorsOrSelf<PlayerMovement>() ?? Player;
+		if ( hierarchyPlayer != null && Player != hierarchyPlayer )
+		{
+			Player = hierarchyPlayer;
+			TrySubscribeToPlayer( Player );
+		}
+
 		bool externalPresentation = LocalPresentationController.ShouldHandleLocalPresentation( hierarchyPlayer );
 
 		var isPaused = Identity?.IsPaused ?? PlayerStats.IsPaused;
@@ -264,39 +286,9 @@ public sealed class CameraMovement : Component
 
 		if ( Networking.IsActive )
 		{
-			if ( Player == null )
-			{
-				if ( hierarchyPlayer != null )
-				{
-					Player = hierarchyPlayer;
-					TrySubscribeToPlayer( Player );
-				}
-			}
-
-			// Step 1: If our Player reference is null or proxy, try to find the real local player first.
-			if ( Player == null || !IsLocallyOwnedPlayer( Player ) )
-			{
-				var local = PlayerIdentity.Local;
-				if ( local?.Movement != null )
-				{
-					if ( Player != local.Movement )
-					{
-						Player = local.Movement;
-						TrySubscribeToPlayer( Player );
-					}
-				}
-				else
-				{
-					var fallback = FindLocalPlayerFallback();
-					if ( fallback != null && Player != fallback )
-					{
-						Player = fallback;
-						TrySubscribeToPlayer( Player );
-					}
-				}
-			}
-
-			// Step 2: After re-acquire, check if we have a locally owned player
+			// CameraMovement must stay attached to its own player hierarchy.
+			// Proxy cameras should never hijack the local player, otherwise they can hide remote bodies
+			// while their separate world-weapon renderers remain visible as floating duplicate guns.
 			bool hasLocalCamera = IsLocalMainCamera();
 			bool playerIsProxy = Player == null || ( !IsLocallyOwnedPlayer( Player ) && !hasLocalCamera );
 			if ( externalPresentation )
@@ -370,8 +362,12 @@ public sealed class CameraMovement : Component
 
 		if ( Player is null ) return;
 
-		// Re-collect renderers if we haven't found any yet
-		if ( bodyRenderers.Count == 0 ) CollectBodyRenderers();
+		// Re-collect every frame so late-added weapon/world-model renderers are included.
+		// Multiplayer joins and weapon equips can add descendants after OnStart().
+		CollectBodyRenderers();
+
+		bool hideOwnedRenderers = IsLocallyOwnedPlayer( Player ) && (isFirstPerson || isIncapacitated);
+		UpdateOwnedRendererVisibility( hideOwnedRenderers );
 
 		// Third-person toggle — bind "ThirdPerson" action in S&box Settings → Bindings
 		if ( Input.Pressed( "ThirdPerson" ) && IsLocallyOwnedPlayer( Player ) )

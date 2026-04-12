@@ -19,7 +19,7 @@ public sealed class ViewModelHandler : Component
 
 	// Cached gun model reference
 	private GameObject gunModel;
-	private Vector3 restPosition;
+	private GunViewModel cachedVm;
 	private Angles restAngles;
 
 	// Animation interpolation
@@ -39,28 +39,68 @@ public sealed class ViewModelHandler : Component
 	// Per-frame local velocity (camera-relative)
 	private Vector3 localVel;
 
+	// For diagnostic logging
+	private float lastLogTime;
+
+	protected override void OnStart()
+	{
+		// Self-heal: when a prefab is cloned via Clone() in multiplayer, cross-GO [Property] references
+		// aren't remapped — Player may still point to the original player scene object (host) instead of
+		// this clone's PlayerMovement. On joining clients, that stale reference would be IsProxy=true,
+		// causing this component to skip processing. Fix by re-wiring from the ancestor hierarchy.
+		var hierarchyPM = Components.GetInAncestorsOrSelf<PlayerMovement>();
+		if ( hierarchyPM != null )
+		{
+			Log.Info( $"[ViewModelHandler] OnStart: Player re-wired from {Player?.GameObject?.Name ?? "null"} to {hierarchyPM.GameObject?.Name}" );
+			Player = hierarchyPM;
+		}
+		else
+		{
+			Log.Warning( $"[ViewModelHandler] OnStart: Could not find PlayerMovement in ancestors" );
+		}
+	}
+
 	protected override void OnUpdate()
 	{
 		if ( Player is null ) return;
-
-		// Find GunViewModel and use its ModelObject reference
-		if ( gunModel is null || !gunModel.IsValid() || !gunModel.Enabled )
+		if ( Player.IsProxy ) return;
+		if ( cachedVm != null && !IsUsableViewModel( cachedVm ) )
 		{
-			var vm = Components.GetInDescendantsOrSelf<GunViewModel>();
-			gunModel = vm?.ModelObject;
-			if ( gunModel is null ) return;
-			restPosition = gunModel.LocalPosition;
-			restAngles   = gunModel.LocalRotation.Angles();
-			finalPos     = Vector3.Zero;
-			finalRot     = Vector3.Zero;
+			cachedVm = null;
+			gunModel = null;
 		}
 
-		// Update rest state when the gun model's rotation changes (weapon swap)
-		// This prevents accumulated rotation from previous weapons
-		var currentAngles = gunModel.LocalRotation.Angles();
-		if ( currentAngles != restAngles )
+		// Find GunViewModel and use its ModelObject reference
+		if ( gunModel is null || !gunModel.IsValid() )
 		{
-			restAngles = currentAngles;
+			cachedVm = ResolveViewModel();
+			gunModel = cachedVm?.ModelObject;
+			if ( gunModel is null )
+				return;
+			restAngles   = cachedVm.RestRotation.Angles();
+			finalPos     = Vector3.Zero;
+			finalRot     = Vector3.Zero;
+			lastEyeRot = ResolveViewRotation();
+		}
+
+		// Ensure cachedVm is always valid (it may have been found on a prior frame)
+		if ( cachedVm is null )
+		{
+			cachedVm = ResolveViewModel();
+			if ( cachedVm is null )
+			{
+				return;
+			}
+		}
+
+		if ( gunModel is null || !gunModel.IsValid() || !gunModel.Enabled )
+			return;
+
+		// Update rest rotation when RestRotation changes (weapon swap, procedural animation state reset)
+		// Read from the authoritative RestRotation instead of reading back what we wrote
+		if ( cachedVm.RestRotation.Angles() != restAngles )
+		{
+			restAngles = cachedVm.RestRotation.Angles();
 			finalRot = Vector3.Zero;  // Reset procedural rotation when swapping
 		}
 
@@ -77,7 +117,8 @@ public sealed class ViewModelHandler : Component
 		);
 
 		// Apply to gun model local transform
-		gunModel.LocalPosition = restPosition + finalPos;
+		var basePos = cachedVm.RestPosition;
+		gunModel.LocalPosition = basePos + finalPos;
 		gunModel.LocalRotation = Rotation.From( restAngles + new Angles( finalRot.x, finalRot.y, finalRot.z ) );
 
 		// Reset targets for this frame
@@ -85,16 +126,17 @@ public sealed class ViewModelHandler : Component
 		targetRot = Vector3.Zero;
 
 		// Camera-local velocity for walk/sway calculations
+		var viewRotation = ResolveViewRotation();
 		var vel = Player.Velocity;
 		localVel = new Vector3(
-			WorldRotation.Right.Dot( vel ),
-			WorldRotation.Forward.Dot( vel ),
+			viewRotation.Right.Dot( vel ),
+			viewRotation.Forward.Dot( vel ),
 			vel.z
 		);
 
 		HandleIdleAnimation();
 		HandleWalkAnimation();
-		HandleSwayAnimation();
+		HandleSwayAnimation( viewRotation );
 		HandleJumpAnimation();
 		HandleSprintAnimation();
 	}
@@ -135,11 +177,11 @@ public sealed class ViewModelHandler : Component
 	}
 
 	// ── Mouse look sway ───────────────────────────────────────────────
-	private void HandleSwayAnimation()
+	private void HandleSwayAnimation( Rotation viewRotation )
 	{
-		lastEyeRot = Rotation.Lerp( lastEyeRot, WorldRotation, 5f * Time.Delta );
+		lastEyeRot = Rotation.Lerp( lastEyeRot, viewRotation, 5f * Time.Delta );
 
-		var angDif = WorldRotation.Angles() - lastEyeRot.Angles();
+		var angDif = viewRotation.Angles() - lastEyeRot.Angles();
 		angDif = new Angles(
 			angDif.pitch,
 			MathX.RadianToDegree( MathF.Atan2( MathF.Sin( MathX.DegreeToRadian( angDif.yaw ) ), MathF.Cos( MathX.DegreeToRadian( angDif.yaw ) ) ) ),
@@ -210,4 +252,33 @@ public sealed class ViewModelHandler : Component
 	// Quadratic bezier interpolation (from SWB)
 	private static float BezierY( float t, float p0, float p1, float p2 )
 		=> MathF.Pow( 1 - t, 2 ) * p0 + 2f * (1 - t) * t * p1 + MathF.Pow( t, 2 ) * p2;
+
+	private GunViewModel ResolveViewModel()
+	{
+		var localVm = Components.Get<GunViewModel>();
+		if ( IsUsableViewModel( localVm ) )
+			return localVm;
+
+		var currentVm = GunViewModel.Current;
+		if ( IsUsableViewModel( currentVm ) )
+			return currentVm;
+
+		return null;
+	}
+
+	private bool IsUsableViewModel( GunViewModel vm )
+	{
+		return vm != null
+			&& vm.IsValid
+			&& vm.HasLocalVisuals
+			&& (Player == null || vm.BelongsTo( Player ));
+	}
+
+	private Rotation ResolveViewRotation()
+	{
+		if ( Player != null && LocalPresentationController.ShouldHandleLocalPresentation( Player ) )
+			return LocalPresentationController.Instance?.RenderCamera?.WorldRotation ?? WorldRotation;
+
+		return gunModel?.Parent?.WorldRotation ?? WorldRotation;
+	}
 }
